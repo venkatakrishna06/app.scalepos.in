@@ -24,8 +24,9 @@ export function TableManagementDialog({
   const handleAction = () => {
     switch (action) {
       case 'add':
+        const maxTableNumber = Math.max(...tables.map((t) => t.table_number), 0);
         addTable({
-          number: Math.max(...tables.map((t) => t.number)) + 1,
+          table_number: maxTableNumber + 1,
           capacity,
           status: 'available',
         });
@@ -94,7 +95,7 @@ export function TableManagementDialog({
                       )
                     }
                   >
-                    Table {table.number}
+                    Table {table.table_number}
                   </Button>
                 ))}
             </div>

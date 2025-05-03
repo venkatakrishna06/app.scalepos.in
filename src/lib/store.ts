@@ -283,7 +283,11 @@ export const useTableStore = create<TableState>((set, get) => ({
   addTable: async (table) => {
     try {
       set({ loading: true, error: null });
-      const newTable = await tableService.createTable(table);
+      const maxTableNumber = Math.max(...get().tables.map((t) => t.table_number)) + 1;
+      const newTable = await tableService.createTable({
+        ...table,
+        table_number: maxTableNumber,
+      });
       set(state => ({ tables: [...state.tables, newTable] }));
     } catch (error) {
       set({ error: 'Failed to add table' });
@@ -362,7 +366,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       if (!table) throw new Error('Table not found');
 
       const newTableData = {
-        number: Math.max(...get().tables.map(t => t.number)) + 1,
+        table_number: Math.max(...get().tables.map(t => t.table_number)) + 1,
         capacity,
         status: 'available' as const,
         splitFrom: tableId,

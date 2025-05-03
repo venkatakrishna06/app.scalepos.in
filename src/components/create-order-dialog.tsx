@@ -3,7 +3,7 @@ import { Search, Plus, Minus, ChevronRight } from 'lucide-react';
 import { Dialog } from './ui/dialog';
 import { Button } from './ui/button';
 import { useOrderStore, useMenuStore, useStaffStore } from '@/lib/store';
-import { MenuItem, Order, OrderItem, Staff } from '@/types';
+import { MenuItem, Order, OrderItem } from '@/types';
 
 interface CreateOrderDialogProps {
   open: boolean;
@@ -23,7 +23,6 @@ export function CreateOrderDialog({
   const { addOrder, addItemsToOrder } = useOrderStore();
   const { menuItems, categories } = useMenuStore();
   const { currentStaff } = useStaffStore();
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [orderItems, setOrderItems] = useState<OrderItem[]>(
@@ -31,7 +30,7 @@ export function CreateOrderDialog({
   );
 
   const filteredItems = menuItems.filter(item => {
-    const matchesCategory = !selectedCategoryId || item.category_id === selectedCategoryId;
+    const matchesCategory = selectedCategory === 'all' || item.category_id === parseInt(selectedCategory);
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
@@ -123,11 +122,11 @@ export function CreateOrderDialog({
               <button
                 key={category.id}
                 className={`whitespace-nowrap rounded-md p-2 text-left text-sm md:w-full ${
-                  selectedCategory === category.name
+                  selectedCategory === category.id.toString()
                     ? 'bg-primary text-white'
                     : 'hover:bg-gray-100'
                 }`}
-                onClick={() => setSelectedCategory(category.name)}
+                onClick={() => setSelectedCategory(category.id.toString())}
               >
                 {category.name}
               </button>

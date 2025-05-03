@@ -196,7 +196,7 @@ export default function Tables() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <p className="text-lg font-semibold">Table {table.number}</p>
+                  <p className="text-lg font-semibold">Table {table.table_number}</p>
                   <span className={`text-sm font-medium ${getStatusColor(table.status)}`}>
                     {table.status.charAt(0).toUpperCase() + table.status.slice(1)}
                   </span>
@@ -242,7 +242,7 @@ export default function Tables() {
             {table.mergedWith && (
               <div className="mt-2 text-sm text-muted-foreground">
                 Merged with: Table {table.mergedWith.map(id => 
-                  tables.find(t => t.id === id)?.number
+                  tables.find(t => t.id === id)?.table_number
                 ).join(', ')}
               </div>
             )}
