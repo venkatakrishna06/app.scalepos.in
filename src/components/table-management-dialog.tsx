@@ -24,13 +24,13 @@ export function TableManagementDialog({
   const handleAction = () => {
     switch (action) {
       case 'add':
-        const maxTableNumber = Math.max(...tables.map((t) => t.table_number), 0);
-        addTable({
+        { const maxTableNumber = Math.max(...tables.map((t) => t.table_number), 0);
+          addTable({
           table_number: maxTableNumber + 1,
           capacity,
           status: 'available',
         });
-        break;
+        break; }
       case 'merge':
         if (selectedTables.length > 1) {
           mergeTables(selectedTables);

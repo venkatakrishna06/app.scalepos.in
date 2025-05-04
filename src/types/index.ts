@@ -8,6 +8,7 @@ export interface MenuItem {
   name: string;
   description: string;
   price: number;
+  category: Category; // Matches backend Category
   category_id: number; // Matches backend CategoryID
   image?: string;
   available?: boolean;

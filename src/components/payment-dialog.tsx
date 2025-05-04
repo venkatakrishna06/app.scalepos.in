@@ -50,7 +50,7 @@ export function PaymentDialog({ open, onClose, order }: PaymentDialogProps) {
             <div className="border-t pt-2">
               <div className="flex justify-between font-bold">
                 <span>Total</span>
-                <span>${order.totalAmount.toFixed(2)}</span>
+                <span>${order.total_amount.toFixed(2)}</span>
               </div>
             </div>
           </div>

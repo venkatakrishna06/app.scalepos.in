@@ -50,7 +50,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                       <span className="font-medium">Order #{order.id}</span>
                       <span className="text-sm text-muted-foreground">
                         <Clock className="mr-1 inline-block h-4 w-4" />
-                        {format(new Date(order.orderTime), 'MMM d, h:mm a')}
+                        {format(new Date(order.order_time), 'MMM d, h:mm a')}
                       </span>
                     </div>
                     <div>
@@ -83,8 +83,8 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                           <tr key={item.id}>
                             <td className="py-1">{item.name}</td>
                             <td className="py-1">{item.quantity}</td>
-                            <td className="py-1">${item.price.toFixed(2)}</td>
-                            <td className="py-1">${(item.quantity * item.price).toFixed(2)}</td>
+                            <td className="py-1">${item.price?.toFixed(2)}</td>
+                            <td className="py-1">${(item.quantity * item?.price)?.toFixed(2)}</td>
                             {canEditOrder(order.status) && (
                               <td className="py-1">
                                 <div className="flex items-center gap-2">
@@ -125,7 +125,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                     <div className="flex items-center gap-4">
                       <div className="text-right">
                         <p className="text-sm text-muted-foreground">Total</p>
-                        <p className="text-lg font-semibold">${order.totalAmount.toFixed(2)}</p>
+                        <p className="text-lg font-semibold">${order.total_amount?.toFixed(2)}</p>
                       </div>
                       {order.status === 'served' && (
                         <Button onClick={() => onPayment(order)}>
@@ -152,7 +152,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                       <span className="font-medium">Order #{order.id}</span>
                       <span className="text-sm text-muted-foreground">
                         <Clock className="mr-1 inline-block h-4 w-4" />
-                        {format(new Date(order.orderTime), 'MMM d, h:mm a')}
+                        {format(new Date(order.order_time), 'MMM d, h:mm a')}
                       </span>
                     </div>
                     <div>
@@ -173,16 +173,16 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                   </div>
 
                   <div className="mt-4 flex items-center justify-between border-t pt-4 text-sm">
-                    <div className="text-muted-foreground">
-                      {order.paymentMethod && (
-                        <div className="flex items-center gap-1">
-                          <CreditCard className="h-4 w-4" />
-                          {order.paymentMethod.charAt(0).toUpperCase() + order.paymentMethod.slice(1)}
-                        </div>
-                      )}
-                    </div>
+                    {/*<div className="text-muted-foreground">*/}
+                    {/*  {order.paymentMethod && (*/}
+                    {/*    <div className="flex items-center gap-1">*/}
+                    {/*      <CreditCard className="h-4 w-4" />*/}
+                    {/*      {order.paymentMethod.charAt(0).toUpperCase() + order.paymentMethod.slice(1)}*/}
+                    {/*    </div>*/}
+                    {/*  )}*/}
+                    {/*</div>*/}
                     <div className="font-medium">
-                      Total: ${order.totalAmount.toFixed(2)}
+                      Total: ${order.total_amount.toFixed(2)}
                     </div>
                   </div>
                 </div>

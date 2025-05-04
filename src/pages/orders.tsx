@@ -47,7 +47,7 @@ export default function Orders() {
 
   const getTableNumber = (tableId: number) => {
     const table = tables.find(t => t.id === tableId);
-    return table ? table.number : tableId;
+    return table ? table.table_number : tableId;
   };
 
   const filteredOrders = orders.filter((order) => {
@@ -55,7 +55,7 @@ export default function Orders() {
     const matchesSearch = 
       order.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.server.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      `Table ${getTableNumber(order.table)}`.toLowerCase().includes(searchQuery.toLowerCase());
+      `Table ${getTableNumber(order.table_id)}`.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
@@ -133,7 +133,7 @@ export default function Orders() {
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold">
-                    {order.orderType === 'takeaway' ? 'Takeaway' : `Table ${getTableNumber(order.table)}`}
+                    {order.orderType === 'takeaway' ? 'Takeaway' : `Table ${getTableNumber(order.table_id)}`}
                   </h3>
                   <span className="text-sm text-muted-foreground">
                     #{order.id}
@@ -150,7 +150,7 @@ export default function Orders() {
                 </div>
                 <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
                   <Clock className="h-4 w-4" />
-                  {format(new Date(order.orderTime), 'MMM d, h:mm a')}
+                  {format(new Date(order.order_time), 'MMM d, h:mm a')}
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -232,7 +232,7 @@ export default function Orders() {
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Total</p>
                 <p className="text-lg font-semibold">
-                  ₹{order.totalAmount.toFixed(2)}
+                  ₹ {order.total_amount.toFixed(2)}
                 </p>
               </div>
             </div>

@@ -283,11 +283,7 @@ export const useTableStore = create<TableState>((set, get) => ({
   addTable: async (table) => {
     try {
       set({ loading: true, error: null });
-      const maxTableNumber = Math.max(...get().tables.map((t) => t.table_number)) + 1;
-      const newTable = await tableService.createTable({
-        ...table,
-        table_number: maxTableNumber,
-      });
+      const newTable = await tableService.createTable(table);
       set(state => ({ tables: [...state.tables, newTable] }));
     } catch (error) {
       set({ error: 'Failed to add table' });
@@ -502,7 +498,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   },
 
   getOrdersByTable: (tableId) => {
-    return get().orders.filter(order => order.table === tableId);
+    return get().orders.filter(order => order.table_id === tableId);
   },
 
   addItemsToOrder: async (orderId, newItems) => {
@@ -565,7 +561,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
     await get().updateOrder(orderId, {
       items: updatedItems,
-      totalAmount,
+      total_amount : totalAmount,
     });
   },
 }));

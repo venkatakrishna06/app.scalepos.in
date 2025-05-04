@@ -5,8 +5,8 @@ export const API_ENDPOINTS = {
     REFRESH: '/auth/refresh',
   },
   MENU: {
-    ITEMS: '/menu/items',
-    CATEGORIES: '/menu/categories',
+    ITEMS: '/menu-items',
+    CATEGORIES: '/menu-categories',
   },
   ORDERS: {
     LIST: '/orders',
@@ -15,10 +15,10 @@ export const API_ENDPOINTS = {
     DELETE: (id: number) => `/orders/${id}`,
   },
   TABLES: {
-    LIST: '/tables',
-    CREATE: '/tables',
-    UPDATE: (id: number) => `/tables/${id}`,
-    DELETE: (id: number) => `/tables/${id}`,
+    LIST: '/restaurant-tables',
+    CREATE: '/restaurant-tables',
+    UPDATE: (id: number) => `/restaurant-tables/${id}`,
+    DELETE: (id: number) => `/restaurant-tables/${id}`,
   },
   STAFF: {
     LIST: '/staff',
