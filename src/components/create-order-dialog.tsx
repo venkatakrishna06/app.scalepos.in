@@ -66,7 +66,21 @@ export function CreateOrderDialog({
 
   const handleSubmitOrder = () => {
     if (existingOrder) {
-      addItemsToOrder(existingOrder.id, orderItems);
+      const itemsWithDetails = orderItems.map(item => {
+        const menuItem = menuItems.find(m => m.id === item.menu_item_id);
+        return {
+          ...item,
+          price: menuItem?.price || 0,
+          name: menuItem?.name || ''
+        };
+      });
+      
+      const totalAmount = itemsWithDetails.reduce(
+        (sum, item) => sum + (item.price * item.quantity),
+        0
+      );
+      
+      addItemsToOrder(existingOrder.id, itemsWithDetails);
     } else {
       const newOrder = {
         table_id: table_id || 0,
