@@ -68,20 +68,17 @@ export function CreateOrderDialog({
     if (existingOrder) {
       addItemsToOrder(existingOrder.id, orderItems);
     } else {
-      const totalAmount = orderItems.reduce(
-        (sum, item) => {
-          const menuItem = menuItems.find(m => m.id === item.menu_item_id);
-          return sum + (menuItem?.price || 0) * item.quantity;
-        },
-        0
-      );
-
       const newOrder = {
         table_id: table_id || 0,
         customer_id: 0, // Default for walk-in customers
         staff_id: currentStaff?.id || 0,
         status: 'placed' as const,
-        order_time: new Date().toISOString()
+        order_time: new Date().toISOString(),
+        items: orderItems.map(item => ({
+          menu_item_id: item.menu_item_id,
+          quantity: item.quantity,
+          notes: item.notes || ''
+        }))
       };
 
       addOrder(newOrder);
