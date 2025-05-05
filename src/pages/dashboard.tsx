@@ -22,7 +22,7 @@ export default function Dashboard({ orderType }: DashboardProps) {
   );
 
   const filteredItems = menuItems.filter(item => {
-    const matchesCategory = selectedCategory === 'all' || item.category.name === selectedCategory;
+    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch && item.available;
   });
@@ -59,15 +59,15 @@ export default function Dashboard({ orderType }: DashboardProps) {
     if (orderItems.length === 0) return;
 
     const newOrder = {
+      items: orderItems,
       status: 'placed' as const,
-      order_type: 'takeaway' as const,
-      order_time: new Date().toISOString(),
-      items: orderItems.map(item => ({
-        menu_item_id: item.id,
-        quantity: item.quantity,
-        notes: item.notes || ''
-      }))
+      orderTime: new Date().toISOString(),
+      customer: 'Walk-in',
+      server: 'Current User',
+      totalAmount,
+      orderType: 'takeaway' as const
     };
+
     addOrder(newOrder);
     setOrderItems([]);
   };
@@ -86,7 +86,7 @@ export default function Dashboard({ orderType }: DashboardProps) {
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-xs font-medium">
-                      {order.order_type === 'takeaway' ? 'Takeaway' : `Table ${order.table_id}`} #{order.id}
+                      {order.orderType === 'takeaway' ? 'Takeaway' : `Table ${order.table}`} #{order.id}
                     </span>
                     <p className="text-xs text-gray-500">
                       {order.items.length} items
@@ -102,10 +102,10 @@ export default function Dashboard({ orderType }: DashboardProps) {
                 </div>
                 <div className="mt-1.5 flex items-center justify-between border-t pt-1.5">
                   <span className="text-xs text-gray-500">
-                    {new Date(order.order_time).toLocaleTimeString()}
+                    {new Date(order.orderTime).toLocaleTimeString()}
                   </span>
                   <span className="text-xs font-semibold">
-                    ₹{order.total_amount.toFixed(2)}
+                    ₹{order.totalAmount.toFixed(2)}
                   </span>
                 </div>
               </div>

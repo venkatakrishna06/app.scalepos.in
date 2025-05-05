@@ -3,7 +3,7 @@ import { Button } from './ui/button';
 import { Clock, CreditCard, Plus, Minus, Trash2 } from 'lucide-react';
 import { Order } from '@/types';
 import { format } from 'date-fns';
-import { useOrderStore } from '@/lib/store';
+import { useOrderStore, useMenuStore } from '@/lib/store';
 
 interface ViewOrdersDialogProps {
   open: boolean;
@@ -13,13 +13,14 @@ interface ViewOrdersDialogProps {
 }
 
 export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrdersDialogProps) {
-  const { updateOrderItem, removeOrderItem } = useOrderStore();
-  const activeOrders = orders.filter(order => order.status !== 'paid' && order.status !== 'cancelled');
-  const completedOrders = orders.filter(order => order.status === 'paid' || order.status === 'cancelled');
+  const { updateOrderItem, removeOrderItem, updateOrderItemStatus, getOrderStatus } = useOrderStore();
+  const { menuItems } = useMenuStore();
+  const activeOrders = orders.filter(order => getOrderStatus(order) !== 'paid');
+  const completedOrders = orders.filter(order => getOrderStatus(order) === 'paid');
 
   const handleQuantityChange = (orderId: number, itemId: number, delta: number) => {
     const order = orders.find(o => o.id === orderId);
-    if (!order || order.status === 'preparing') return;
+    if (!order) return;
 
     const item = order.items.find(i => i.id === itemId);
     if (!item) return;
@@ -32,8 +33,8 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
     }
   };
 
-  const canEditOrder = (status: Order['status']) => {
-    return status === 'placed';
+  const canEditItem = (itemStatus: string) => {
+    return itemStatus === 'placed';
   };
 
   return (
@@ -50,17 +51,17 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                       <span className="font-medium">Order #{order.id}</span>
                       <span className="text-sm text-muted-foreground">
                         <Clock className="mr-1 inline-block h-4 w-4" />
-                        {format(new Date(order.order_time), 'MMM d, h:mm a')}
+                        {format(new Date(order.orderTime), 'MMM d, h:mm a')}
                       </span>
                     </div>
                     <div>
                       <span className={`rounded-full px-2 py-1 text-sm font-medium ${
-                        order.status === 'placed' ? 'bg-blue-100 text-blue-800' :
-                        order.status === 'preparing' ? 'bg-yellow-100 text-yellow-800' :
-                        order.status === 'served' ? 'bg-green-100 text-green-800' :
+                        getOrderStatus(order) === 'placed' ? 'bg-blue-100 text-blue-800' :
+                        getOrderStatus(order) === 'preparing' ? 'bg-yellow-100 text-yellow-800' :
+                        getOrderStatus(order) === 'served' ? 'bg-green-100 text-green-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
-                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        {getOrderStatus(order).charAt(0).toUpperCase() + getOrderStatus(order).slice(1)}
                       </span>
                     </div>
                   </div>
@@ -72,10 +73,9 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                           <th className="pb-2">Item</th>
                           <th className="pb-2">Qty</th>
                           <th className="pb-2">Price</th>
+                          <th className="pb-2">Status</th>
                           <th className="pb-2">Total</th>
-                          {canEditOrder(order.status) && (
-                            <th className="pb-2">Actions</th>
-                          )}
+                          <th className="pb-2">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -83,35 +83,64 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                           <tr key={item.id}>
                             <td className="py-1">{item.name}</td>
                             <td className="py-1">{item.quantity}</td>
-                            <td className="py-1">₹{item.price?.toFixed(2)}</td>
-                            <td className="py-1">₹{(item.quantity * item?.price)?.toFixed(2)}</td>
-                            {canEditOrder(order.status) && (
-                              <td className="py-1">
-                                <div className="flex items-center gap-2">
+                            <td className="py-1">${item.price.toFixed(2)}</td>
+                            <td className="py-1">
+                              <span className={`rounded-full px-2 py-1 text-xs font-medium ${
+                                item.status === 'placed' ? 'bg-blue-100 text-blue-800' :
+                                item.status === 'preparing' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-green-100 text-green-800'
+                              }`}>
+                                {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                              </span>
+                            </td>
+                            <td className="py-1">${(item.quantity * item.price).toFixed(2)}</td>
+                            <td className="py-1">
+                              <div className="flex items-center gap-2">
+                                {item.status === 'placed' && (
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => handleQuantityChange(order.id, item.id, -1)}
+                                    onClick={() => updateOrderItemStatus(order.id, item.id, 'preparing')}
                                   >
-                                    <Minus className="h-4 w-4" />
+                                    Start Preparing
                                   </Button>
+                                )}
+                                {item.status === 'preparing' && (
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => handleQuantityChange(order.id, item.id, 1)}
+                                    onClick={() => updateOrderItemStatus(order.id, item.id, 'served')}
                                   >
-                                    <Plus className="h-4 w-4" />
+                                    Mark Served
                                   </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => removeOrderItem(order.id, item.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </td>
-                            )}
+                                )}
+                                {canEditItem(item.status) && (
+                                  <>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleQuantityChange(order.id, item.id, -1)}
+                                    >
+                                      <Minus className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleQuantityChange(order.id, item.id, 1)}
+                                    >
+                                      <Plus className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => removeOrderItem(order.id, item.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -125,9 +154,9 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                     <div className="flex items-center gap-4">
                       <div className="text-right">
                         <p className="text-sm text-muted-foreground">Total</p>
-                        <p className="text-lg font-semibold">₹{order.total_amount?.toFixed(2)}</p>
+                        <p className="text-lg font-semibold">${order.totalAmount.toFixed(2)}</p>
                       </div>
-                      {order.status === 'served' && (
+                      {getOrderStatus(order) === 'served' && (
                         <Button onClick={() => onPayment(order)}>
                           <CreditCard className="mr-2 h-4 w-4" />
                           Pay
@@ -152,7 +181,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                       <span className="font-medium">Order #{order.id}</span>
                       <span className="text-sm text-muted-foreground">
                         <Clock className="mr-1 inline-block h-4 w-4" />
-                        {format(new Date(order.order_time), 'MMM d, h:mm a')}
+                        {format(new Date(order.orderTime), 'MMM d, h:mm a')}
                       </span>
                     </div>
                     <div>
@@ -173,16 +202,16 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                   </div>
 
                   <div className="mt-4 flex items-center justify-between border-t pt-4 text-sm">
-                    {/*<div className="text-muted-foreground">*/}
-                    {/*  {order.paymentMethod && (*/}
-                    {/*    <div className="flex items-center gap-1">*/}
-                    {/*      <CreditCard className="h-4 w-4" />*/}
-                    {/*      {order.paymentMethod.charAt(0).toUpperCase() + order.paymentMethod.slice(1)}*/}
-                    {/*    </div>*/}
-                    {/*  )}*/}
-                    {/*</div>*/}
+                    <div className="text-muted-foreground">
+                      {order.paymentMethod && (
+                        <div className="flex items-center gap-1">
+                          <CreditCard className="h-4 w-4" />
+                          {order.paymentMethod.charAt(0).toUpperCase() + order.paymentMethod.slice(1)}
+                        </div>
+                      )}
+                    </div>
                     <div className="font-medium">
-                      Total: ${order.total_amount.toFixed(2)}
+                      Total: ${order.totalAmount.toFixed(2)}
                     </div>
                   </div>
                 </div>

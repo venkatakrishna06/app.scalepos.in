@@ -8,7 +8,7 @@ const menuItemSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().min(1, 'Description is required'),
   price: z.number().min(0.01, 'Price must be greater than 0'),
-  category_id: z.number().min(1, 'Category is required'),
+  category: z.string().min(1, 'Category is required'),
   subcategory: z.string().optional(),
   image: z.string().url('Must be a valid URL'),
 });
@@ -78,18 +78,18 @@ export function MenuItemForm({ onSubmit, initialData }: MenuItemFormProps) {
           Category
         </label>
         <select
-          {...register('category_id',{ valueAsNumber: true })}
+          {...register('category')}
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
         >
           <option value="">Select a category</option>
           {categories.map((category) => (
-            <option key={category.id} value={category.id}>
+            <option key={category.id} value={category.name}>
               {category.name}
             </option>
           ))}
         </select>
-        {errors.category_id && (
-          <p className="mt-1 text-sm text-red-600">{errors.category_id.message}</p>
+        {errors.category && (
+          <p className="mt-1 text-sm text-red-600">{errors.category.message}</p>
         )}
       </div>
 

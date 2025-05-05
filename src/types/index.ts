@@ -8,7 +8,6 @@ export interface MenuItem {
   name: string;
   description: string;
   price: number;
-  category: Category; // Matches backend Category
   category_id: number; // Matches backend CategoryID
   image?: string;
   available?: boolean;
@@ -28,6 +27,7 @@ export interface OrderItem {
   menu_item_id: number; // Matches backend MenuItemID
   quantity: number;
   notes: string; // Matches backend Notes
+  status: 'placed' | 'preparing' | 'served';
   price?: number; // For UI calculations
   name?: string; // For UI display
 }
@@ -38,7 +38,6 @@ export interface Order {
   table_id: number; // Matches backend TableID
   staff_id: number; // Matches backend StaffID
   order_time: string; // Matches backend OrderTime
-  status: 'placed' | 'preparing' | 'served' | 'cancelled' | 'paid';
   items: OrderItem[];
   total_amount?: number;
   customer?: string;

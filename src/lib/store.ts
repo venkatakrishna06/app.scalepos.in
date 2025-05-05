@@ -54,12 +54,13 @@ interface OrderState {
   fetchOrders: () => Promise<void>;
   addOrder: (order: Omit<Order, 'id'>) => Promise<void>;
   updateOrder: (id: number, updates: Partial<Order>) => Promise<void>;
-  updateOrderStatus: (id: number, status: Order['status']) => Promise<void>;
+  updateOrderItemStatus: (orderId: number, itemId: number, status: OrderItem['status']) => Promise<void>;
   deleteOrder: (id: number) => Promise<void>;
   getOrdersByTable: (tableId: number) => Order[];
   addItemsToOrder: (orderId: number, items: OrderItem[]) => Promise<void>;
   updateOrderItem: (orderId: number, itemId: number, quantity: number) => Promise<void>;
   removeOrderItem: (orderId: number, itemId: number) => Promise<void>;
+  getOrderStatus: (order: Order) => 'placed' | 'preparing' | 'served' | 'paid';
 }
 
 interface PaymentState {
@@ -283,7 +284,11 @@ export const useTableStore = create<TableState>((set, get) => ({
   addTable: async (table) => {
     try {
       set({ loading: true, error: null });
-      const newTable = await tableService.createTable(table);
+      const maxTableNumber = Math.max(...get().tables.map((t) => t.table_number)) + 1;
+      const newTable = await tableService.createTable({
+        ...table,
+        table_number: maxTableNumber,
+      });
       set(state => ({ tables: [...state.tables, newTable] }));
     } catch (error) {
       set({ error: 'Failed to add table' });
@@ -454,13 +459,59 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   addOrder: async (order) => {
     try {
       set({ loading: true, error: null });
-      const newOrder = await orderService.createOrder(order);
+      const newOrder = await orderService.createOrder({
+        ...order,
+        items: order.items.map(item => ({
+          ...item,
+          status: 'placed'
+        }))
+      });
       set(state => ({ orders: [...state.orders, newOrder] }));
     } catch (error) {
       set({ error: 'Failed to add order' });
     } finally {
       set({ loading: false });
     }
+  },
+
+  updateOrderItemStatus: async (orderId, itemId, status) => {
+    try {
+      set({ loading: true, error: null });
+      const order = get().orders.find(o => o.id === orderId);
+      if (!order) return;
+
+      const updatedItems = order.items.map(item =>
+        item.id === itemId ? { ...item, status } : item
+      );
+
+      await orderService.updateOrder(orderId, { items: updatedItems });
+      
+      set(state => ({
+        orders: state.orders.map(order =>
+          order.id === orderId
+            ? { ...order, items: updatedItems }
+            : order
+        )
+      }));
+    } catch (error) {
+      set({ error: 'Failed to update order item status' });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  getOrderStatus: (order) => {
+    if (!order.items.length) return 'placed';
+    
+    if (order.items.every(item => item.status === 'served')) {
+      return 'served';
+    }
+    
+    if (order.items.some(item => item.status === 'preparing')) {
+      return 'preparing';
+    }
+    
+    return 'placed';
   },
 
   updateOrder: async (id, updates) => {
@@ -479,10 +530,6 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     }
   },
 
-  updateOrderStatus: async (id, status) => {
-    await get().updateOrder(id, { status });
-  },
-
   deleteOrder: async (id) => {
     try {
       set({ loading: true, error: null });
@@ -498,7 +545,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   },
 
   getOrdersByTable: (tableId) => {
-    return get().orders.filter(order => order.table_id === tableId);
+    return get().orders.filter(order => order.table === tableId);
   },
 
   addItemsToOrder: async (orderId, newItems) => {
@@ -561,7 +608,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
     await get().updateOrder(orderId, {
       items: updatedItems,
-      total_amount : totalAmount,
+      totalAmount,
     });
   },
 }));

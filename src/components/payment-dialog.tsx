@@ -39,48 +39,48 @@ export function PaymentDialog({ open, onClose, order }: PaymentDialogProps) {
   };
 
   return (
-      <Dialog open={open} onClose={onClose} title="Process Payment">
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-lg font-medium">Order Summary</h3>
-            <div className="mt-2 space-y-2">
-              {order.items.map((item) => (
-                  <div key={item.id} className="flex justify-between">
-                    <span>{item.name} x {item.quantity}</span>
-                    <span>${(item.price * item.quantity).toFixed(2)}</span>
-                  </div>
-              ))}
-              <div className="border-t pt-2">
-                <div className="flex justify-between font-bold">
-                  <span>Total</span>
-                  <span>${order.total_amount.toFixed(2)}</span>
-                </div>
+    <Dialog open={open} onClose={onClose} title="Process Payment">
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-medium">Order Summary</h3>
+          <div className="mt-2 space-y-2">
+            {order.items.map((item) => (
+              <div key={item.id} className="flex justify-between">
+                <span>{item.name} x {item.quantity}</span>
+                <span>${(item.price * item.quantity).toFixed(2)}</span>
+              </div>
+            ))}
+            <div className="border-t pt-2">
+              <div className="flex justify-between font-bold">
+                <span>Total</span>
+                <span>${order.totalAmount.toFixed(2)}</span>
               </div>
             </div>
           </div>
-
-          <div>
-            <h3 className="mb-2 text-lg font-medium">Payment Method</h3>
-            <div className="flex gap-4">
-              <Button
-                  variant={paymentMethod === 'cash' ? 'primary' : 'outline'}
-                  onClick={() => setPaymentMethod('cash')}
-              >
-                Cash
-              </Button>
-              <Button
-                  variant={paymentMethod === 'card' ? 'primary' : 'outline'}
-                  onClick={() => setPaymentMethod('card')}
-              >
-                Card
-              </Button>
-            </div>
-          </div>
-
-          <Button onClick={handlePayment} className="w-full">
-            Complete Payment
-          </Button>
         </div>
-      </Dialog>
+
+        <div>
+          <h3 className="mb-2 text-lg font-medium">Payment Method</h3>
+          <div className="flex gap-4">
+            <Button
+              variant={paymentMethod === 'cash' ? 'primary' : 'outline'}
+              onClick={() => setPaymentMethod('cash')}
+            >
+              Cash
+            </Button>
+            <Button
+              variant={paymentMethod === 'card' ? 'primary' : 'outline'}
+              onClick={() => setPaymentMethod('card')}
+            >
+              Card
+            </Button>
+          </div>
+        </div>
+
+        <Button onClick={handlePayment} className="w-full">
+          Complete Payment
+        </Button>
+      </div>
+    </Dialog>
   );
 }
