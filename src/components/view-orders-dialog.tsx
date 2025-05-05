@@ -1,9 +1,9 @@
 import { Dialog } from './ui/dialog';
 import { Button } from './ui/button';
-import { Clock, CreditCard, Plus, Minus, Trash2 } from 'lucide-react';
+import {Clock, CreditCard, Plus, Minus, Trash2, XCircle, CheckCircle2} from 'lucide-react';
 import { Order } from '@/types';
 import { format } from 'date-fns';
-import { useOrderStore, useMenuStore } from '@/lib/store';
+import { useOrderStore } from '@/lib/store';
 
 interface ViewOrdersDialogProps {
   open: boolean;
@@ -13,14 +13,13 @@ interface ViewOrdersDialogProps {
 }
 
 export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrdersDialogProps) {
-  const { updateOrderItem, removeOrderItem, updateOrderItemStatus, getOrderStatus } = useOrderStore();
-  const { menuItems } = useMenuStore();
-  const activeOrders = orders.filter(order => getOrderStatus(order) !== 'paid');
-  const completedOrders = orders.filter(order => getOrderStatus(order) === 'paid');
+  const { updateOrderItem, removeOrderItem } = useOrderStore();
+  const activeOrders = orders.filter(order => order.status !== 'paid' && order.status !== 'cancelled');
+  const completedOrders = orders.filter(order => order.status === 'paid' || order.status === 'cancelled');
 
   const handleQuantityChange = (orderId: number, itemId: number, delta: number) => {
     const order = orders.find(o => o.id === orderId);
-    if (!order) return;
+    if (!order || order.status === 'preparing') return;
 
     const item = order.items.find(i => i.id === itemId);
     if (!item) return;
@@ -29,12 +28,16 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
     if (newQuantity <= 0) {
       removeOrderItem(orderId, itemId);
     } else {
-      updateOrderItem(orderId, itemId, newQuantity);
+      updateOrderItem(orderId, itemId, { quantity: newQuantity });
     }
   };
 
-  const canEditItem = (itemStatus: string) => {
-    return itemStatus === 'placed';
+  const handleItemStatusChange = (orderId: number, itemId: number, newStatus: Order['items'][0]['status']) => {
+    updateOrderItem(orderId, itemId, { status: newStatus });
+  };
+
+  const canEditOrder = (status: Order['status']) => {
+    return status === 'placed';
   };
 
   return (
@@ -51,17 +54,17 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                       <span className="font-medium">Order #{order.id}</span>
                       <span className="text-sm text-muted-foreground">
                         <Clock className="mr-1 inline-block h-4 w-4" />
-                        {format(new Date(order.orderTime), 'MMM d, h:mm a')}
+                        {format(new Date(order.order_time), 'MMM d, h:mm a')}
                       </span>
                     </div>
                     <div>
                       <span className={`rounded-full px-2 py-1 text-sm font-medium ${
-                        getOrderStatus(order) === 'placed' ? 'bg-blue-100 text-blue-800' :
-                        getOrderStatus(order) === 'preparing' ? 'bg-yellow-100 text-yellow-800' :
-                        getOrderStatus(order) === 'served' ? 'bg-green-100 text-green-800' :
+                        order.status === 'placed' ? 'bg-blue-100 text-blue-800' :
+                        order.status === 'preparing' ? 'bg-yellow-100 text-yellow-800' :
+                        order.status === 'served' ? 'bg-green-100 text-green-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
-                        {getOrderStatus(order).charAt(0).toUpperCase() + getOrderStatus(order).slice(1)}
+                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                       </span>
                     </div>
                   </div>
@@ -73,9 +76,10 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                           <th className="pb-2">Item</th>
                           <th className="pb-2">Qty</th>
                           <th className="pb-2">Price</th>
-                          <th className="pb-2">Status</th>
                           <th className="pb-2">Total</th>
-                          <th className="pb-2">Actions</th>
+                          {canEditOrder(order.status) && (
+                            <th className="pb-2">Actions</th>
+                          )}
                         </tr>
                       </thead>
                       <tbody>
@@ -83,64 +87,65 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                           <tr key={item.id}>
                             <td className="py-1">{item.name}</td>
                             <td className="py-1">{item.quantity}</td>
-                            <td className="py-1">${item.price.toFixed(2)}</td>
-                            <td className="py-1">
-                              <span className={`rounded-full px-2 py-1 text-xs font-medium ${
-                                item.status === 'placed' ? 'bg-blue-100 text-blue-800' :
-                                item.status === 'preparing' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-green-100 text-green-800'
-                              }`}>
-                                {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                              </span>
-                            </td>
-                            <td className="py-1">${(item.quantity * item.price).toFixed(2)}</td>
-                            <td className="py-1">
-                              <div className="flex items-center gap-2">
-                                {item.status === 'placed' && (
+                            <td className="py-1">₹{item.price?.toFixed(2)}</td>
+                            <td className="py-1">₹{(item.quantity * item?.price)?.toFixed(2)}</td>
+                            {canEditOrder(item.status) && (
+                              <td className="py-1">
+                                <div className="flex items-center gap-2">
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => updateOrderItemStatus(order.id, item.id, 'preparing')}
+                                    onClick={() => handleQuantityChange(order.id, item.id, -1)}
                                   >
-                                    Start Preparing
+                                    <Minus className="h-4 w-4" />
                                   </Button>
-                                )}
-                                {item.status === 'preparing' && (
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => updateOrderItemStatus(order.id, item.id, 'served')}
+                                    onClick={() => handleQuantityChange(order.id, item.id, 1)}
                                   >
-                                    Mark Served
+                                    <Plus className="h-4 w-4" />
                                   </Button>
-                                )}
-                                {canEditItem(item.status) && (
+                                  {/*<Button*/}
+                                  {/*  variant="outline"*/}
+                                  {/*  size="sm"*/}
+                                  {/*  onClick={() => removeOrderItem(order.id, item.id)}*/}
+                                  {/*>*/}
+                                  {/*  <Trash2 className="h-4 w-4" />*/}
+                                  {/*</Button>*/}
+
+                                </div>
+                              </td>
+                            )}
+                            <div className="flex items-center gap-2">
+                              {item.status === 'placed' && (
                                   <>
                                     <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => handleQuantityChange(order.id, item.id, -1)}
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleItemStatusChange(order.id,item.id, 'cancelled')}
                                     >
-                                      <Minus className="h-4 w-4" />
+                                      <XCircle className="mr-2 h-4 w-4" />
+                                      Cancel
                                     </Button>
                                     <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => handleQuantityChange(order.id, item.id, 1)}
+                                        size="sm"
+                                        onClick={() => handleItemStatusChange(order.id, item.id, 'preparing')}
                                     >
-                                      <Plus className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => removeOrderItem(order.id, item.id)}
-                                    >
-                                      <Trash2 className="h-4 w-4" />
+                                      Start Preparing
                                     </Button>
                                   </>
-                                )}
-                              </div>
-                            </td>
+                              )}
+                              {item.status === 'preparing' && (
+                                    <Button
+                                        size="sm"
+                                        onClick={() => handleItemStatusChange(order.id, item.id, 'served')}
+                                    >
+                                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                                      Mark Served
+                                    </Button>
+                              )}
+                            </div>
                           </tr>
                         ))}
                       </tbody>
@@ -154,9 +159,9 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                     <div className="flex items-center gap-4">
                       <div className="text-right">
                         <p className="text-sm text-muted-foreground">Total</p>
-                        <p className="text-lg font-semibold">${order.totalAmount.toFixed(2)}</p>
+                        <p className="text-lg font-semibold">₹{order.total_amount?.toFixed(2)}</p>
                       </div>
-                      {getOrderStatus(order) === 'served' && (
+                      {order.status === 'served' && (
                         <Button onClick={() => onPayment(order)}>
                           <CreditCard className="mr-2 h-4 w-4" />
                           Pay
@@ -181,7 +186,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                       <span className="font-medium">Order #{order.id}</span>
                       <span className="text-sm text-muted-foreground">
                         <Clock className="mr-1 inline-block h-4 w-4" />
-                        {format(new Date(order.orderTime), 'MMM d, h:mm a')}
+                        {format(new Date(order.order_time), 'MMM d, h:mm a')}
                       </span>
                     </div>
                     <div>
@@ -202,16 +207,16 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                   </div>
 
                   <div className="mt-4 flex items-center justify-between border-t pt-4 text-sm">
-                    <div className="text-muted-foreground">
-                      {order.paymentMethod && (
-                        <div className="flex items-center gap-1">
-                          <CreditCard className="h-4 w-4" />
-                          {order.paymentMethod.charAt(0).toUpperCase() + order.paymentMethod.slice(1)}
-                        </div>
-                      )}
-                    </div>
+                    {/*<div className="text-muted-foreground">*/}
+                    {/*  {order.paymentMethod && (*/}
+                    {/*    <div className="flex items-center gap-1">*/}
+                    {/*      <CreditCard className="h-4 w-4" />*/}
+                    {/*      {order.paymentMethod.charAt(0).toUpperCase() + order.paymentMethod.slice(1)}*/}
+                    {/*    </div>*/}
+                    {/*  )}*/}
+                    {/*</div>*/}
                     <div className="font-medium">
-                      Total: ${order.totalAmount.toFixed(2)}
+                      Total: ${order.total_amount.toFixed(2)}
                     </div>
                   </div>
                 </div>

@@ -58,7 +58,7 @@ interface OrderState {
   deleteOrder: (id: number) => Promise<void>;
   getOrdersByTable: (tableId: number) => Order[];
   addItemsToOrder: (orderId: number, items: OrderItem[]) => Promise<void>;
-  updateOrderItem: (orderId: number, itemId: number, quantity: number) => Promise<void>;
+  updateOrderItem: (orderId: number, itemId: number, updates: Partial<OrderItem>) => Promise<void>;
   removeOrderItem: (orderId: number, itemId: number) => Promise<void>;
   getOrderStatus: (order: Order) => 'placed' | 'preparing' | 'served' | 'paid';
 }
@@ -575,15 +575,13 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     });
   },
 
-  updateOrderItem: async (orderId, itemId, quantity) => {
+  updateOrderItem: async (orderId, itemId, updates) => {
     const order = get().orders.find(o => o.id === orderId);
     if (!order) return;
 
-    const updatedItems = quantity > 0
-      ? order.items.map(item =>
-          item.id === itemId ? { ...item, quantity } : item
-        )
-      : order.items.filter(item => item.id !== itemId);
+    const updatedItems = order.items.map(item =>
+      item.id === itemId ? { ...item, ...updates } : item
+    ).filter(item => item.quantity > 0);
 
     const totalAmount = updatedItems.reduce(
       (sum, item) => sum + item.price * item.quantity,
@@ -662,3 +660,4 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
     return get().payments.filter(payment => payment.orderId === orderId);
   },
 }));
+

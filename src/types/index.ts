@@ -26,6 +26,7 @@ export interface OrderItem {
   order_id: number; // Matches backend OrderID
   menu_item_id: number; // Matches backend MenuItemID
   quantity: number;
+  status: 'placed' | 'preparing' | 'served' | 'cancelled';
   notes: string; // Matches backend Notes
   status: 'placed' | 'preparing' | 'served';
   price?: number; // For UI calculations
