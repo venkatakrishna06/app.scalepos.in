@@ -42,8 +42,6 @@ export default function Tables() {
         return 'text-orange-600';
       case 'reserved':
         return 'text-blue-600';
-      case 'cleaning':
-        return 'text-purple-600';
       default:
         return 'text-gray-600';
     }
@@ -168,25 +166,6 @@ export default function Tables() {
         </div>
       </div>
 
-      <div className="mb-6 flex gap-4">
-        <div className="flex items-center gap-2">
-          <span className="h-3 w-3 rounded-full bg-green-500"></span>
-          <span className="text-sm">Available</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="h-3 w-3 rounded-full bg-orange-500"></span>
-          <span className="text-sm">Occupied</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="h-3 w-3 rounded-full bg-blue-500"></span>
-          <span className="text-sm">Reserved</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="h-3 w-3 rounded-full bg-purple-500"></span>
-          <span className="text-sm">Cleaning</span>
-        </div>
-      </div>
-
       <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-4">
         {tables.map((table) => (
           <div
@@ -230,7 +209,7 @@ export default function Tables() {
                     </button>
                     <button
                       className="block w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
-                      onClick={() => handleStatusChange(table.id, 'cleaning')}
+                      onClick={() => handleStatusChange(table.id, 'available')}
                     >
                       Set Cleaning
                     </button>
@@ -239,19 +218,19 @@ export default function Tables() {
               </div>
             </div>
 
-            {table.mergedWith && (
+            {table.merged_with && (
               <div className="mt-2 text-sm text-muted-foreground">
-                Merged with: Table {table.mergedWith.map(id => 
+                Merged with: Table {table.merged_with.map(id =>
                   tables.find(t => t.id === id)?.table_number
                 ).join(', ')}
               </div>
             )}
 
-            {table.currentOrderId && (
+            {table.current_order_id && (
               <div className="mt-4 border-t pt-4">
                 <div className="flex items-center gap-2 text-sm">
                   <Coffee className="h-4 w-4 text-muted-foreground" />
-                  <span>Order #{table.currentOrderId}</span>
+                  <span>Order #{table.current_order_id}</span>
                   <Clock className="ml-2 h-4 w-4 text-muted-foreground" />
                   <span>Active</span>
                 </div>

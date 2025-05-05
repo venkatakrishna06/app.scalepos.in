@@ -39,7 +39,7 @@ export default function Menu() {
   }, [fetchMenuItems, fetchCategories, handleError]);
 
   const filteredItems = menuItems.filter((item) => {
-    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
+    const matchesCategory = selectedCategory === 'all' || item.category.name === selectedCategory;
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          item.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
@@ -165,7 +165,7 @@ export default function Menu() {
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-semibold">{item.name}</h3>
-                  <p className="text-sm text-muted-foreground">{item.category}</p>
+                  <p className="text-sm text-muted-foreground">{item.category.name}</p>
                 </div>
                 <p className="font-semibold">₹{item.price.toFixed(2)}</p>
               </div>
