@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Dialog } from './ui/dialog';
 import { Button } from './ui/button';
-import { usePaymentStore, useOrderStore } from '@/lib/store';
+import { usePaymentStore, useOrderStore, useMenuStore, useTableStore } from '@/lib/store';
 import { Payment, Order } from '@/types';
 
 interface PaymentDialogProps {
@@ -14,8 +14,10 @@ export function PaymentDialog({ open, onClose, order }: PaymentDialogProps) {
   const [paymentMethod, setPaymentMethod] = useState<Payment['payment_method']>('cash');
   const { addPayment } = usePaymentStore();
   const { updateOrder } = useOrderStore();
+  const { menuItems } = useMenuStore();
+  const { updateTableStatus } = useTableStore();
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     const payment = {
       order_id: order.id,
       amount_paid: calculateTotal(),
@@ -23,7 +25,8 @@ export function PaymentDialog({ open, onClose, order }: PaymentDialogProps) {
       paid_at: new Date().toISOString()
     };
 
-    addPayment(payment);
+    await addPayment(payment);
+    await updateTableStatus(order.table_id, 'available');
     updateOrder(order.id, { status: 'served' });
     onClose();
   };
@@ -36,48 +39,48 @@ export function PaymentDialog({ open, onClose, order }: PaymentDialogProps) {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title="Process Payment">
-      <div className="space-y-6">
-        <div>
-          <h3 className="text-lg font-medium">Order Summary</h3>
-          <div className="mt-2 space-y-2">
-            {order.items.map((item) => (
-              <div key={item.id} className="flex justify-between">
-                <span>{item.name} x {item.quantity}</span>
-                <span>${(item.price * item.quantity).toFixed(2)}</span>
-              </div>
-            ))}
-            <div className="border-t pt-2">
-              <div className="flex justify-between font-bold">
-                <span>Total</span>
-                <span>${order.total_amount.toFixed(2)}</span>
+      <Dialog open={open} onClose={onClose} title="Process Payment">
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-lg font-medium">Order Summary</h3>
+            <div className="mt-2 space-y-2">
+              {order.items.map((item) => (
+                  <div key={item.id} className="flex justify-between">
+                    <span>{item.name} x {item.quantity}</span>
+                    <span>${(item.price * item.quantity).toFixed(2)}</span>
+                  </div>
+              ))}
+              <div className="border-t pt-2">
+                <div className="flex justify-between font-bold">
+                  <span>Total</span>
+                  <span>${order.total_amount.toFixed(2)}</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div>
-          <h3 className="mb-2 text-lg font-medium">Payment Method</h3>
-          <div className="flex gap-4">
-            <Button
-              variant={paymentMethod === 'cash' ? 'primary' : 'outline'}
-              onClick={() => setPaymentMethod('cash')}
-            >
-              Cash
-            </Button>
-            <Button
-              variant={paymentMethod === 'card' ? 'primary' : 'outline'}
-              onClick={() => setPaymentMethod('card')}
-            >
-              Card
-            </Button>
+          <div>
+            <h3 className="mb-2 text-lg font-medium">Payment Method</h3>
+            <div className="flex gap-4">
+              <Button
+                  variant={paymentMethod === 'cash' ? 'primary' : 'outline'}
+                  onClick={() => setPaymentMethod('cash')}
+              >
+                Cash
+              </Button>
+              <Button
+                  variant={paymentMethod === 'card' ? 'primary' : 'outline'}
+                  onClick={() => setPaymentMethod('card')}
+              >
+                Card
+              </Button>
+            </div>
           </div>
-        </div>
 
-        <Button onClick={handlePayment} className="w-full">
-          Complete Payment
-        </Button>
-      </div>
-    </Dialog>
+          <Button onClick={handlePayment} className="w-full">
+            Complete Payment
+          </Button>
+        </div>
+      </Dialog>
   );
 }

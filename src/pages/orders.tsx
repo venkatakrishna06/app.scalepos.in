@@ -133,7 +133,7 @@ export default function Orders() {
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold">
-                    {order.orderType === 'takeaway' ? 'Takeaway' : `Table ${getTableNumber(order.table_id)}`}
+                    {order.order_type === 'takeaway' ? 'Takeaway' : `Table ${getTableNumber(order.table_id)}`}
                   </h3>
                   <span className="text-sm text-muted-foreground">
                     #{order.id}
@@ -223,16 +223,16 @@ export default function Orders() {
               <div>
                 <p>Customer: {order.customer}</p>
                 <p className="text-muted-foreground">Server: {order.server}</p>
-                {order.paymentMethod && (
-                  <p className="text-muted-foreground">
-                    Payment: {order.paymentMethod.charAt(0).toUpperCase() + order.paymentMethod.slice(1)}
-                  </p>
-                )}
+                {/*{order.paymentMethod && (*/}
+                {/*  <p className="text-muted-foreground">*/}
+                {/*    Payment: {order.paymentMethod.charAt(0).toUpperCase() + order.paymentMethod.slice(1)}*/}
+                {/*  </p>*/}
+                {/*)}*/}
               </div>
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Total</p>
                 <p className="text-lg font-semibold">
-                  ₹ {order.total_amount.toFixed(2)}
+                  ₹ {order.total_amount?.toFixed(2)}
                 </p>
               </div>
             </div>

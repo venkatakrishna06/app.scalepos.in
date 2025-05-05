@@ -32,7 +32,8 @@ export function CreateOrderDialog({
   const filteredItems = menuItems.filter(item => {
     const matchesCategory = selectedCategory === 'all' || item.category_id === parseInt(selectedCategory);
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    const matchAvailability = item.available;
+    return matchesCategory && matchesSearch && matchAvailability;
   });
 
   const handleQuantityChange = (item: MenuItem, delta: number) => {
@@ -83,7 +84,7 @@ export function CreateOrderDialog({
       addItemsToOrder(existingOrder.id, itemsWithDetails);
     } else {
       const newOrder = {
-        table_id: table_id || 0,
+        table_id: table_id ,
         customer_id: 1, // Default for walk-in customers
         staff_id: currentStaff?.id || 1,
         status: 'placed' as const,

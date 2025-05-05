@@ -83,8 +83,8 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                           <tr key={item.id}>
                             <td className="py-1">{item.name}</td>
                             <td className="py-1">{item.quantity}</td>
-                            <td className="py-1">${item.price?.toFixed(2)}</td>
-                            <td className="py-1">${(item.quantity * item?.price)?.toFixed(2)}</td>
+                            <td className="py-1">₹{item.price?.toFixed(2)}</td>
+                            <td className="py-1">₹{(item.quantity * item?.price)?.toFixed(2)}</td>
                             {canEditOrder(order.status) && (
                               <td className="py-1">
                                 <div className="flex items-center gap-2">
@@ -125,7 +125,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                     <div className="flex items-center gap-4">
                       <div className="text-right">
                         <p className="text-sm text-muted-foreground">Total</p>
-                        <p className="text-lg font-semibold">${order.total_amount?.toFixed(2)}</p>
+                        <p className="text-lg font-semibold">₹{order.total_amount?.toFixed(2)}</p>
                       </div>
                       {order.status === 'served' && (
                         <Button onClick={() => onPayment(order)}>

@@ -42,8 +42,6 @@ export default function Tables() {
         return 'text-orange-600';
       case 'reserved':
         return 'text-blue-600';
-      case 'cleaning':
-        return 'text-purple-600';
       default:
         return 'text-gray-600';
     }
@@ -165,25 +163,6 @@ export default function Tables() {
             <Plus className="mr-2 h-4 w-4" />
             Add Table
           </Button>
-        </div>
-      </div>
-
-      <div className="mb-6 flex gap-4">
-        <div className="flex items-center gap-2">
-          <span className="h-3 w-3 rounded-full bg-green-500"></span>
-          <span className="text-sm">Available</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="h-3 w-3 rounded-full bg-orange-500"></span>
-          <span className="text-sm">Occupied</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="h-3 w-3 rounded-full bg-blue-500"></span>
-          <span className="text-sm">Reserved</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="h-3 w-3 rounded-full bg-purple-500"></span>
-          <span className="text-sm">Cleaning</span>
         </div>
       </div>
 
