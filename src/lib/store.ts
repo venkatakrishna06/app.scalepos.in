@@ -81,9 +81,8 @@ export const useStaffStore = create<StaffState>((set) => ({
   fetchStaff: async () => {
     try {
       set({ loading: true, error: null });
-      // Note: You'll need to implement staffService and import it
-      // const staff = await staffService.getStaff();
-      // set({ staff });
+      const staff = await staffService.getStaff();
+      set({ staff });
     } catch (error) {
       set({ error: 'Failed to fetch staff' });
     } finally {
@@ -98,8 +97,8 @@ export const useStaffStore = create<StaffState>((set) => ({
   addStaff: async (staff) => {
     try {
       set({ loading: true, error: null });
-      // const newStaff = await staffService.createStaff(staff);
-      // set(state => ({ staff: [...state.staff, newStaff] }));
+      const newStaff = await staffService.createStaff(staff);
+      set(state => ({ staff: [...state.staff, newStaff] }));
     } catch (error) {
       set({ error: 'Failed to add staff member' });
     } finally {
@@ -110,11 +109,11 @@ export const useStaffStore = create<StaffState>((set) => ({
   updateStaff: async (id, updates) => {
     try {
       set({ loading: true, error: null });
-      // const updatedStaff = await staffService.updateStaff(id, updates);
-      // set(state => ({
-      //   staff: state.staff.map(s => s.id === id ? updatedStaff : s),
-      //   currentStaff: state.currentStaff?.id === id ? updatedStaff : state.currentStaff,
-      // }));
+      const updatedStaff = await staffService.updateStaff(id, updates);
+      set(state => ({
+        staff: state.staff.map(s => s.id === id ? updatedStaff : s),
+        currentStaff: state.currentStaff?.id === id ? updatedStaff : state.currentStaff,
+      }));
     } catch (error) {
       set({ error: 'Failed to update staff member' });
     } finally {
@@ -125,11 +124,11 @@ export const useStaffStore = create<StaffState>((set) => ({
   deleteStaff: async (id) => {
     try {
       set({ loading: true, error: null });
-      // await staffService.deleteStaff(id);
-      // set(state => ({
-      //   staff: state.staff.filter(s => s.id !== id),
-      //   currentStaff: state.currentStaff?.id === id ? null : state.currentStaff,
-      // }));
+      await staffService.deleteStaff(id);
+      set(state => ({
+        staff: state.staff.filter(s => s.id !== id),
+        currentStaff: state.currentStaff?.id === id ? null : state.currentStaff,
+      }));
     } catch (error) {
       set({ error: 'Failed to delete staff member' });
     } finally {
