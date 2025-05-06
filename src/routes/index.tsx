@@ -8,6 +8,7 @@ import Reservations from '@/pages/reservations';
 import Customers from '@/pages/customers';
 import Staff from '@/pages/staff';
 import Payments from '@/pages/payments';
+import Profile from '@/pages/profile';
 
 interface AppRoutesProps {
   orderType: 'dine-in' | 'takeaway' | 'orders';
@@ -26,6 +27,7 @@ export default function AppRoutes({ orderType }: AppRoutesProps) {
       <Route path="/customers" element={<Customers />} />
       <Route path="/staff" element={<Staff />} />
       <Route path="/payments" element={<Payments />} />
+      <Route path="/profile" element={<Profile />} />
     </Routes>
   );
 }
