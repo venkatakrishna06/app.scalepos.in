@@ -1,6 +1,6 @@
-import { Plus, Edit2, Trash2, Search, Loader2, Filter, SortAsc, SortDesc, LayoutGrid, LayoutList } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
+import { Plus, Edit2, Trash2, Search, Loader2, Filter, SortAsc, SortDesc, LayoutGrid, LayoutList, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,7 @@ import { useMenuStore } from '@/lib/store';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
 import { MenuItem } from '@/types';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 type SortField = 'name' | 'price' | 'category';
 type ViewMode = 'grid' | 'list';
@@ -100,9 +101,6 @@ export default function Menu() {
   };
 
   const handleDelete = async (id: number) => {
-    const confirmed = window.confirm('Are you sure you want to delete this menu item?');
-    if (!confirmed) return;
-
     try {
       setIsSubmitting(true);
       await deleteMenuItem(id);
@@ -140,8 +138,8 @@ export default function Menu() {
   if (loading) {
     return (
       <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <Loader2 className="h-5 w-5 animate-spin" />
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Loader2 className="h-6 w-6 animate-spin" />
           <span>Loading menu items...</span>
         </div>
       </div>
@@ -152,11 +150,12 @@ export default function Menu() {
     return (
       <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
         <div className="text-center">
-          <p className="text-sm text-red-600">{error}</p>
+          <AlertCircle className="mx-auto h-10 w-10 text-destructive" />
+          <p className="mt-4 text-lg font-semibold text-destructive">{error}</p>
           <Button
             variant="outline"
-            size="sm"
-            className="mt-2"
+            size="lg"
+            className="mt-4"
             onClick={() => {
               fetchMenuItems();
               fetchCategories();
@@ -170,9 +169,14 @@ export default function Menu() {
   }
 
   return (
-    <div>
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Menu Management</h1>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Menu Management</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Manage your restaurant's menu items and categories
+          </p>
+        </div>
         <div className="flex items-center gap-4">
           <Button
             variant="outline"
@@ -189,10 +193,10 @@ export default function Menu() {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Search by name, description, or category..."
+              placeholder="Search menu items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-10 rounded-md border border-input bg-background pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full rounded-md border bg-background pl-9 pr-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
           </div>
           <DropdownMenu>
@@ -202,7 +206,7 @@ export default function Menu() {
                 {selectedCategory === 'all' ? 'All Categories' : selectedCategory}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setSelectedCategory('all')}>
                 All Categories
               </DropdownMenuItem>
@@ -223,7 +227,7 @@ export default function Menu() {
         </div>
       </div>
 
-      <div className="mb-6 flex items-center gap-4">
+      <div className="flex items-center gap-4 border-b pb-4">
         <Button
           variant="ghost"
           size="sm"
@@ -267,7 +271,7 @@ export default function Menu() {
           <div
             key={item.id}
             className={cn(
-              "group rounded-lg border bg-card shadow-sm transition-shadow hover:shadow-md",
+              "group relative overflow-hidden rounded-lg border bg-card transition-all hover:shadow-lg",
               viewMode === 'list' && "flex gap-6"
             )}
           >
@@ -282,11 +286,11 @@ export default function Menu() {
                   "object-cover",
                   viewMode === 'list'
                     ? "h-full w-full rounded-l-lg"
-                    : "h-48 w-full rounded-t-lg"
+                    : "aspect-[4/3] w-full rounded-t-lg"
                 )}
               />
               {!item.available && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm">
                   <span className="rounded-full bg-red-100 px-3 py-1 text-sm font-medium text-red-800">
                     Unavailable
                   </span>
@@ -310,6 +314,7 @@ export default function Menu() {
                   variant={item.available ? 'outline' : 'secondary'}
                   size="sm"
                   onClick={() => handleToggleAvailability(item.id)}
+                  disabled={isSubmitting}
                 >
                   {item.available ? 'Mark Unavailable' : 'Mark Available'}
                 </Button>
@@ -318,9 +323,9 @@ export default function Menu() {
                   size="sm"
                   onClick={() => {
                     setEditingItem(item);
-                    form.reset(item);
                     setShowAddDialog(true);
                   }}
+                  disabled={isSubmitting}
                 >
                   <Edit2 className="mr-2 h-4 w-4" />
                   Edit
@@ -329,6 +334,7 @@ export default function Menu() {
                   variant="outline"
                   size="sm"
                   onClick={() => handleDelete(item.id)}
+                  disabled={isSubmitting}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete
@@ -338,10 +344,24 @@ export default function Menu() {
           </div>
         ))}
       </div>
+
       {filteredItems.length === 0 && (
-          <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
-            No menu items found. Try adjusting your search or filters.
+        <div className="flex h-[400px] items-center justify-center rounded-lg border border-dashed">
+          <div className="text-center">
+            <p className="text-muted-foreground">No menu items found</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Try adjusting your search or filters
+            </p>
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => setShowAddDialog(true)}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add New Item
+            </Button>
           </div>
+        </div>
       )}
 
       <Dialog
@@ -350,9 +370,8 @@ export default function Menu() {
           setShowAddDialog(false);
           setEditingItem(null);
         } : undefined}
-        title={editingItem ? 'Edit Menu Item' : 'Add Menu Item'}
       >
-        <DialogContent>
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>
               {editingItem ? 'Edit Menu Item' : 'Add Menu Item'}
@@ -363,7 +382,7 @@ export default function Menu() {
                 : 'Fill in the details to add a new menu item.'}
             </DialogDescription>
           </DialogHeader>
-          <div className="p-6">
+          <div className="mt-4">
             <MenuItemForm
               onSubmit={handleSubmit}
               initialData={editingItem || undefined}

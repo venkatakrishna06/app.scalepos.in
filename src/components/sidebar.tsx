@@ -9,6 +9,7 @@ import {
   UserCircle,
   Receipt,
   Tags,
+  ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -34,34 +35,55 @@ export default function Sidebar({ isOpen }: SidebarProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] w-64 flex-col border-r bg-white">
-      <nav className="flex-1 space-y-1 px-2 py-4">
-        {navigation.map((item) => {
-          const isActive = location.pathname === item.href;
-          return (
-            <Link
-              key={item.name}
-              to={item.href}
-              className={cn(
-                'group flex items-center rounded-md px-2 py-2 text-sm font-medium',
-                isActive
-                  ? 'bg-gray-100 text-gray-900'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              )}
-            >
-              <item.icon
+    <div className="flex h-[calc(100vh-4rem)] flex-col">
+      <div className="flex-1 overflow-y-auto py-4">
+        <nav className="space-y-1 px-2">
+          {navigation.map((item) => {
+            const isActive = location.pathname === item.href;
+            return (
+              <Link
+                key={item.name}
+                to={item.href}
                 className={cn(
-                  'mr-3 h-5 w-5 flex-shrink-0',
+                  "group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   isActive
-                    ? 'text-gray-500'
-                    : 'text-gray-400 group-hover:text-gray-500'
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
-              />
-              {item.name}
-            </Link>
-          );
-        })}
-      </nav>
+              >
+                <div className="flex items-center">
+                  <item.icon
+                    className={cn(
+                      "mr-3 h-5 w-5",
+                      isActive
+                        ? "text-primary-foreground"
+                        : "text-muted-foreground group-hover:text-foreground"
+                    )}
+                  />
+                  {item.name}
+                </div>
+                {isActive && <ChevronRight className="h-4 w-4" />}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+      
+      <div className="border-t p-4">
+        <div className="rounded-lg bg-muted p-4">
+          <h5 className="mb-2 text-sm font-medium">Need Help?</h5>
+          <p className="text-xs text-muted-foreground">
+            Check our documentation or contact support for assistance.
+          </p>
+          <Button
+            variant="link"
+            className="mt-2 h-auto p-0 text-xs text-primary"
+            onClick={() => window.open('https://docs.example.com', '_blank')}
+          >
+            View Documentation
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

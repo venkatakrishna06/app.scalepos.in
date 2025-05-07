@@ -8,6 +8,13 @@ import { ViewOrdersDialog } from '@/components/view-orders-dialog';
 import { useTableStore, useOrderStore } from '@/lib/store';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
 import { Table, Order } from '@/types';
+import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Tables() {
   const { tables, loading, error, fetchTables, deleteTable, updateTableStatus } = useTableStore();
@@ -21,7 +28,6 @@ export default function Tables() {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [showOrdersDialog, setShowOrdersDialog] = useState(false);
   const [tableManagementAction, setTableManagementAction] = useState<'add' | 'merge' | 'split' | null>(null);
-  const [showStatusMenu, setShowStatusMenu] = useState<number | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -37,13 +43,15 @@ export default function Tables() {
   const getStatusColor = (status: Table['status']) => {
     switch (status) {
       case 'available':
-        return 'text-green-600';
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       case 'occupied':
-        return 'text-orange-600';
+        return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
       case 'reserved':
-        return 'text-blue-600';
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'cleaning':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
       default:
-        return 'text-gray-600';
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     }
   };
 
@@ -99,7 +107,6 @@ export default function Tables() {
   const handleStatusChange = async (tableId: number, status: Table['status']) => {
     try {
       await updateTableStatus(tableId, status);
-      setShowStatusMenu(null);
     } catch (err) {
       handleError(err);
     }
@@ -119,8 +126,8 @@ export default function Tables() {
   if (loading || ordersLoading) {
     return (
       <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <Loader2 className="h-5 w-5 animate-spin" />
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Loader2 className="h-6 w-6 animate-spin" />
           <span>Loading tables...</span>
         </div>
       </div>
@@ -131,13 +138,13 @@ export default function Tables() {
     return (
       <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
         <div className="text-center">
-          <p className="text-sm text-red-600">
+          <p className="text-sm text-destructive">
             {error || ordersError}
           </p>
           <Button
             variant="outline"
             size="sm"
-            className="mt-2"
+            className="mt-4"
             onClick={() => {
               fetchTables();
               fetchOrders();
@@ -151,11 +158,11 @@ export default function Tables() {
   }
 
   return (
-    <div>
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Table Management</h1>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold tracking-tight">Table Management</h1>
         <div className="flex items-center gap-4">
-          <Button onClick={() => setTableManagementAction('merge')}>
+          <Button variant="outline" onClick={() => setTableManagementAction('merge')}>
             <Merge className="mr-2 h-4 w-4" />
             Merge Tables
           </Button>
@@ -166,126 +173,119 @@ export default function Tables() {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {tables.map((table) => (
           <div
             key={table.id}
-            className="relative rounded-lg border bg-card p-6 text-card-foreground shadow-sm"
+            className="group relative overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-lg"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="text-lg font-semibold">Table {table.table_number}</p>
-                  <span className={`text-sm font-medium ${getStatusColor(table.status)}`}>
-                    {table.status.charAt(0).toUpperCase() + table.status.slice(1)}
-                  </span>
-                </div>
-                <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                  <Users className="h-4 w-4" />
-                  <span>Capacity: {table.capacity}</span>
-                </div>
-              </div>
-              <div className="relative">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowStatusMenu(showStatusMenu === table.id ? null : table.id)}
-                >
-                  <Settings2 className="h-4 w-4" />
-                </Button>
-                {showStatusMenu === table.id && (
-                  <div className="absolute right-0 top-full z-50 mt-1 w-48 rounded-md border bg-white py-1 shadow-lg">
-                    <button
-                      className="block w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
-                      onClick={() => handleStatusChange(table.id, 'available')}
-                    >
-                      Set Available
-                    </button>
-                    <button
-                      className="block w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
-                      onClick={() => handleStatusChange(table.id, 'reserved')}
-                    >
-                      Set Reserved
-                    </button>
-                    <button
-                      className="block w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
-                      onClick={() => handleStatusChange(table.id, 'available')}
-                    >
-                      Set Cleaning
-                    </button>
+            <div className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-semibold">Table {table.table_number}</h2>
+                    <span className={cn(
+                      "rounded-full px-2.5 py-0.5 text-xs font-semibold",
+                      getStatusColor(table.status)
+                    )}>
+                      {table.status.charAt(0).toUpperCase() + table.status.slice(1)}
+                    </span>
                   </div>
-                )}
+                  <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                    <Users className="h-4 w-4" />
+                    <span>Capacity: {table.capacity}</span>
+                  </div>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <Settings2 className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleStatusChange(table.id, 'available')}>
+                      Mark Available
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleStatusChange(table.id, 'cleaning')}>
+                      Mark for Cleaning
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleStatusChange(table.id, 'reserved')}>
+                      Mark Reserved
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
+
+              {table.merged_with && (
+                <div className="mt-4 rounded-md bg-muted/50 p-2 text-sm text-muted-foreground">
+                  Merged with: Table {table.merged_with.map(id =>
+                    tables.find(t => t.id === id)?.table_number
+                  ).join(', ')}
+                </div>
+              )}
+
+              {table.current_order_id && (
+                <div className="mt-4 border-t pt-4">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Coffee className="h-4 w-4" />
+                    <span>Active Order #{table.current_order_id}</span>
+                    <Clock className="ml-2 h-4 w-4" />
+                    <span>In Progress</span>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {table.merged_with && (
-              <div className="mt-2 text-sm text-muted-foreground">
-                Merged with: Table {table.merged_with.map(id =>
-                  tables.find(t => t.id === id)?.table_number
-                ).join(', ')}
-              </div>
-            )}
-
-            {table.current_order_id && (
-              <div className="mt-4 border-t pt-4">
-                <div className="flex items-center gap-2 text-sm">
-                  <Coffee className="h-4 w-4 text-muted-foreground" />
-                  <span>Order #{table.current_order_id}</span>
-                  <Clock className="ml-2 h-4 w-4 text-muted-foreground" />
-                  <span>Active</span>
-                </div>
-              </div>
-            )}
-
-            <div className="mt-4 flex gap-2">
+            <div className="absolute inset-x-0 bottom-0 flex translate-y-full items-center justify-end gap-2 border-t bg-background/95 p-4 backdrop-blur transition-transform group-hover:translate-y-0">
               {table.status === 'available' && (
                 <>
                   <Button
+                    variant="outline"
                     size="sm"
-                    className="flex-1"
+                    onClick={() => setTableManagementAction('split')}
+                  >
+                    <Split className="mr-2 h-4 w-4" />
+                    Split
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteTable(table.id)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </Button>
+                  <Button
+                    size="sm"
                     onClick={() => handleNewOrder(table.id)}
                   >
                     New Order
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setTableManagementAction('split')}
-                  >
-                    <Split className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDeleteTable(table.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </>
               )}
               {table.status === 'occupied' && (
                 <>
                   <Button
-                    size="sm"
                     variant="outline"
-                    className="flex-1"
+                    size="sm"
                     onClick={() => handleNewOrder(table.id, false)}
                   >
                     Add Items
                   </Button>
                   <Button
-                    size="sm"
                     variant="outline"
+                    size="sm"
                     onClick={() => handleViewOrders(table.id)}
                   >
-                    <ClipboardList className="h-4 w-4" />
+                    <ClipboardList className="mr-2 h-4 w-4" />
+                    Orders
                   </Button>
                   <Button
                     size="sm"
-                    variant="primary"
                     onClick={() => handlePayment(table)}
                   >
-                    <CreditCard className="h-4 w-4" />
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Pay
                   </Button>
                 </>
               )}
@@ -293,17 +293,30 @@ export default function Tables() {
           </div>
         ))}
       </div>
+
       {tables.length === 0 && (
-          <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
-            No Tables found
+        <div className="flex h-[400px] items-center justify-center rounded-lg border border-dashed">
+          <div className="text-center">
+            <p className="text-muted-foreground">No tables found</p>
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => setTableManagementAction('add')}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Table
+            </Button>
           </div>
+        </div>
       )}
 
       <CreateOrderDialog
         open={showOrderDialog}
         onClose={() => {
           setShowOrderDialog(false);
-          setSelectedTableId(null);
+          set
+
+SelectedTableId(null);
           setSelectedOrder(null);
         }}
         table_id={selectedTableId || 0}
