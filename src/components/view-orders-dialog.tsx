@@ -1,9 +1,24 @@
-import { Dialog } from './ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from './ui/dialog';
 import { Button } from './ui/button';
-import {Clock, CreditCard, Plus, Minus, Trash2, XCircle, CheckCircle2} from 'lucide-react';
+import {
+  Clock,
+  CreditCard,
+  Plus,
+  Minus,
+  XCircle,
+  CheckCircle2,
+  Loader2
+} from 'lucide-react';
 import { Order } from '@/types';
 import { format } from 'date-fns';
 import { useOrderStore } from '@/lib/store';
+import { toast } from 'sonner';
+import { useState } from 'react';
 
 interface ViewOrdersDialogProps {
   open: boolean;
@@ -13,36 +28,72 @@ interface ViewOrdersDialogProps {
 }
 
 export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrdersDialogProps) {
-  const { updateOrderItem, removeOrderItem } = useOrderStore();
+  const { updateOrderItem, removeOrderItem, loading } = useOrderStore();
+  const [processingItemId, setProcessingItemId] = useState<number | null>(null);
   const activeOrders = orders.filter(order => order.status !== 'paid' && order.status !== 'cancelled');
   const completedOrders = orders.filter(order => order.status === 'paid' || order.status === 'cancelled');
 
-  const handleQuantityChange = (orderId: number, itemId: number, delta: number) => {
+  const handleQuantityChange = async (orderId: number, itemId: number, delta: number, currentQuantity: number) => {
+    if (processingItemId) return;
+    
     const order = orders.find(o => o.id === orderId);
     if (!order || order.status === 'preparing') return;
 
-    const item = order.items.find(i => i.id === itemId);
-    if (!item) return;
+    try {
+      setProcessingItemId(itemId);
+      const newQuantity = currentQuantity + delta;
 
-    const newQuantity = item.quantity + delta;
-    if (newQuantity <= 0) {
-      removeOrderItem(orderId, itemId);
-    } else {
-      updateOrderItem(orderId, itemId, { quantity: newQuantity });
+      if (newQuantity <= 0) {
+        await removeOrderItem(orderId, itemId);
+        toast.success('Item removed from order');
+      } else {
+        await updateOrderItem(orderId, itemId, { quantity: newQuantity });
+        toast.success('Order quantity updated');
+      }
+    } catch (error) {
+      toast.error('Failed to update order quantity');
+    } finally {
+      setProcessingItemId(null);
     }
   };
 
-  const handleItemStatusChange = (orderId: number, itemId: number, newStatus: Order['items'][0]['status']) => {
-    updateOrderItem(orderId, itemId, { status: newStatus });
+  const handleItemStatusChange = async (orderId: number, itemId: number, newStatus: Order['items'][0]['status']) => {
+    if (processingItemId) return;
+    
+    try {
+      setProcessingItemId(itemId);
+      await updateOrderItem(orderId, itemId, { status: newStatus });
+      toast.success(`Item marked as ${newStatus}`);
+    } catch (error) {
+      toast.error('Failed to update item status');
+    } finally {
+      setProcessingItemId(null);
+    }
   };
 
   const canEditOrder = (status: Order['status']) => {
     return status === 'placed';
   };
 
+  if (loading) {
+    return (
+      <Dialog open={open} onClose={onClose}>
+        <DialogContent>
+          <div className="flex h-32 items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
-    <Dialog open={open} onClose={onClose} title="Table Orders">
-      <div className="max-h-[70vh] overflow-y-auto">
+    <Dialog open={open} onClose={onClose}>
+      <DialogContent className="max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>Table Orders</DialogTitle>
+        </DialogHeader>
+        <div className="max-h-[70vh] overflow-y-auto px-1">
         {activeOrders.length > 0 && (
           <div className="mb-6">
             <h3 className="mb-4 text-lg font-semibold">Active Orders</h3>
@@ -51,7 +102,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                 <div key={order.id} className="rounded-lg border bg-card p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">Order #{order.id}</span>
+                      <span className="text-lg font-semibold">Order #{order.id}</span>
                       <span className="text-sm text-muted-foreground">
                         <Clock className="mr-1 inline-block h-4 w-4" />
                         {format(new Date(order.order_time), 'MMM d, h:mm a')}
@@ -87,33 +138,35 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                           <tr key={item.id}>
                             <td className="py-1">{item.name}</td>
                             <td className="py-1">{item.quantity}</td>
-                            <td className="py-1">₹{item.price?.toFixed(2)}</td>
-                            <td className="py-1">₹{(item.quantity * item?.price)?.toFixed(2)}</td>
+                            <td className="py-1">₹{item.price.toFixed(2)}</td>
+                            <td className="py-1">₹{(item.quantity * item.price).toFixed(2)}</td>
                             {canEditOrder(item.status) && (
                               <td className="py-1">
                                 <div className="flex items-center gap-2">
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => handleQuantityChange(order.id, item.id, -1)}
+                                    onClick={() => handleQuantityChange(order.id, item.id, -1, item.quantity)}
+                                    disabled={processingItemId === item.id}
                                   >
-                                    <Minus className="h-4 w-4" />
+                                    {processingItemId === item.id ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <Minus className="h-3 w-3" />
+                                    )}
                                   </Button>
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => handleQuantityChange(order.id, item.id, 1)}
+                                    onClick={() => handleQuantityChange(order.id, item.id, 1, item.quantity)}
+                                    disabled={processingItemId === item.id}
                                   >
-                                    <Plus className="h-4 w-4" />
+                                    {processingItemId === item.id ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <Plus className="h-3 w-3" />
+                                    )}
                                   </Button>
-                                  {/*<Button*/}
-                                  {/*  variant="outline"*/}
-                                  {/*  size="sm"*/}
-                                  {/*  onClick={() => removeOrderItem(order.id, item.id)}*/}
-                                  {/*>*/}
-                                  {/*  <Trash2 className="h-4 w-4" />*/}
-                                  {/*</Button>*/}
-
                                 </div>
                               </td>
                             )}
@@ -124,15 +177,27 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                                         variant="outline"
                                         size="sm"
                                         onClick={() => handleItemStatusChange(order.id,item.id, 'cancelled')}
+                                        disabled={processingItemId === item.id}
                                     >
-                                      <XCircle className="mr-2 h-4 w-4" />
+                                      {processingItemId === item.id ? (
+                                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                      ) : (
+                                        <XCircle className="mr-2 h-3 w-3" />
+                                      )}
                                       Cancel
                                     </Button>
                                     <Button
                                         size="sm"
                                         onClick={() => handleItemStatusChange(order.id, item.id, 'preparing')}
+                                        disabled={processingItemId === item.id}
                                     >
+                                      {processingItemId === item.id ? (
+                                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                      ) : (
+                                      <span>
                                       Start Preparing
+                                        </span>
+                                      )}
                                     </Button>
                                   </>
                               )}
@@ -140,8 +205,13 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                                     <Button
                                         size="sm"
                                         onClick={() => handleItemStatusChange(order.id, item.id, 'served')}
+                                        disabled={processingItemId === item.id}
                                     >
-                                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                                      {processingItemId === item.id ? (
+                                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                      ) : (
+                                        <CheckCircle2 className="mr-2 h-3 w-3" />
+                                      )}
                                       Mark Served
                                     </Button>
                               )}
@@ -176,12 +246,14 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                         <p className="text-sm text-muted-foreground">Total</p>
                         <p className="text-lg font-semibold">₹{order.total_amount?.toFixed(2)}</p>
                       </div>
-                      {order.status === 'served' && (
-                        <Button onClick={() => onPayment(order)}>
+                      <Button
+                        onClick={() => onPayment(order)}
+                        disabled={order.status !== 'served'}
+                        variant={order.status === 'served' ? 'default' : 'outline'}
+                      >
                           <CreditCard className="mr-2 h-4 w-4" />
                           Pay
-                        </Button>
-                      )}
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -222,14 +294,6 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                   </div>
 
                   <div className="mt-4 flex items-center justify-between border-t pt-4 text-sm">
-                    {/*<div className="text-muted-foreground">*/}
-                    {/*  {order.paymentMethod && (*/}
-                    {/*    <div className="flex items-center gap-1">*/}
-                    {/*      <CreditCard className="h-4 w-4" />*/}
-                    {/*      {order.paymentMethod.charAt(0).toUpperCase() + order.paymentMethod.slice(1)}*/}
-                    {/*    </div>*/}
-                    {/*  )}*/}
-                    {/*</div>*/}
                     <div className="font-medium">
                       Total: ${order.total_amount.toFixed(2)}
                     </div>
@@ -239,7 +303,8 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
             </div>
           </div>
         )}
-      </div>
+        </div>
+      </DialogContent>
     </Dialog>
   );
 }

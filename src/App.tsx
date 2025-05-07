@@ -5,6 +5,8 @@ import Layout from './components/layout';
 import AppRoutes from './routes';
 import Login from './pages/auth/login';
 import Signup from './pages/auth/signup';
+import { ThemeProvider } from './components/theme/theme-provider';
+import { Toaster } from 'sonner';
 import { AuthGuard } from './components/auth/auth-guard';
 
 const queryClient = new QueryClient();
@@ -14,6 +16,7 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="system" enableSystem>
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -30,6 +33,8 @@ function App() {
           />
         </Routes>
       </Router>
+      <Toaster richColors position="top-right" />
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

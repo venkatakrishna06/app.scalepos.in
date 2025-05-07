@@ -3,6 +3,7 @@ import { Button } from './ui/button';
 import { PropsWithChildren } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/lib/store/auth.store';
+import { ThemeToggle } from './theme/theme-toggle';
 
 interface NavbarProps extends PropsWithChildren {
   orderType: 'dine-in' | 'takeaway' | 'orders';
@@ -61,6 +62,7 @@ export default function Navbar({ children, orderType, onOrderTypeChange }: Navba
             <Button variant="ghost" size="sm">
               <Settings className="h-5 w-5" />
             </Button>
+            <ThemeToggle />
             <Button variant="ghost" size="sm" onClick={() => logout()}>
               <LogOut className="h-5 w-5" />
             </Button>
