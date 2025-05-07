@@ -201,7 +201,13 @@ export default function Menu() {
             </div>
           </div>
         ))}
+
       </div>
+      {filteredItems.length === 0 && (
+          <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
+            No Items found
+          </div>
+      )}
 
       <Dialog
         open={showAddDialog}

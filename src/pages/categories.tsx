@@ -154,6 +154,11 @@ export default function Categories() {
           </div>
         ))}
       </div>
+      {filteredCategories.length === 0 && (
+          <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
+            No Categories found
+          </div>
+      )}
 
       <Dialog
         open={showDialog}
@@ -175,17 +180,17 @@ export default function Categories() {
               required
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Description
-            </label>
-            <textarea
-              name="description"
-              defaultValue={editingCategory?.description}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              required
-            />
-          </div>
+          {/*<div>*/}
+          {/*  <label className="block text-sm font-medium text-gray-700">*/}
+          {/*    Description*/}
+          {/*  </label>*/}
+          {/*  <textarea*/}
+          {/*    name="description"*/}
+          {/*    defaultValue={editingCategory?.name}*/}
+          {/*    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"*/}
+          {/*    required*/}
+          {/*  />*/}
+          {/*</div>*/}
           <div className="flex justify-end gap-2">
             <Button
               type="button"

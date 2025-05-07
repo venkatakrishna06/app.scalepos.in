@@ -47,10 +47,10 @@ export function StaffForm({ onSubmit, initialData }: StaffFormProps) {
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
         >
           <option value="">Select a role</option>
-          <option value="Server">Server</option>
-          <option value="Chef">Chef</option>
-          <option value="Manager">Manager</option>
-          <option value="Host">Host</option>
+          <option value="server">Server</option>
+          <option value="manager">Manager</option>
+          <option value="kitchen">Kitchen</option>
+          <option value="admin">Admin</option>
         </select>
         {errors.role && (
           <p className="mt-1 text-sm text-red-600">{errors.role.message}</p>

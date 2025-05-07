@@ -16,7 +16,11 @@ export interface LoginCredentials {
 export interface SignupData {
   email: string;
   password: string;
-  name: string;
+  restaurant_name: string;
+  restaurant_address?: string;
+  restaurant_phone?: string;
+  restaurant_email?: string;
+  restaurant_description?: string;
 }
 
 export interface AuthResponse {

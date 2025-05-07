@@ -9,14 +9,26 @@ export default function Signup() {
   const { signup, loading, error, clearError } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  const [restaurant_name, setRestaurantName] = useState('');
+  const [restaurant_address, setRestaurantAddress] = useState('');
+  const [restaurant_phone, setRestaurantPhone] = useState('');
+  const [restaurant_email, setRestaurantEmail] = useState('');
+  const [restaurant_description, setRestaurantDescription] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await signup(email, password, name);
+      await signup(
+        email, 
+        password, 
+        restaurant_name,
+        restaurant_address,
+        restaurant_phone,
+        restaurant_email,
+        restaurant_description
+      );
       navigate('/dashboard', { replace: true });
-    } catch (err) {
+    } catch {
       // Error is handled by the store
     }
   };
@@ -38,25 +50,6 @@ export default function Signup() {
           )}
 
           <div className="space-y-4 rounded-md shadow-sm">
-            <div>
-              <label htmlFor="name" className="sr-only">
-                Full name
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  clearError();
-                }}
-                className="relative block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
-                placeholder="Full name"
-              />
-            </div>
-
             <div>
               <label htmlFor="email" className="sr-only">
                 Email address
@@ -94,6 +87,96 @@ export default function Signup() {
                 }}
                 className="relative block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
                 placeholder="Password"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="restaurant_name" className="sr-only">
+                Restaurant Name
+              </label>
+              <input
+                id="restaurant_name"
+                name="restaurant_name"
+                type="text"
+                required
+                value={restaurant_name}
+                onChange={(e) => {
+                  setRestaurantName(e.target.value);
+                  clearError();
+                }}
+                className="relative block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
+                placeholder="Restaurant Name"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="restaurant_address" className="sr-only">
+                Restaurant Address
+              </label>
+              <input
+                id="restaurant_address"
+                name="restaurant_address"
+                type="text"
+                value={restaurant_address}
+                onChange={(e) => {
+                  setRestaurantAddress(e.target.value);
+                  clearError();
+                }}
+                className="relative block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
+                placeholder="Restaurant Address"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="restaurant_phone" className="sr-only">
+                Restaurant Phone
+              </label>
+              <input
+                id="restaurant_phone"
+                name="restaurant_phone"
+                type="text"
+                value={restaurant_phone}
+                onChange={(e) => {
+                  setRestaurantPhone(e.target.value);
+                  clearError();
+                }}
+                className="relative block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
+                placeholder="Restaurant Phone"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="restaurant_email" className="sr-only">
+                Restaurant Email
+              </label>
+              <input
+                id="restaurant_email"
+                name="restaurant_email"
+                type="email"
+                value={restaurant_email}
+                onChange={(e) => {
+                  setRestaurantEmail(e.target.value);
+                  clearError();
+                }}
+                className="relative block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
+                placeholder="Restaurant Email"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="restaurant_description" className="sr-only">
+                Restaurant Description
+              </label>
+              <textarea
+                id="restaurant_description"
+                name="restaurant_description"
+                value={restaurant_description}
+                onChange={(e) => {
+                  setRestaurantDescription(e.target.value);
+                  clearError();
+                }}
+                className="relative block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
+                placeholder="Restaurant Description"
               />
             </div>
           </div>

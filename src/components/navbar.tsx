@@ -28,7 +28,7 @@ export default function Navbar({ children, orderType, onOrderTypeChange }: Navba
           <div className="flex items-center gap-4">
             {children}
             <button
-              onClick={() => navigate('/profile')}
+
               className="flex items-center gap-2 rounded-full hover:bg-gray-100 p-1"
             >
               <Button
@@ -66,7 +66,7 @@ export default function Navbar({ children, orderType, onOrderTypeChange }: Navba
             </Button>
             <div className="ml-4 flex items-center">
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-gray-200" />
+                <button className="h-8 w-8 rounded-full bg-gray-200"  onClick={() => navigate('/profile')} />
                 <span className="text-sm font-medium">{user?.name}</span>
               </div>
             </div>

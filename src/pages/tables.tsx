@@ -76,7 +76,7 @@ export default function Tables() {
 
   const handlePayment = (table: Table) => {
     const tableOrders = getOrdersByTable(table.id);
-    const activeOrder = tableOrders.find(order => 
+    const activeOrder = tableOrders.find(order =>
       order.status !== 'paid' && order.status !== 'cancelled'
     );
     if (activeOrder) {
@@ -293,6 +293,11 @@ export default function Tables() {
           </div>
         ))}
       </div>
+      {tables.length === 0 && (
+          <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
+            No Tables found
+          </div>
+      )}
 
       <CreateOrderDialog
         open={showOrderDialog}

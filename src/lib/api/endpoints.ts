@@ -1,8 +1,11 @@
 export const API_ENDPOINTS = {
   AUTH: {
-    LOGIN: '/auth/login',
+    LOGIN: '/login',
+    SIGNUP: '/first-admin',
     LOGOUT: '/auth/logout',
     REFRESH: '/auth/refresh',
+    PROFILE: '/auth/profile',
+    PASSWORD: '/auth/password',
   },
   MENU: {
     ITEMS: '/menu-items',

@@ -1,5 +1,8 @@
 import axios from 'axios';
-import { useAuthStore } from '@/lib/store/auth.store';
+import { tokenService } from '@/lib/services/token.service';
+// Import kept for when refresh functionality is re-enabled
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { API_ENDPOINTS } from './endpoints';
 
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
@@ -12,7 +15,7 @@ export const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = tokenService.getToken();
     if (token) {
       // Add token to all requests
       config.headers['Authorization'] = `Bearer ${token}`;
@@ -26,29 +29,33 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
+
     // Handle 401 Unauthorized responses
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
-      try {
-        // Try to refresh the token
-        const response = await api.post('/auth/refresh');
-        const { token } = response.data;
-        
-        // Update token in localStorage and auth headers
-        localStorage.setItem('token', token);
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        
-        // Retry the original request
-        return api(originalRequest);
-      } catch (refreshError) {
-        // If refresh fails, logout and redirect to login
-        const auth = useAuthStore.getState();
-        await auth.logout();
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      }
+
+      // Temporarily disabled token refresh
+      // try {
+      //   // Try to refresh the token
+      //   const response = await api.post(API_ENDPOINTS.AUTH.REFRESH);
+      //   const { token } = response.data;
+      //
+      //   // Update token in storage and auth headers
+      //   tokenService.setToken(token);
+      //   api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      //
+      //   // Retry the original request
+      //   return api(originalRequest);
+      // } catch (refreshError) {
+      //   // If refresh fails, clear tokens and redirect to login
+      //   tokenService.clearTokens();
+      //   window.location.href = '/login';
+      //   return Promise.reject(refreshError);
+      // }
+
+      // Just clear tokens and redirect to login
+      tokenService.clearTokens();
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }

@@ -4,6 +4,7 @@ import { menuService } from './api/services/menu.service';
 import { orderService } from './api/services/order.service';
 import { tableService } from './api/services/table.service';
 import { paymentService } from './api/services/payment.service';
+import {staffService} from "@/lib/api/services/staff.service.ts";
 
 interface StaffState {
   staff: StaffMember[];
