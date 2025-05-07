@@ -1,10 +1,37 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Search, Loader2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useMenuStore } from '@/lib/store';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
 import { Category } from '@/types';
+import { toast } from 'sonner';
+
+const categorySchema = z.object({
+  name: z.string().min(1, 'Name is required').max(50, 'Name cannot exceed 50 characters'),
+  description: z.string().optional(),
+});
+
+type CategoryFormData = z.infer<typeof categorySchema>;
 
 export default function Categories() {
   const {
@@ -20,6 +47,15 @@ export default function Categories() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const form = useForm<CategoryFormData>({
+    resolver: zodResolver(categorySchema),
+    defaultValues: {
+      name: '',
+      description: '',
+    },
+  });
 
   useEffect(() => {
     const loadData = async () => {
@@ -32,44 +68,64 @@ export default function Categories() {
     loadData();
   }, [fetchCategories, handleError]);
 
+  useEffect(() => {
+    if (editingCategory) {
+      form.reset({
+        name: editingCategory.name,
+        description: editingCategory.description,
+      });
+    } else {
+      form.reset({
+        name: '',
+        description: '',
+      });
+    }
+  }, [editingCategory, form]);
+
   const filteredCategories = categories.filter((category) =>
     category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    category.description.toLowerCase().includes(searchQuery.toLowerCase())
+    category.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async (data: CategoryFormData) => {
     try {
-      const formData = new FormData(e.currentTarget);
-      const name = formData.get('name') as string;
-      const description = formData.get('description') as string;
-
+      setIsSubmitting(true);
       if (editingCategory) {
-        await updateCategory(editingCategory.id, { name, description });
+        await updateCategory(editingCategory.id, data);
+        toast.success('Category updated successfully');
       } else {
-        await addCategory({ name, description });
+        await addCategory(data);
+        toast.success('Category added successfully');
       }
-
       setShowDialog(false);
       setEditingCategory(null);
+      form.reset();
     } catch (err) {
       handleError(err);
+      toast.error('Failed to save category');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDelete = async (id: number) => {
     try {
+      setIsSubmitting(true);
       await deleteCategory(id);
+      toast.success('Category deleted successfully');
     } catch (err) {
       handleError(err);
+      toast.error('Failed to delete category');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   if (loading) {
     return (
       <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <Loader2 className="h-5 w-5 animate-spin" />
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Loader2 className="h-6 w-6 animate-spin" />
           <span>Loading categories...</span>
         </div>
       </div>
@@ -80,11 +136,12 @@ export default function Categories() {
     return (
       <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
         <div className="text-center">
-          <p className="text-sm text-red-600">{error}</p>
+          <AlertCircle className="mx-auto h-10 w-10 text-destructive" />
+          <p className="mt-4 text-lg font-semibold text-destructive">{error}</p>
           <Button
             variant="outline"
-            size="sm"
-            className="mt-2"
+            size="lg"
+            className="mt-4"
             onClick={() => fetchCategories()}
           >
             Try Again
@@ -95,9 +152,14 @@ export default function Categories() {
   }
 
   return (
-    <div>
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Categories</h1>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Categories</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Manage your menu categories
+          </p>
+        </div>
         <div className="flex items-center gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -106,7 +168,7 @@ export default function Categories() {
               placeholder="Search categories..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-10 rounded-md border border-input bg-background pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full rounded-md border bg-background pl-9 pr-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
           </div>
           <Button onClick={() => setShowDialog(true)}>
@@ -120,93 +182,139 @@ export default function Categories() {
         {filteredCategories.map((category) => (
           <div
             key={category.id}
-            className="rounded-lg border bg-card p-6 shadow-sm"
+            className="group relative overflow-hidden rounded-lg border bg-card transition-all hover:shadow-lg"
           >
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="font-semibold">{category.name}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
+            <div className="p-6">
+              <h3 className="font-semibold">{category.name}</h3>
+              {category.description && (
+                <p className="mt-2 text-sm text-muted-foreground">
                   {category.description}
                 </p>
+              )}
+              <div className="mt-4 flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setEditingCategory(category);
+                    setShowDialog(true);
+                  }}
+                  disabled={isSubmitting}
+                >
+                  <Edit2 className="mr-2 h-4 w-4" />
+                  Edit
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDelete(category.id)}
+                  disabled={isSubmitting}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </Button>
               </div>
-            </div>
-            <div className="mt-4 flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setEditingCategory(category);
-                  setShowDialog(true);
-                }}
-              >
-                <Edit2 className="mr-2 h-4 w-4" />
-                Edit
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleDelete(category.id)}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </Button>
             </div>
           </div>
         ))}
       </div>
+
       {filteredCategories.length === 0 && (
-          <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
-            No Categories found
+        <div className="flex h-[400px] items-center justify-center rounded-lg border border-dashed">
+          <div className="text-center">
+            <p className="text-muted-foreground">No categories found</p>
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => setShowDialog(true)}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Category
+            </Button>
           </div>
+        </div>
       )}
 
-      <Dialog
-        open={showDialog}
-        onClose={() => {
+      <Dialog open={showDialog}>
+        <DialogContent onClose={!isSubmitting ? () => {
           setShowDialog(false);
           setEditingCategory(null);
-        }}
-        title={editingCategory ? 'Edit Category' : 'Add Category'}
-      >
-        <form onSubmit={handleSubmit} className="space-y-4 p-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Name
-            </label>
-            <input
-              name="name"
-              defaultValue={editingCategory?.name}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              required
-            />
-          </div>
-          {/*<div>*/}
-          {/*  <label className="block text-sm font-medium text-gray-700">*/}
-          {/*    Description*/}
-          {/*  </label>*/}
-          {/*  <textarea*/}
-          {/*    name="description"*/}
-          {/*    defaultValue={editingCategory?.name}*/}
-          {/*    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"*/}
-          {/*    required*/}
-          {/*  />*/}
-          {/*</div>*/}
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setShowDialog(false);
-                setEditingCategory(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button type="submit">
-              {editingCategory ? 'Update' : 'Create'} Category
-            </Button>
-          </div>
-        </form>
+          form.reset();
+        } : undefined}>
+          <DialogHeader>
+            <DialogTitle>
+              {editingCategory ? 'Edit Category' : 'Add Category'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingCategory
+                ? 'Update the category details below.'
+                : 'Fill in the details to add a new category.'}
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter category name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description (Optional)</FormLabel>
+                    <FormControl>
+                      <textarea
+                        className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        placeholder="Enter category description"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Provide a brief description of this category
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowDialog(false);
+                    setEditingCategory(null);
+                    form.reset();
+                  }}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {editingCategory ? 'Updating...' : 'Creating...'}
+                    </>
+                  ) : (
+                    editingCategory ? 'Update Category' : 'Add Category'
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
       </Dialog>
     </div>
   );

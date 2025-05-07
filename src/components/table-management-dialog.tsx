@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import {
   Dialog,
@@ -75,19 +75,21 @@ export function TableManagementDialog({
   });
 
   useEffect(() => {
-    setSelectedTables([]);
-    addTableForm.reset({ capacity: 4 });
-    splitTableForm.reset({
-      capacity: selectedTable ? Math.floor(selectedTable.capacity / 2) : 4,
-    });
+    if (!open) {
+      setSelectedTables([]);
+      addTableForm.reset({ capacity: 4 });
+      splitTableForm.reset({
+        capacity: selectedTable ? Math.floor(selectedTable.capacity / 2) : 4,
+      });
+    }
   }, [open, action, selectedTable]);
 
   const handleAction = async () => {
-    setIsSubmitting(true);
-    
-    switch (action) {
-      case 'add':
-        try {
+    try {
+      setIsSubmitting(true);
+      
+      switch (action) {
+        case 'add':
           const data = await addTableForm.handleSubmit(async (values) => {
             const maxTableNumber = Math.max(...tables.map((t) => t.table_number), 0);
             await addTable({
@@ -98,13 +100,9 @@ export function TableManagementDialog({
           })();
           toast.success('Table added successfully');
           onClose();
-        } catch (error) {
-          toast.error('Failed to add table');
-        }
-        break;
+          break;
 
-      case 'merge':
-        try {
+        case 'merge':
           if (selectedTables.length < 2) {
             toast.error('Please select at least 2 tables to merge');
             return;
@@ -112,18 +110,14 @@ export function TableManagementDialog({
           await mergeTables(selectedTables);
           toast.success('Tables merged successfully');
           onClose();
-        } catch (error) {
-          toast.error('Failed to merge tables');
-        }
-        break;
+          break;
 
-      case 'split':
-        try {
+        case 'split':
           if (!selectedTable) {
             toast.error('No table selected for splitting');
             return;
           }
-          const data = await splitTableForm.handleSubmit(async (values) => {
+          const splitData = await splitTableForm.handleSubmit(async (values) => {
             if (values.capacity >= selectedTable.capacity) {
               toast.error('New capacity must be less than current capacity');
               return;
@@ -132,12 +126,13 @@ export function TableManagementDialog({
           })();
           toast.success('Table split successfully');
           onClose();
-        } catch (error) {
-          toast.error('Failed to split table');
-        }
-        break;
+          break;
+      }
+    } catch (error) {
+      toast.error('Operation failed');
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
 
   const handleTableSelection = (tableId: number) => {
@@ -148,14 +143,11 @@ export function TableManagementDialog({
     );
   };
 
-  const availableTables = useMemo(() => 
-    tables.filter((t) => t.status === 'available'),
-    [tables]
-  );
+  const availableTables = tables.filter((t) => t.status === 'available');
 
   if (loading) {
     return (
-      <Dialog open={open} onClose={onClose}>
+      <Dialog open={open}>
         <DialogContent>
           <div className="flex h-32 items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -166,8 +158,8 @@ export function TableManagementDialog({
   }
 
   return (
-    <Dialog open={open} onClose={!isSubmitting ? onClose : undefined}>
-      <DialogContent>
+    <Dialog open={open}>
+      <DialogContent onClose={!isSubmitting ? onClose : undefined}>
         <DialogHeader>
           <DialogTitle>
             {action === 'add'
