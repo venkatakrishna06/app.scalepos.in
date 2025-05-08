@@ -1,4 +1,6 @@
 export interface Category {
+  parent_category_id: number | undefined;
+  mainCategory: string;
   id: number;
   name: string;
 }

@@ -247,21 +247,20 @@ export default function Tables() {
             <div className="absolute inset-x-0 bottom-0 flex translate-y-full items-center justify-end gap-2 border-t bg-background/95 p-4 backdrop-blur transition-transform group-hover:translate-y-0">
               {table.status === 'available' && (
                 <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setTableManagementAction('split')}
-                  >
-                    <Split className="mr-2 h-4 w-4" />
-                    Split
-                  </Button>
+
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handleDeleteTable(table.id)}
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
+                  </Button>
+                  <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setTableManagementAction('split')}
+                  >
+                    <Split className="mr-2 h-4 w-4" />
                   </Button>
                   <Button
                     size="sm"

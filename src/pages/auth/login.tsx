@@ -183,26 +183,26 @@ export default function Login() {
                 )}
               </Button>
 
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300 dark:border-gray-600" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="bg-white px-2 text-gray-500 dark:bg-gray-800 dark:text-gray-400">
-                    Or continue with
-                  </span>
-                </div>
-              </div>
+              {/*<div className="relative">*/}
+              {/*  <div className="absolute inset-0 flex items-center">*/}
+              {/*    <div className="w-full border-t border-gray-300 dark:border-gray-600" />*/}
+              {/*  </div>*/}
+              {/*  <div className="relative flex justify-center text-sm">*/}
+              {/*    <span className="bg-white px-2 text-gray-500 dark:bg-gray-800 dark:text-gray-400">*/}
+              {/*      Or continue with*/}
+              {/*    </span>*/}
+              {/*  </div>*/}
+              {/*</div>*/}
 
-              <div className="grid gap-3">
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                >
-                  <img src="https://authjs.dev/img/providers/google.svg" alt="Google" className="h-5 w-5" />
-                  <span>Sign in with Google</span>
-                </button>
-              </div>
+              {/*<div className="grid gap-3">*/}
+              {/*  <button*/}
+              {/*    type="button"*/}
+              {/*    className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"*/}
+              {/*  >*/}
+              {/*    <img src="https://authjs.dev/img/providers/google.svg" alt="Google" className="h-5 w-5" />*/}
+              {/*    <span>Sign in with Google</span>*/}
+              {/*  </button>*/}
+              {/*</div>*/}
 
               <p className="text-center text-sm text-gray-600 dark:text-gray-400">
                 Don't have an account?{' '}

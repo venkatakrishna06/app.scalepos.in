@@ -144,12 +144,12 @@ export default function Menu() {
 
   if (loading) {
     return (
-      <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading menu items...</span>
+        <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="h-6 w-6 animate-spin"/>
+            <span>Loading menu items...</span>
+          </div>
         </div>
-      </div>
     );
   }
 
@@ -218,12 +218,14 @@ export default function Menu() {
                 All Categories
               </DropdownMenuItem>
               {categories.map((category) => (
-                <DropdownMenuItem
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.name)}
-                >
-                  {category.name}
-                </DropdownMenuItem>
+                category.parent_category_id && (
+                  <DropdownMenuItem
+                    key={category.id}
+                    onClick={() => setSelectedCategory(category.name)}
+                  >
+                    {category.name}
+                  </DropdownMenuItem>
+                )
               ))}
             </DropdownMenuContent>
           </DropdownMenu>

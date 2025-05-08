@@ -28,7 +28,7 @@ import { toast } from 'sonner';
 
 const categorySchema = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name cannot exceed 50 characters'),
-  description: z.string().optional(),
+  parent_category_id: z.number().nullable().optional(), // Corrected to allow null or undefined
 });
 
 type CategoryFormData = z.infer<typeof categorySchema>;
@@ -48,12 +48,11 @@ export default function Categories() {
   const [showDialog, setShowDialog] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const mainCategories = categories.filter(category => category.parent_category_id === undefined);
   const form = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
     defaultValues: {
       name: '',
-      description: '',
     },
   });
 
@@ -72,19 +71,18 @@ export default function Categories() {
     if (editingCategory) {
       form.reset({
         name: editingCategory.name,
-        description: editingCategory.description,
+        parent_category_id: editingCategory.parent_category_id ?? null, // Handle null or undefined
       });
     } else {
       form.reset({
         name: '',
-        description: '',
+        parent_category_id: null, // Default to null
       });
     }
   }, [editingCategory, form]);
 
   const filteredCategories = categories.filter((category) =>
-    category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    category.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    category.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleSubmit = async (data: CategoryFormData) => {
@@ -186,11 +184,11 @@ export default function Categories() {
           >
             <div className="p-6">
               <h3 className="font-semibold">{category.name}</h3>
-              {category.description && (
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {category.description}
-                </p>
-              )}
+              {/*{category.description && (*/}
+              {/*  <p className="mt-2 text-sm text-muted-foreground">*/}
+              {/*    {category.description}*/}
+              {/*  </p>*/}
+              {/*)}*/}
               <div className="mt-4 flex gap-2">
                 <Button
                   variant="outline"
@@ -269,20 +267,29 @@ export default function Categories() {
 
               <FormField
                 control={form.control}
-                name="description"
+                name="parent_category_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description (Optional)</FormLabel>
+                    <FormLabel>Main Category</FormLabel>
                     <FormControl>
-                      <textarea
-                        className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        placeholder="Enter category description"
+                      <select
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         {...field}
-                      />
+                        value={field.value ?? ''} // Ensure proper handling of null or undefined
+                        onChange={(e) =>
+                          field.onChange(e.target.value ? Number(e.target.value) : null)
+                        }
+                      >
+                        <option value="" disabled>
+                          Select a main category
+                        </option>
+                        {mainCategories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
                     </FormControl>
-                    <FormDescription>
-                      Provide a brief description of this category
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
