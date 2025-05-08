@@ -35,7 +35,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
 
   const handleQuantityChange = async (orderId: number, itemId: number, delta: number, currentQuantity: number) => {
     if (processingItemId) return;
-    
+
     const order = orders.find(o => o.id === orderId);
     if (!order || order.status === 'preparing') return;
 
@@ -59,7 +59,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
 
   const handleItemStatusChange = async (orderId: number, itemId: number, newStatus: Order['items'][0]['status']) => {
     if (processingItemId) return;
-    
+
     try {
       setProcessingItemId(itemId);
       await updateOrderItem(orderId, itemId, { status: newStatus });
@@ -77,8 +77,8 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
 
   if (loading) {
     return (
-      <Dialog open={open} onClose={onClose}>
-        <DialogContent>
+      <Dialog open={open}>
+        <DialogContent onClose={onClose}>
           <div className="flex h-32 items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
@@ -88,8 +88,8 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
   }
 
   return (
-    <Dialog open={open} onClose={onClose}>
-      <DialogContent className="max-w-4xl">
+    <Dialog open={open}>
+      <DialogContent onClose={onClose} className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>Table Orders</DialogTitle>
         </DialogHeader>

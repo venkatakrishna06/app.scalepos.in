@@ -87,7 +87,7 @@ export function TableManagementDialog({
   const handleAction = async () => {
     try {
       setIsSubmitting(true);
-      
+
       switch (action) {
         case 'add':
           const data = await addTableForm.handleSubmit(async (values) => {

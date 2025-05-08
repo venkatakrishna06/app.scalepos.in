@@ -16,7 +16,7 @@ import {
 import { StaffForm } from '@/components/forms/staff-form';
 import { useStaffStore } from '@/lib/store';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { StaffMember } from '@/types';
 import { toast } from 'sonner';
 
@@ -34,8 +34,14 @@ export default function Staff() {
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Using a ref to prevent duplicate API calls in StrictMode
+  const isDataFetchedRef = useRef(false);
+
   useEffect(() => {
-    fetchStaff();
+    if (!isDataFetchedRef.current) {
+      fetchStaff();
+      isDataFetchedRef.current = true;
+    }
   }, [fetchStaff]);
 
   const filteredStaff = staff
@@ -284,13 +290,13 @@ export default function Staff() {
 
       <Dialog
         open={showDialog}
-        onClose={() => {
+
+      >
+        <DialogContent onClose={() => {
           if (isSubmitting) return;
           setShowDialog(false);
           setEditingStaff(null);
-        }}
-      >
-        <DialogContent>
+        }}>
           <DialogHeader>
             <DialogTitle>
               {editingStaff ? 'Edit Staff Member' : 'Add Staff Member'}
@@ -301,7 +307,7 @@ export default function Staff() {
                 : 'Fill in the details to add a new staff member.'}
             </DialogDescription>
           </DialogHeader>
-          <div className="p-6">
+          <div >
             <StaffForm
               onSubmit={handleSubmit}
               initialData={editingStaff || undefined}

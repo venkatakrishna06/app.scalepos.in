@@ -78,7 +78,7 @@ export default function Dashboard({ orderType }: DashboardProps) {
     try {
       const newOrder = {
         customer_id: 1, // Default for walk-in customers
-        table_id: 0, // For takeaway orders
+        order_type: 'takeaway' as const,
         staff_id: 1, // Current staff ID
         status: 'placed' as const,
         order_time: new Date().toISOString(),

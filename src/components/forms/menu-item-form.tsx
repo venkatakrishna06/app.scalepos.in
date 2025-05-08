@@ -98,7 +98,7 @@ export function MenuItemForm({ onSubmit, initialData }: MenuItemFormProps) {
                 <textarea
                   {...field}
                   placeholder="Enter item description"
-                  className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex min-h-[40px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </FormControl>
               <FormMessage />
@@ -157,7 +157,7 @@ export function MenuItemForm({ onSubmit, initialData }: MenuItemFormProps) {
         />
           </div>
 
-          <div className="w-72 space-y-4">
+          <div className="w-72 space-y-2">
         <FormField
           control={form.control}
           name="image"
@@ -185,9 +185,7 @@ export function MenuItemForm({ onSubmit, initialData }: MenuItemFormProps) {
                   onChange={(e) => handleImageUrlChange(e.target.value)}
                 />
               </FormControl>
-              <FormDescription>
-                Provide a URL for the menu item image
-              </FormDescription>
+
               <FormMessage />
             </FormItem>
           )}

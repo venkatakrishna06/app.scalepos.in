@@ -1,4 +1,3 @@
-
 import { Bell, Settings, LogOut } from 'lucide-react';
 import { Button } from './ui/button';
 import { PropsWithChildren } from 'react';
@@ -26,6 +25,10 @@ export default function Navbar({ children, orderType, onOrderTypeChange }: Navba
 
   const handleOrderTypeChange = (type: 'dine-in' | 'takeaway' | 'orders') => {
     onOrderTypeChange(type);
+    if(type === 'dine-in') {
+        navigate('/tables');
+        return
+    }
     if (location.pathname !== '/dashboard') {
       navigate('/dashboard');
     }
@@ -42,12 +45,12 @@ export default function Navbar({ children, orderType, onOrderTypeChange }: Navba
         <div className="flex flex-1 items-center justify-between">
           <div className="flex items-center gap-4">
             {children}
-            <div className="hidden items-center gap-2 rounded-full bg-muted p-1 lg:flex">
+            <div className="ml-10 hidden  items-center gap-2 rounded-full bg-muted p-1 lg:flex">
               <Button
                 variant={orderType === 'dine-in' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => handleOrderTypeChange('dine-in')}
-                className="rounded-full px-4"
+                className="rounded-full text-l px-4"
               >
                 Dine In
               </Button>

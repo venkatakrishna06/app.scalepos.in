@@ -68,22 +68,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
           })}
         </nav>
       </div>
-      
-      <div className="border-t p-4">
-        <div className="rounded-lg bg-muted p-4">
-          <h5 className="mb-2 text-sm font-medium">Need Help?</h5>
-          <p className="text-xs text-muted-foreground">
-            Check our documentation or contact support for assistance.
-          </p>
-          <Button
-            variant="link"
-            className="mt-2 h-auto p-0 text-xs text-primary"
-            onClick={() => window.open('https://docs.example.com', '_blank')}
-          >
-            View Documentation
-          </Button>
-        </div>
-      </div>
+
     </div>
   );
 }

@@ -36,14 +36,14 @@ export function PaymentDialog({ open, onClose, order }: PaymentDialogProps) {
 
   const handlePayment = async () => {
     setCurrentStep('processing');
-    
+
     const payment = {
       order_id: order.id,
       amount_paid: calculateTotal(),
       payment_method: paymentMethod,
       paid_at: new Date().toISOString()
     };
-    
+
     try {
       await addPayment(payment);
       await updateTableStatus(order.table_id, 'available');
@@ -161,8 +161,10 @@ export function PaymentDialog({ open, onClose, order }: PaymentDialogProps) {
   };
 
   return (
-    <Dialog open={open} onClose={currentStep === 'complete' ? onClose : undefined}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={open}>
+      <DialogContent 
+        onClose={currentStep === 'complete' ? onClose : undefined}
+        className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Process Payment</DialogTitle>
         </DialogHeader>

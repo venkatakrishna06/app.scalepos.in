@@ -272,12 +272,12 @@ export default function Customers() {
         ))}
       </div>
 
-      <Dialog open={showDialog} onClose={!isSubmitting ? () => {
-        setShowDialog(false);
-        setEditingCustomer(null);
-        form.reset();
-      } : undefined}>
-        <DialogContent>
+      <Dialog open={showDialog}>
+        <DialogContent  onClose={!isSubmitting ? () => {
+          setShowDialog(false);
+          setEditingCustomer(null);
+          form.reset();
+        } : undefined}>
           <DialogHeader>
             <DialogTitle>
               {editingCustomer ? 'Edit Customer' : 'Add New Customer'}

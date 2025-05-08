@@ -81,7 +81,7 @@ export function CreateOrderDialog({
   const handleSubmitOrder = async () => {
     try {
       setIsSubmitting(true);
-      
+
       if (existingOrder) {
         const itemsWithDetails = orderItems.map(item => {
           const menuItem = menuItems.find(m => m.id === item.menu_item_id);
@@ -137,13 +137,15 @@ export function CreateOrderDialog({
   );
 
   return (
-      <Dialog open={open} onClose={!isSubmitting ? onClose : undefined}>
-        <DialogContent className="h-[90vh] max-w-[95vw] md:max-w-[90vw] lg:max-w-[80vw]">
-          <DialogHeader>
-            <DialogTitle>
-              {existingOrder ? 'Update Order' : 'Create New Order'}
-            </DialogTitle>
-          </DialogHeader>
+      <Dialog open={open}>
+        <DialogContent 
+          onClose={!isSubmitting ? onClose : undefined}
+          className="h-[90vh] max-w-[95vw] md:max-w-[90vw] lg:max-w-[80vw]">
+          {/*<DialogHeader>*/}
+          {/*  <DialogTitle>*/}
+          {/*    {existingOrder ? 'Update Order' : 'Create New Order'}*/}
+          {/*  </DialogTitle>*/}
+          {/*</DialogHeader>*/}
           <div className="flex h-full flex-col md:flex-row">
             <div className="border-b bg-gray-50 p-2 md:w-48 md:border-b-0 md:border-r">
               <div className="mb-2">
@@ -203,7 +205,7 @@ export function CreateOrderDialog({
                         />
                         <div className="flex-1 min-w-0">
                           <h3 className="font-medium leading-tight">{item.name}</h3>
-                          <div className="mt-2 flex items-center justify-between">
+                          <div className="mt-1 items-center justify-between">
                             <span className="text-sm font-semibold">₹{item.price.toFixed(2)}</span>
                             <div className="flex items-center gap-1">
                               <Button

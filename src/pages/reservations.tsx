@@ -298,8 +298,8 @@ export default function Reservations() {
         </div>
       )}
 
-      <Dialog open={showDialog} onClose={!isSubmitting ? () => setShowDialog(false) : undefined}>
-        <DialogContent>
+      <Dialog open={showDialog} >
+        <DialogContent onClose={!isSubmitting ? () => setShowDialog(false) : undefined}>
           <DialogHeader>
             <DialogTitle>New Reservation</DialogTitle>
             <DialogDescription>
@@ -336,19 +336,19 @@ export default function Reservations() {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email (Optional)</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="Enter email address" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/*<FormField*/}
+              {/*  control={form.control}*/}
+              {/*  name="email"*/}
+              {/*  render={({ field }) => (*/}
+              {/*    <FormItem>*/}
+              {/*      <FormLabel>Email (Optional)</FormLabel>*/}
+              {/*      <FormControl>*/}
+              {/*        <Input type="email" placeholder="Enter email address" {...field} />*/}
+              {/*      </FormControl>*/}
+              {/*      <FormMessage />*/}
+              {/*    </FormItem>*/}
+              {/*  )}*/}
+              {/*/>*/}
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <FormField
@@ -400,23 +400,23 @@ export default function Reservations() {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Special Requests (Optional)</FormLabel>
-                    <FormControl>
-                      <textarea
-                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        placeholder="Enter any special requests or notes"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/*<FormField*/}
+              {/*  control={form.control}*/}
+              {/*  name="notes"*/}
+              {/*  render={({ field }) => (*/}
+              {/*    <FormItem>*/}
+              {/*      <FormLabel>Special Requests (Optional)</FormLabel>*/}
+              {/*      <FormControl>*/}
+              {/*        <textarea*/}
+              {/*          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"*/}
+              {/*          placeholder="Enter any special requests or notes"*/}
+              {/*          {...field}*/}
+              {/*        />*/}
+              {/*      </FormControl>*/}
+              {/*      <FormMessage />*/}
+              {/*    </FormItem>*/}
+              {/*  )}*/}
+              {/*/>*/}
 
               <div className="flex justify-end gap-2">
                 <Button

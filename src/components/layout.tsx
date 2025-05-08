@@ -12,7 +12,7 @@ interface LayoutProps extends PropsWithChildren {
 }
 
 export default function Layout({ children, orderType, onOrderTypeChange }: LayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const location = useLocation();
 
@@ -20,7 +20,7 @@ export default function Layout({ children, orderType, onOrderTypeChange }: Layou
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 1024);
-      setSidebarOpen(window.innerWidth >= 1024);
+
     };
 
     checkMobile();
@@ -42,12 +42,11 @@ export default function Layout({ children, orderType, onOrderTypeChange }: Layou
           variant="ghost"
           size="sm"
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="lg:hidden"
         >
           <Menu className="h-5 w-5" />
         </Button>
       </Navbar>
-      
+
       <div className="flex">
         {/* Sidebar with overlay for mobile */}
         <div
@@ -57,25 +56,30 @@ export default function Layout({ children, orderType, onOrderTypeChange }: Layou
           )}
           onClick={() => setSidebarOpen(false)}
         />
-        
-        <div
-          className={cn(
-            "fixed inset-y-0 left-0 z-30 w-64 transform bg-white transition-transform duration-200 ease-in-out lg:static lg:transform-none dark:bg-gray-800",
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          )}
-        >
-          <Sidebar isOpen={true} />
-        </div>
+
+        {/* Sidebar - fixed on mobile, static on desktop */}
+        {sidebarOpen && (
+          <div
+            className={cn(
+              "fixed inset-y-0 left-0 z-30 w-64 bg-white transition-all duration-200 ease-in-out dark:bg-gray-800",
+              "lg:static lg:block"
+            )}
+          >
+            <Sidebar isOpen={true} />
+          </div>
+        )}
 
         {/* Main content */}
         <main
           className={cn(
             "flex-1 overflow-auto transition-all duration-200 ease-in-out",
-            sidebarOpen ? "lg:ml-64" : "ml-0",
-            "p-4 lg:p-8"
+            "p-4",
+            "w-full"
           )}
         >
-          <div className="mx-auto max-w-7xl">
+          <div className={cn(
+            sidebarOpen ? "mx-auto max-w-7xl" : "w-full"
+          )}>
             {children}
           </div>
         </main>

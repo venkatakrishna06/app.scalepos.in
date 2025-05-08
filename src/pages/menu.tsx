@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Plus, Edit2, Trash2, Search, Loader2, Filter, SortAsc, SortDesc, LayoutGrid, LayoutList, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -48,6 +48,9 @@ export default function Menu() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Using a ref to prevent duplicate API calls in StrictMode
+  const isDataFetchedRef = useRef(false);
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -56,7 +59,11 @@ export default function Menu() {
         handleError(err);
       }
     };
-    loadData();
+
+    if (!isDataFetchedRef.current) {
+      loadData();
+      isDataFetchedRef.current = true;
+    }
   }, [fetchMenuItems, fetchCategories, handleError]);
 
   const filteredItems = menuItems.filter((item) => {
@@ -67,7 +74,7 @@ export default function Menu() {
     return matchesCategory && matchesSearch;
   }).sort((a, b) => {
     const multiplier = sortOrder === 'asc' ? 1 : -1;
-    
+
     switch (sortField) {
       case 'name':
         return multiplier * a.name.localeCompare(b.name);
@@ -366,12 +373,12 @@ export default function Menu() {
 
       <Dialog
         open={showAddDialog}
-        onClose={!isSubmitting ? () => {
+
+      >
+        <DialogContent className="sm:max-w-[600px]"  onClose={!isSubmitting ? () => {
           setShowAddDialog(false);
           setEditingItem(null);
-        } : undefined}
-      >
-        <DialogContent className="sm:max-w-[600px]">
+        } : undefined}>
           <DialogHeader>
             <DialogTitle>
               {editingItem ? 'Edit Menu Item' : 'Add Menu Item'}

@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { Table2, Users, Coffee, Clock, Plus, Trash2, Split, Merge, CreditCard, ClipboardList, Settings2, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Users, Coffee, Clock, Plus, Trash2, Split, Merge, CreditCard, ClipboardList, Settings2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CreateOrderDialog } from '@/components/create-order-dialog';
 import { PaymentDialog } from '@/components/payment-dialog';
 import { TableManagementDialog } from '@/components/table-management-dialog';
 import { ViewOrdersDialog } from '@/components/view-orders-dialog';
-import { useTableStore, useOrderStore } from '@/lib/store';
+import {useTableStore, useOrderStore, useMenuStore} from '@/lib/store';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
 import { Table, Order } from '@/types';
 import { cn } from '@/lib/utils';
@@ -18,9 +18,10 @@ import {
 
 export default function Tables() {
   const { tables, loading, error, fetchTables, deleteTable, updateTableStatus } = useTableStore();
-  const { orders, loading: ordersLoading, error: ordersError, getOrdersByTable, fetchOrders } = useOrderStore();
+  const { loading: ordersLoading, error: ordersError, getOrdersByTable, fetchOrders } = useOrderStore();
+  const {fetchMenuItems} = useMenuStore();
   const { handleError } = useErrorHandler();
-  
+
   const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isNewOrder, setIsNewOrder] = useState(false);
@@ -29,16 +30,23 @@ export default function Tables() {
   const [showOrdersDialog, setShowOrdersDialog] = useState(false);
   const [tableManagementAction, setTableManagementAction] = useState<'add' | 'merge' | 'split' | null>(null);
 
+  // Using a ref to prevent duplicate API calls in StrictMode
+  const isDataFetchedRef = useRef(false);
+
   useEffect(() => {
     const loadData = async () => {
       try {
-        await Promise.all([fetchTables(), fetchOrders()]);
+        await Promise.all([fetchTables(), fetchOrders(), fetchMenuItems()]);
       } catch (err) {
         handleError(err);
       }
     };
-    loadData();
-  }, [fetchTables, fetchOrders, handleError]);
+
+    if (!isDataFetchedRef.current) {
+      loadData();
+      isDataFetchedRef.current = true;
+    }
+  }, [fetchTables, fetchOrders, fetchMenuItems, handleError]);
 
   const getStatusColor = (status: Table['status']) => {
     switch (status) {
@@ -70,9 +78,11 @@ export default function Tables() {
     }
   };
 
-  const handleCreateOrder = async (items: any[]) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleCreateOrder = async (items: OrderItem[]) => {
     if (!selectedTableId) return;
     try {
+      // Update table status after order is created
       await updateTableStatus(selectedTableId, 'occupied');
       setSelectedTableId(null);
       setSelectedOrder(null);
@@ -148,6 +158,7 @@ export default function Tables() {
             onClick={() => {
               fetchTables();
               fetchOrders();
+              fetchMenuItems()
             }}
           >
             Try Again
@@ -205,9 +216,6 @@ export default function Tables() {
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => handleStatusChange(table.id, 'available')}>
                       Mark Available
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleStatusChange(table.id, 'cleaning')}>
-                      Mark for Cleaning
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleStatusChange(table.id, 'reserved')}>
                       Mark Reserved
@@ -314,9 +322,7 @@ export default function Tables() {
         open={showOrderDialog}
         onClose={() => {
           setShowOrderDialog(false);
-          set
-
-SelectedTableId(null);
+          setSelectedTableId(null);
           setSelectedOrder(null);
         }}
         table_id={selectedTableId || 0}
