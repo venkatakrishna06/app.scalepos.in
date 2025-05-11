@@ -4,7 +4,7 @@ import { tokenService } from '@/lib/services/token.service';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { API_ENDPOINTS } from './endpoints';
 
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const baseURL = import.meta.env.VITE_API_URL || 'https://quickquick-backend-341757523815.asia-south1.run.app/';
 
 export const api = axios.create({
   baseURL,
