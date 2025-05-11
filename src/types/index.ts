@@ -19,42 +19,57 @@ export interface MenuItem {
 
 export interface Customer {
   id: number;
+  restaurant_id: number;
   name: string;
   phone: string;
   email: string;
-  created_at: string; // Matches backend CreatedAt
+  address?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface OrderItem {
-  id: number; // Matches backend ID
-  order_id: number; // Matches backend OrderID
-  menu_item_id: number; // Matches backend MenuItemID
+  id: number;
+  restaurant_id: number;
+  order_id: number;
+  menu_item_id: number;
   quantity: number;
   status: 'placed' | 'preparing' | 'served' | 'cancelled';
-  notes: string; // Matches backend Notes
-  price?: number; // For UI calculations
-  name?: string; // For UI display
+  notes: string;
+  price: number;
+  name: string;
 }
 
 export interface Order {
   id: number;
-  customer_id: number; // Matches backend CustomerID
-  table_id: number; // Matches backend TableID
-  staff_id: number; // Matches backend StaffID
-  order_time: string; // Matches backend OrderTime
+  restaurant_id: number;
+  customer_id?: number;
+  table_id: number;
+  staff_id: number;
+  order_time: string;
   status: 'placed' | 'preparing' | 'served' | 'cancelled' | 'paid';
+  order_type: 'dine-in' | 'takeaway' | 'delivery';
+  sub_total: number;
+  sgst_rate: number;
+  cgst_rate: number;
+  sgst_amount: number;
+  cgst_amount: number;
+  total_amount: number;
   items: OrderItem[];
-  total_amount?: number;
-  customer?: string;
+  table?: Table;
   server?: string;
+  customer?: string;
   payment_method?: string;
 }
 
 export interface Table {
   id: number;
-  table_number: number; // Matches backend table_number
+  restaurant_id: number;
+  table_number: number;
   capacity: number;
   status: 'available' | 'occupied' | 'reserved' | 'cleaning';
+  location?: string;
   current_order_id?: number;
   merged_with?: number[];
   split_from?: number;
@@ -62,20 +77,26 @@ export interface Table {
 
 export interface StaffMember {
   id: number;
+  restaurant_id: number;
   name: string;
   role: string;
   phone: string;
   shift: string;
-  status?: 'active' | 'inactive';
+  status: 'active' | 'inactive';
 }
 
 export interface Payment {
   id: number;
-  order_id: number; // Matches backend OrderID
-  amount_paid: number; // Matches backend amount_paid
-  payment_method: 'cash' | 'card';
-  paid_at: string; // Matches backend paid_at
-  status?: 'completed' | 'pending' | 'failed';
+  restaurant_id: number;
+  order_id: number;
+  amount: number;
+  payment_method: 'cash' | 'credit_card' | 'debit_card' | 'upi';
+  payment_status: 'completed' | 'pending' | 'failed';
+  transaction_id?: string;
+  card_details?: {
+    last_four?: string;
+    card_type?: string;
+  };
 }
 
 export interface Reservation {
@@ -92,20 +113,23 @@ export interface Reservation {
 export interface Restaurant {
   id: number;
   name: string;
-  address?: string;
-  phone?: string;
-  email?: string;
-  gst_number?: string;
-  default_sgst_rate?: number;
-  default_cgst_rate?: number;
+  address: string;
+  phone: string;
+  email: string;
+  gst_number: string;
+  is_active: boolean;
+  default_sgst_rate: number;
+  default_cgst_rate: number;
 }
 
 export interface User {
-  username: any;
-  staff: any;
   id: number;
+  restaurant_id: number;
+  staff_id: number;
+  username: string;
   email: string;
   role: string;
-  staff_id: string;
-  staffName?: string;
+  is_active: boolean;
+  staff?: StaffMember;
+  restaurant?: Restaurant;
 }

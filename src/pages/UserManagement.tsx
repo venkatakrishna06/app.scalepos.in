@@ -70,7 +70,7 @@ const UserManagement: React.FC = () => {
   const filteredUsers = users
     .filter((user) => {
       const matchesSearch = 
-        user.staff.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (user.staff?.name?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
           user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.role.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesRole = roleFilter === 'all' || user.role === roleFilter;
@@ -179,10 +179,10 @@ const UserManagement: React.FC = () => {
                 {/* Avatar and name section */}
                 <div className="flex flex-col sm:flex-row items-center text-center sm:text-left sm:items-start gap-4 mb-4">
                   <div className="h-20 w-20 sm:h-16 sm:w-16 rounded-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/40 text-primary text-xl sm:text-lg">
-                    {user.staff.name.charAt(0).toUpperCase()}
+                    {user.staff?.name ? user.staff.name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold">{user.staff.name}</h3>
+                    <h3 className="text-lg font-semibold">{user.staff?.name || user.username}</h3>
                     <p className="text-sm text-muted-foreground">@{user.username}</p>
                   </div>
                 </div>
@@ -192,14 +192,14 @@ const UserManagement: React.FC = () => {
                   <div className="flex flex-wrap items-center gap-2 text-sm">
                     <User className="h-4 w-4 text-primary" />
                     <span className="text-muted-foreground">Status:</span>
-                    <span className="font-medium">{user.staff.status}.char</span>
+                    <span className="font-medium">{user.staff?.status || 'Unknown'}</span>
                   </div>
 
-                  {user.staffName && (
+                  {user.staff && (
                     <div className="flex flex-wrap items-center gap-2 text-sm">
                       <Mail className="h-4 w-4 text-primary" />
                       <span className="text-muted-foreground">Linked to:</span>
-                      <span className="font-medium">{user.staffName}</span>
+                      <span className="font-medium">{user.staff.name}</span>
                     </div>
                   )}
                 </div>

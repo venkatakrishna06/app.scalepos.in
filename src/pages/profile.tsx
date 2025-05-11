@@ -1,20 +1,34 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/lib/store/auth.store';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Loader2, Camera, Key } from 'lucide-react';
 
 export default function Profile() {
-  const { user, loading, error, updateProfile, changePassword, clearError } = useAuthStore();
+  const { user, loading, error, updateProfile, changePassword, clearError, initAuth } = useAuthStore();
+
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
+    name: '',
+    email: '',
+    phone: '',
   });
+
+  // Initialize user data when component mounts or user changes
+  useEffect(() => {
+    if (!user) {
+      initAuth();
+    } else {
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+      });
+    }
+  }, [user, initAuth]);
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +45,33 @@ export default function Profile() {
       setNewPassword('');
     }
   };
+
+  // Show loading state while fetching user data
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-8">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2 text-lg">Loading profile...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if user data couldn't be loaded
+  if (!user && !loading) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-8">
+        <div className="rounded-lg border bg-card p-6 shadow-sm">
+          <div className="text-center py-8">
+            <h2 className="text-xl font-semibold text-red-600 mb-2">Unable to load profile</h2>
+            <p className="text-gray-600 mb-4">There was a problem loading your profile information.</p>
+            <Button onClick={() => initAuth()}>Retry</Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">

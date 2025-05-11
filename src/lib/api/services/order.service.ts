@@ -1,44 +1,98 @@
 import { api } from '../axios';
 import { API_ENDPOINTS } from '../endpoints';
-import { Order } from '@/types';
+import { Order, OrderItem } from '@/types';
+
+// Define error type for better type safety
+interface ApiErrorResponse {
+  response?: {
+    data?: {
+      error?: {
+        type?: string;
+        code?: string;
+        message?: string;
+        details?: Record<string, unknown>;
+        request_id?: string;
+      };
+    };
+  };
+}
+
+// Helper function to handle API errors
+const handleApiError = (error: ApiErrorResponse | Error, defaultMessage: string) => {
+  if ('response' in error && error.response?.data?.error) {
+    const apiError = error.response.data.error;
+    throw new Error(apiError.message || defaultMessage);
+  }
+  throw new Error(defaultMessage);
+};
 
 export const orderService = {
   getOrders: async () => {
-    const response = await api.get<Order[]>(API_ENDPOINTS.ORDERS.LIST);
-    return response.data;
-  },
-
-  getAllRolesOrders: async () => {
-    const response = await api.get<Order[]>(API_ENDPOINTS.ORDERS.ALL_LIST);
-    return response.data;
-  },
-
-  getAllRolesOrderById: async (id: number) => {
-    const response = await api.get<Order>(API_ENDPOINTS.ORDERS.ALL_BY_ID(id));
-    return response.data;
+    try {
+      const response = await api.get<Order[]>(API_ENDPOINTS.ORDERS.LIST);
+      return response.data;
+    } catch (error) {
+      handleApiError(error, 'Failed to fetch orders');
+      return [];
+    }
   },
 
   createOrder: async (order: Omit<Order, 'id'>) => {
-    const response = await api.post<Order>(API_ENDPOINTS.ORDERS.CREATE, order);
-    return response.data;
+    try {
+      const response = await api.post<Order>(API_ENDPOINTS.ORDERS.CREATE, order);
+      return response.data;
+    } catch (error) {
+      handleApiError(error, 'Failed to create order');
+      throw error;
+    }
   },
 
   updateOrder: async (id: number, order: Partial<Order>) => {
-    const response = await api.put<Order>(API_ENDPOINTS.ORDERS.UPDATE(id), order);
-    return response.data;
+    try {
+      const response = await api.put<Order>(API_ENDPOINTS.ORDERS.UPDATE(id), order);
+      return response.data;
+    } catch (error) {
+      handleApiError(error, 'Failed to update order');
+      throw error;
+    }
   },
 
   deleteOrder: async (id: number) => {
-    await api.delete(API_ENDPOINTS.ORDERS.DELETE(id));
+    try {
+      await api.delete(API_ENDPOINTS.ORDERS.DELETE(id));
+    } catch (error) {
+      handleApiError(error, 'Failed to delete order');
+      throw error;
+    }
   },
 
   getOrdersByTable: async (tableId: number) => {
-    const response = await api.get<Order[]>(`${API_ENDPOINTS.ORDERS.LIST}?tableId=${tableId}`);
-    return response.data;
+    try {
+      const response = await api.get<Order[]>(`${API_ENDPOINTS.ORDERS.LIST}?table_id=${tableId}`);
+      return response.data;
+    } catch (error) {
+      handleApiError(error, 'Failed to fetch orders for table');
+      return [];
+    }
   },
 
-  getAllRolesOrdersByTable: async (tableId: number) => {
-    const response = await api.get<Order[]>(`${API_ENDPOINTS.ORDERS.ALL_LIST}?tableId=${tableId}`);
-    return response.data;
+  // Order item operations
+  updateOrderItem: async (orderId: number, itemId: number, updates: Partial<OrderItem>) => {
+    try {
+      const response = await api.put<OrderItem>(`${API_ENDPOINTS.ORDER_ITEMS.UPDATE(itemId)}`, updates);
+      return response.data;
+    } catch (error) {
+      handleApiError(error, 'Failed to update order item');
+      throw error;
+    }
+  },
+
+  removeOrderItem: async (orderId: number, itemId: number) => {
+    try {
+      await api.delete(API_ENDPOINTS.ORDER_ITEMS.DELETE(itemId));
+    } catch (error) {
+      handleApiError(error, 'Failed to remove order item');
+      throw error;
+    }
   },
 };

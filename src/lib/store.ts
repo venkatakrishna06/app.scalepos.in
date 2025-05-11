@@ -63,6 +63,12 @@ interface OrderState {
   addItemsToOrder: (orderId: number, items: OrderItem[]) => Promise<void>;
   updateOrderItem: (orderId: number, itemId: number, updates: Partial<OrderItem>) => Promise<void>;
   removeOrderItem: (orderId: number, itemId: number) => Promise<void>;
+  calculateOrderTotals: (items: OrderItem[], sgstRate?: number, cgstRate?: number) => { 
+    subTotal: number; 
+    sgstAmount: number; 
+    cgstAmount: number; 
+    totalAmount: number; 
+  };
 }
 
 interface PaymentState {
@@ -527,6 +533,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       const orders = await orderService.getOrders();
       set({ orders });
     } catch (error) {
+      console.error('Failed to fetch orders:', error);
       set({ error: 'Failed to fetch orders' });
     } finally {
       set({ loading: false });
@@ -536,9 +543,31 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   addOrder: async (order) => {
     try {
       set({ loading: true, error: null });
+
+      // Calculate totals if not provided
+      if (!order.sub_total || !order.total_amount) {
+        const { restaurant } = get() as any; // Access restaurant from RestaurantStore
+        const sgstRate = order.sgst_rate ?? restaurant?.default_sgst_rate ?? 2.5;
+        const cgstRate = order.cgst_rate ?? restaurant?.default_cgst_rate ?? 2.5;
+
+        const { subTotal, sgstAmount, cgstAmount, totalAmount } = 
+          get().calculateOrderTotals(order.items, sgstRate, cgstRate);
+
+        order = {
+          ...order,
+          sub_total: subTotal,
+          sgst_rate: sgstRate,
+          cgst_rate: cgstRate,
+          sgst_amount: sgstAmount,
+          cgst_amount: cgstAmount,
+          total_amount: totalAmount
+        };
+      }
+
       const newOrder = await orderService.createOrder(order);
       set(state => ({ orders: [...state.orders, newOrder] }));
     } catch (error) {
+      console.error('Failed to add order:', error);
       set({ error: 'Failed to add order' });
     } finally {
       set({ loading: false });
@@ -548,6 +577,30 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   updateOrder: async (id, updates) => {
     try {
       set({ loading: true, error: null });
+
+      // If items are updated, recalculate totals
+      if (updates.items) {
+        const order = get().orders.find(o => o.id === id);
+        if (order) {
+          const { restaurant } = get() as any; // Access restaurant from RestaurantStore
+          const sgstRate = updates.sgst_rate ?? order.sgst_rate ?? restaurant?.default_sgst_rate ?? 2.5;
+          const cgstRate = updates.cgst_rate ?? order.cgst_rate ?? restaurant?.default_cgst_rate ?? 2.5;
+
+          const { subTotal, sgstAmount, cgstAmount, totalAmount } = 
+            get().calculateOrderTotals(updates.items, sgstRate, cgstRate);
+
+          updates = {
+            ...updates,
+            sub_total: subTotal,
+            sgst_rate: sgstRate,
+            cgst_rate: cgstRate,
+            sgst_amount: sgstAmount,
+            cgst_amount: cgstAmount,
+            total_amount: totalAmount
+          };
+        }
+      }
+
       const updatedOrder = await orderService.updateOrder(id, updates);
       set(state => ({
         orders: state.orders.map(order =>
@@ -555,6 +608,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
         ),
       }));
     } catch (error) {
+      console.error('Failed to update order:', error);
       set({ error: 'Failed to update order' });
     } finally {
       set({ loading: false });
@@ -573,6 +627,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
         orders: state.orders.filter(order => order.id !== id),
       }));
     } catch (error) {
+      console.error('Failed to delete order:', error);
       set({ error: 'Failed to delete order' });
     } finally {
       set({ loading: false });
@@ -594,7 +649,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     const updatedItems = [...(order.items || [])];
     newItems.forEach(newItem => {
       const existingItemIndex = updatedItems.findIndex(
-        item => item.id === newItem.id
+        item => item.menu_item_id === newItem.menu_item_id
       );
       if (existingItemIndex >= 0) {
         updatedItems[existingItemIndex].quantity += newItem.quantity;
@@ -603,51 +658,113 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       }
     });
 
-    const totalAmount = updatedItems.reduce(
-      (sum, item) => sum + (item.price || 0) * (item.quantity || 0),
-      0
-    );
+    const { restaurant } = get() as any; // Access restaurant from RestaurantStore
+    const { subTotal, sgstAmount, cgstAmount, totalAmount } = 
+      get().calculateOrderTotals(
+        updatedItems, 
+        order.sgst_rate ?? restaurant?.default_sgst_rate ?? 2.5,
+        order.cgst_rate ?? restaurant?.default_cgst_rate ?? 2.5
+      );
 
     await get().updateOrder(orderId, {
       items: updatedItems,
-      totalAmount,
+      sub_total: subTotal,
+      sgst_amount: sgstAmount,
+      cgst_amount: cgstAmount,
+      total_amount: totalAmount
     });
   },
 
   updateOrderItem: async (orderId, itemId, updates) => {
-    const order = get().orders.find(o => o.id === orderId);
-    if (!order) return;
+    try {
+      // First update the item through the API
+      await orderService.updateOrderItem(orderId, itemId, updates);
 
-    const updatedItems = (order?.items?.map(item =>
-      item.id === itemId ? { ...item, ...updates } : item
-    ) || []).filter(item => item.quantity > 0);
+      // Then update the local state
+      const order = get().orders.find(o => o.id === orderId);
+      if (!order) return;
 
-    const totalAmount = updatedItems.reduce(
-      (sum, item) => sum + (item.price || 0) * (item.quantity || 0),
-      0
-    );
+      const updatedItems = order.items.map(item =>
+        item.id === itemId ? { ...item, ...updates } : item
+      );
 
-    await get().updateOrder(orderId, {
-      items: updatedItems,
-      totalAmount,
-    });
+      const { restaurant } = get() as any; // Access restaurant from RestaurantStore
+      const { subTotal, sgstAmount, cgstAmount, totalAmount } = 
+        get().calculateOrderTotals(
+          updatedItems, 
+          order.sgst_rate ?? restaurant?.default_sgst_rate ?? 2.5,
+          order.cgst_rate ?? restaurant?.default_cgst_rate ?? 2.5
+        );
+
+      await get().updateOrder(orderId, {
+        items: updatedItems,
+        sub_total: subTotal,
+        sgst_amount: sgstAmount,
+        cgst_amount: cgstAmount,
+        total_amount: totalAmount
+      });
+    } catch (error) {
+      console.error('Failed to update order item:', error);
+      throw error; // Re-throw to allow component to handle
+    }
   },
 
   removeOrderItem: async (orderId, itemId) => {
-    const order = get().orders.find(o => o.id === orderId);
-    if (!order) return;
+    try {
+      // First remove the item through the API
+      await orderService.removeOrderItem(orderId, itemId);
 
-    const updatedItems = order?.items?.filter(item => item.id !== itemId) || [];
-    const totalAmount = updatedItems.reduce(
-      (sum, item) => sum + (item.price || 0) * (item.quantity || 0),
+      // Then update the local state
+      const order = get().orders.find(o => o.id === orderId);
+      if (!order) return;
+
+      const updatedItems = order.items.filter(item => item.id !== itemId);
+
+      const { restaurant } = get() as any; // Access restaurant from RestaurantStore
+      const { subTotal, sgstAmount, cgstAmount, totalAmount } = 
+        get().calculateOrderTotals(
+          updatedItems, 
+          order.sgst_rate ?? restaurant?.default_sgst_rate ?? 2.5,
+          order.cgst_rate ?? restaurant?.default_cgst_rate ?? 2.5
+        );
+
+      await get().updateOrder(orderId, {
+        items: updatedItems,
+        sub_total: subTotal,
+        sgst_amount: sgstAmount,
+        cgst_amount: cgstAmount,
+        total_amount: totalAmount
+      });
+    } catch (error) {
+      console.error('Failed to remove order item:', error);
+      throw error; // Re-throw to allow component to handle
+    }
+  },
+
+  calculateOrderTotals: (items, sgstRate = 2.5, cgstRate = 2.5) => {
+    // Filter out cancelled items
+    const validItems = items.filter(item => item.status !== 'cancelled');
+
+    // Calculate subtotal
+    const subTotal = validItems.reduce(
+      (sum, item) => sum + (item.price * item.quantity),
       0
     );
 
-    await get().updateOrder(orderId, {
-      items: updatedItems,
-      total_amount : totalAmount,
-    });
-  },
+    // Calculate tax amounts
+    const sgstAmount = (subTotal * sgstRate) / 100;
+    const cgstAmount = (subTotal * cgstRate) / 100;
+
+    // Calculate total
+    const totalAmount = subTotal + sgstAmount + cgstAmount;
+
+    return {
+      subTotal,
+      sgstAmount,
+      cgstAmount,
+      totalAmount
+    };
+  }
 }));
 
 export const usePaymentStore = create<PaymentState>((set, get) => ({
@@ -661,6 +778,7 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
       const payments = await paymentService.getPayments();
       set({ payments });
     } catch (error) {
+      console.error('Failed to fetch payments:', error);
       set({ error: 'Failed to fetch payments' });
     } finally {
       set({ loading: false });
@@ -671,9 +789,21 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
     try {
       set({ loading: true, error: null });
       const newPayment = await paymentService.createPayment(payment);
+
+      // If payment is successful, update the corresponding order status to 'paid'
+      if (newPayment.payment_status === 'completed') {
+        const { updateOrderStatus } = get() as any; // Access updateOrderStatus from OrderStore
+        if (updateOrderStatus) {
+          await updateOrderStatus(newPayment.order_id, 'paid');
+        }
+      }
+
       set(state => ({ payments: [...state.payments, newPayment] }));
+      return newPayment;
     } catch (error) {
+      console.error('Failed to add payment:', error);
       set({ error: 'Failed to add payment' });
+      throw error;
     } finally {
       set({ loading: false });
     }
@@ -682,14 +812,26 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
   updatePaymentStatus: async (id, status) => {
     try {
       set({ loading: true, error: null });
-      const updatedPayment = await paymentService.updatePayment(id, { status });
+      const updatedPayment = await paymentService.updatePayment(id, { payment_status: status });
+
+      // If payment is now completed, update the corresponding order status to 'paid'
+      if (status === 'completed') {
+        const { updateOrderStatus } = get() as any; // Access updateOrderStatus from OrderStore
+        if (updateOrderStatus) {
+          await updateOrderStatus(updatedPayment.order_id, 'paid');
+        }
+      }
+
       set(state => ({
         payments: state.payments.map(payment =>
           payment.id === id ? updatedPayment : payment
         ),
       }));
+      return updatedPayment;
     } catch (error) {
+      console.error('Failed to update payment status:', error);
       set({ error: 'Failed to update payment status' });
+      throw error;
     } finally {
       set({ loading: false });
     }

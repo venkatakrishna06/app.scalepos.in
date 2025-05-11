@@ -57,11 +57,16 @@ export function PaymentDialog({ open, onClose, order }: PaymentDialogProps) {
     setError(null);
     setCurrentStep('processing');
 
+    // Create payment object according to the new API structure
     const payment = {
       order_id: order.id,
-      amount_paid: order.total_amount,
+      amount: order.total_amount,
       payment_method: paymentMethod,
-      paid_at: new Date().toISOString()
+      payment_status: 'completed',
+      transaction_id: `txn_${Date.now()}`,
+      card_details: paymentMethod === 'credit_card' || paymentMethod === 'debit_card' 
+        ? { last_four: '1234', card_type: paymentMethod === 'credit_card' ? 'visa' : 'mastercard' } 
+        : undefined
     };
 
     try {
@@ -198,16 +203,57 @@ export function PaymentDialog({ open, onClose, order }: PaymentDialogProps) {
                         <button
                             className={cn(
                                 "flex items-center gap-3 rounded-lg border p-4 text-left transition-colors",
-                                paymentMethod === 'card'
+                                paymentMethod === 'credit_card'
                                     ? "border-primary bg-primary/5"
                                     : "hover:bg-accent"
                             )}
-                            onClick={() => setPaymentMethod('card')}
+                            onClick={() => setPaymentMethod('credit_card')}
                         >
-                          <CreditCard className={cn("h-5 w-5", paymentMethod === 'card' ? "text-primary" : "")} />
+                          <CreditCard className={cn("h-5 w-5", paymentMethod === 'credit_card' ? "text-primary" : "")} />
                           <div>
-                            <p className="font-medium">Card</p>
-                            <p className="text-sm text-muted-foreground">Pay with credit/debit card</p>
+                            <p className="font-medium">Credit Card</p>
+                            <p className="text-sm text-muted-foreground">Pay with credit card</p>
+                          </div>
+                        </button>
+                        <button
+                            className={cn(
+                                "flex items-center gap-3 rounded-lg border p-4 text-left transition-colors",
+                                paymentMethod === 'debit_card'
+                                    ? "border-primary bg-primary/5"
+                                    : "hover:bg-accent"
+                            )}
+                            onClick={() => setPaymentMethod('debit_card')}
+                        >
+                          <CreditCard className={cn("h-5 w-5", paymentMethod === 'debit_card' ? "text-primary" : "")} />
+                          <div>
+                            <p className="font-medium">Debit Card</p>
+                            <p className="text-sm text-muted-foreground">Pay with debit card</p>
+                          </div>
+                        </button>
+                        <button
+                            className={cn(
+                                "flex items-center gap-3 rounded-lg border p-4 text-left transition-colors",
+                                paymentMethod === 'upi'
+                                    ? "border-primary bg-primary/5"
+                                    : "hover:bg-accent"
+                            )}
+                            onClick={() => setPaymentMethod('upi')}
+                        >
+                          <svg 
+                            className={cn("h-5 w-5", paymentMethod === 'upi' ? "text-primary" : "")}
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path d="M12 2L4 6V18L12 22L20 18V6L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M12 22V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M20 6L12 10L4 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M4 14L12 18L20 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M12 10V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          <div>
+                            <p className="font-medium">UPI</p>
+                            <p className="text-sm text-muted-foreground">Pay with UPI</p>
                           </div>
                         </button>
                       </div>

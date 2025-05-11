@@ -42,10 +42,28 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
     }
   }, [open, restaurant, fetchRestaurant]);
 
-  // Helper function to calculate the actual total amount excluding cancelled items
-  const calculateOrderTotal = (order: Order) => {
+  // Helper function to get the order total, either from the API or calculated from items
+  const getOrderTotal = (order: Order) => {
+    // If the order has a total_amount from the API, use it
+    if (order.total_amount) {
+      return order.total_amount;
+    }
+
+    // Otherwise, calculate it from the items (for backward compatibility)
     const nonCancelledItems = order?.items?.filter(item => item.status !== 'cancelled') || [];
     return nonCancelledItems.reduce((total, item) => total + (item.quantity * item.price), 0);
+  };
+
+  // Helper function to get GST details from the order
+  const getGstDetails = (order: Order) => {
+    return {
+      subTotal: order.sub_total || 0,
+      sgstRate: order.sgst_rate || 0,
+      cgstRate: order.cgst_rate || 0,
+      sgstAmount: order.sgst_amount || 0,
+      cgstAmount: order.cgst_amount || 0,
+      totalGstAmount: (order.sgst_amount || 0) + (order.cgst_amount || 0),
+    };
   };
 
 
@@ -388,8 +406,20 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                             </div>
                             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                               <div className="text-left sm:text-right">
+                                {/* Show GST details if available */}
+                                {order.sub_total > 0 && (
+                                  <div className="text-xs text-muted-foreground mb-1 space-y-0.5">
+                                    <p>Subtotal: ₹{getGstDetails(order).subTotal.toFixed(2)}</p>
+                                    {getGstDetails(order).sgstAmount > 0 && (
+                                      <p>SGST ({getGstDetails(order).sgstRate}%): ₹{getGstDetails(order).sgstAmount.toFixed(2)}</p>
+                                    )}
+                                    {getGstDetails(order).cgstAmount > 0 && (
+                                      <p>CGST ({getGstDetails(order).cgstRate}%): ₹{getGstDetails(order).cgstAmount.toFixed(2)}</p>
+                                    )}
+                                  </div>
+                                )}
                                 <p className="text-sm text-muted-foreground">Total</p>
-                                <p className="text-lg font-semibold">₹{calculateOrderTotal(order).toFixed(2)}</p>
+                                <p className="text-lg font-semibold">₹{getOrderTotal(order).toFixed(2)}</p>
                               </div>
                               <Button
                                   onClick={() => onPayment(order)}
