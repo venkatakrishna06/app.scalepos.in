@@ -60,7 +60,7 @@ export default function Login() {
       toast.success('Welcome back!');
       navigate(from, { replace: true });
     } catch (err) {
-      // Error is handled by the store
+      toast.warning('Unable to login, please try again');
     }
   };
 

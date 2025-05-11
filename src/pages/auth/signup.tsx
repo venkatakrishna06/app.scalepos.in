@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, Mail, Lock, Building2, Phone, MapPin, Info } from 'lucide-react';
+import { Loader2, Mail, Lock, Building2, Phone, MapPin, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 
 const signupSchema = z.object({
@@ -42,8 +42,8 @@ const signupSchema = z.object({
     .email('Please enter a valid email address')
     .optional()
     .or(z.literal('')),
-  restaurant_description: z.string()
-    .max(500, 'Description cannot exceed 500 characters')
+  restaurant_gst: z.string()
+    .regex(/^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}[Z]{1}[A-Z\d]{1}$/, 'Please enter a valid GST number (15 characters)')
     .optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
@@ -68,12 +68,13 @@ export default function Signup() {
       restaurant_address: '',
       restaurant_phone: '',
       restaurant_email: '',
-      restaurant_description: '',
+      restaurant_gst: '',
     },
   });
 
   const handleSubmit = async (data: SignupFormData) => {
     try {
+      console.log('Form data:', data);
       await signup(
         data.email,
         data.password,
@@ -81,7 +82,7 @@ export default function Signup() {
         data.restaurant_address,
         data.restaurant_phone,
         data.restaurant_email,
-        data.restaurant_description
+        data.restaurant_gst
       );
       toast.success('Account created successfully!');
       navigate('/dashboard', { replace: true });
@@ -123,7 +124,7 @@ export default function Signup() {
                             <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                             <Input
                               placeholder="Enter your email"
-                              className="pl-10"
+                              className="pl-10 dark:border-blue-700 dark:focus:border-blue-500"
                               {...field}
                             />
                           </div>
@@ -146,7 +147,7 @@ export default function Signup() {
                             <Building2 className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                             <Input
                               placeholder="Enter restaurant name"
-                              className="pl-10"
+                              className="pl-10 dark:border-blue-700 dark:focus:border-blue-500"
                               {...field}
                             />
                           </div>
@@ -172,7 +173,7 @@ export default function Signup() {
                             <Input
                               type={showPassword ? "text" : "password"}
                               placeholder="Create a password"
-                              className="pl-10"
+                              className="pl-10 dark:border-blue-700 dark:focus:border-blue-500"
                               {...field}
                             />
                             <button
@@ -216,7 +217,7 @@ export default function Signup() {
                             <Input
                               type={showConfirmPassword ? "text" : "password"}
                               placeholder="Confirm your password"
-                              className="pl-10"
+                              className="pl-10 dark:border-blue-700 dark:focus:border-blue-500"
                               {...field}
                             />
                             <button
@@ -263,7 +264,7 @@ export default function Signup() {
                               <Phone className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                               <Input
                                 placeholder="Enter phone number"
-                                className="pl-10"
+                                className="pl-10 dark:border-blue-700 dark:focus:border-blue-500"
                                 {...field}
                               />
                             </div>
@@ -286,7 +287,7 @@ export default function Signup() {
                               <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                               <Input
                                 placeholder="Enter restaurant email"
-                                className="pl-10"
+                                className="pl-10 dark:border-blue-700 dark:focus:border-blue-500"
                                 {...field}
                               />
                             </div>
@@ -297,51 +298,57 @@ export default function Signup() {
                     />
                   </div>
 
-                  <FormField
-                    control={form.control}
-                    name="restaurant_address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 dark:text-gray-300">
-                          Restaurant Address
-                        </FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <MapPin className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                            <Input
-                              placeholder="Enter restaurant address"
-                              className="pl-10"
-                              {...field}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="restaurant_address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700 dark:text-gray-300">
+                            Restaurant Address
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <MapPin className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                              <Input
+                                placeholder="Enter restaurant address"
+                                className="pl-10 dark:border-blue-700 dark:focus:border-blue-500"
+                                {...field}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="restaurant_description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 dark:text-gray-300">
-                          Restaurant Description
-                        </FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Info className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                            <textarea
-                              className="min-h-[100px] w-full rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                              placeholder="Enter restaurant description"
-                              {...field}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="restaurant_gst"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700 dark:text-gray-300">
+                            GST Number
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <CreditCard className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                              <Input
+                                placeholder="Enter GST number (15 characters)"
+                                className="pl-10 dark:border-blue-700 dark:focus:border-blue-500"
+                                maxLength={15}
+                                {...field}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormDescription className="text-xs">
+                            Format: 2 digits state code, 10 digits PAN number, followed by 3 characters
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
               </div>
 

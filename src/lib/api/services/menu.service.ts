@@ -9,17 +9,17 @@ export const menuService = {
   },
 
   createItem: async (item: Omit<MenuItem, 'id'>) => {
-    const response = await api.post<MenuItem>(API_ENDPOINTS.MENU.ITEMS, item);
+    const response = await api.post<MenuItem>(API_ENDPOINTS.MENU.CREATE, item);
     return response.data;
   },
 
   updateItem: async (id: number, item: Partial<MenuItem>) => {
-    const response = await api.put<MenuItem>(`${API_ENDPOINTS.MENU.ITEMS}/${id}`, item);
+    const response = await api.put<MenuItem>(API_ENDPOINTS.MENU.ITEM_UPDATE(id), item);
     return response.data;
   },
 
   deleteItem: async (id: number) => {
-    await api.delete(`${API_ENDPOINTS.MENU.ITEMS}/${id}`);
+    await api.delete(API_ENDPOINTS.MENU.ITEM_UPDATE(id));
   },
 
   getCategories: async () => {
@@ -33,11 +33,11 @@ export const menuService = {
   },
 
   updateCategory: async (id: number, category: Partial<Category>) => {
-    const response = await api.put<Category>(`${API_ENDPOINTS.MENU.CATEGORIES}/${id}`, category);
+    const response = await api.put<Category>(API_ENDPOINTS.MENU.CATEGORY_UPDATE(id), category);
     return response.data;
   },
 
   deleteCategory: async (id: number) => {
-    await api.delete(`${API_ENDPOINTS.MENU.CATEGORIES}/${id}`);
+    await api.delete(API_ENDPOINTS.MENU.CATEGORY_UPDATE(id));
   },
 };

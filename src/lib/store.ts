@@ -1,10 +1,12 @@
 import { create } from 'zustand';
-import { MenuItem, Order, Table, StaffMember, Payment, Category } from '@/types';
+import { MenuItem, Order, Table, StaffMember, Payment, Category, User, Restaurant } from '@/types';
 import { menuService } from './api/services/menu.service';
 import { orderService } from './api/services/order.service';
 import { tableService } from './api/services/table.service';
 import { paymentService } from './api/services/payment.service';
-import {staffService} from "@/lib/api/services/staff.service.ts";
+import { staffService } from "@/lib/api/services/staff.service.ts";
+import { userService } from '@/lib/api/services/user.service';
+import { restaurantService } from '@/lib/api/services/restaurant.service';
 
 interface StaffState {
   staff: StaffMember[];
@@ -73,6 +75,25 @@ interface PaymentState {
   getPaymentsByOrder: (orderId: number) => Payment[];
 }
 
+interface UserState {
+  users: User[];
+  loading: boolean;
+  error: string | null;
+  fetchUsers: () => Promise<void>;
+  addUser: (user: Omit<User, 'id'>) => Promise<void>;
+  updateUser: (id: number, updates: Partial<User>) => Promise<void>;
+  deleteUser: (id: number) => Promise<void>;
+}
+
+interface RestaurantState {
+  restaurant: Restaurant | null;
+  loading: boolean;
+  error: string | null;
+  fetchRestaurant: () => Promise<void>;
+  updateRestaurant: (updates: Partial<Restaurant>) => Promise<void>;
+  updateGstSettings: (sgstRate: number, cgstRate: number) => Promise<void>;
+}
+
 export const useStaffStore = create<StaffState>((set) => ({
   staff: [],
   currentStaff: null,
@@ -83,7 +104,7 @@ export const useStaffStore = create<StaffState>((set) => ({
     try {
       set({ loading: true, error: null });
       const staff = await staffService.getStaff();
-      set({ staff });
+      set({staff: staff });
     } catch (error) {
       set({ error: 'Failed to fetch staff' });
     } finally {
@@ -308,23 +329,44 @@ export const useTableStore = create<TableState>((set, get) => ({
 
   updateTableStatus: async (id, status) => {
     try {
-      set({ loading: true, error: null });
+      // Optimistically update UI
+      set(state => ({
+        tables: state.tables.map(table =>
+          table.id === id ? { ...table, status } : table
+        ),
+      }));
+
+      // Actual API call
       const updatedTable = await tableService.updateTable(id, { status });
+
+      // Update with server response
       set(state => ({
         tables: state.tables.map(table =>
           table.id === id ? updatedTable : table
         ),
       }));
     } catch (error) {
-      set({ error: 'Failed to update table status' });
-    } finally {
-      set({ loading: false });
+      // Revert on error
+      set(state => {
+        const originalTable = state.tables.find(t => t.id === id);
+        if (!originalTable) return state;
+
+        toast.error('Failed to update table status', {
+          description: 'The table status has been reverted',
+        });
+
+        return {
+          tables: state.tables.map(table =>
+            table.id === id ? { ...table, status: originalTable.status } : table
+          ),
+          error: 'Failed to update table status',
+        };
+      });
     }
   },
 
   mergeTables: async (tableIds) => {
     try {
-      set({ loading: true, error: null });
       const mainTable = get().tables.find(t => t.id === tableIds[0]);
       if (!mainTable) return;
 
@@ -333,25 +375,65 @@ export const useTableStore = create<TableState>((set, get) => ({
         return sum + (table?.capacity || 0);
       }, 0);
 
-      const updatedMainTable = await tableService.updateTable(mainTable.id, {
-        capacity: totalCapacity,
-        mergedWith: tableIds.slice(1),
-      });
+      // Store original tables for potential rollback
+      const originalTables = get().tables.filter(t => tableIds.includes(t.id));
 
-      await Promise.all(
-        tableIds.slice(1).map(id =>
-          tableService.updateTable(id, {
-            status: 'occupied',
-            mergedWith: [mainTable.id],
-          })
-        )
-      );
+      // Optimistically update UI
+      set(state => ({
+        tables: state.tables.map(table => {
+          if (table.id === mainTable.id) {
+            return {
+              ...table,
+              capacity: totalCapacity,
+              mergedWith: tableIds.slice(1)
+            };
+          } else if (tableIds.slice(1).includes(table.id)) {
+            return {
+              ...table,
+              status: 'occupied',
+              mergedWith: [mainTable.id]
+            };
+          }
+          return table;
+        }),
+      }));
 
-      await get().fetchTables();
+      try {
+        // Actual API calls
+        await tableService.updateTable(mainTable.id, {
+          capacity: totalCapacity,
+          mergedWith: tableIds.slice(1),
+        });
+
+        await Promise.all(
+          tableIds.slice(1).map(id =>
+            tableService.updateTable(id, {
+              status: 'occupied',
+              mergedWith: [mainTable.id],
+            })
+          )
+        );
+
+        // Fetch updated tables from server to ensure consistency
+        await get().fetchTables();
+
+        toast.success('Tables merged successfully');
+      } catch (apiError) {
+        // Revert optimistic update on API error
+        set(state => ({
+          tables: state.tables.map(table => {
+            const originalTable = originalTables.find(t => t.id === table.id);
+            return originalTable ? originalTable : table;
+          }),
+          error: 'Failed to merge tables'
+        }));
+
+        toast.error('Failed to merge tables', {
+          description: 'The operation has been reverted',
+        });
+      }
     } catch (error) {
       set({ error: 'Failed to merge tables' });
-    } finally {
-      set({ loading: false });
     }
   },
 
@@ -498,14 +580,18 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   },
 
   getOrdersByTable: (tableId) => {
-    return get().orders.filter(order => order.table_id === tableId);
+    return get().orders.filter(order => 
+      order.table_id === tableId && 
+      order.status !== 'paid' && 
+      order.status !== 'cancelled'
+    );
   },
 
   addItemsToOrder: async (orderId, newItems) => {
     const order = get().orders.find(o => o.id === orderId);
     if (!order) return;
 
-    const updatedItems = [...order.items];
+    const updatedItems = [...(order.items || [])];
     newItems.forEach(newItem => {
       const existingItemIndex = updatedItems.findIndex(
         item => item.id === newItem.id
@@ -518,7 +604,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     });
 
     const totalAmount = updatedItems.reduce(
-      (sum, item) => sum + item.price * item.quantity,
+      (sum, item) => sum + (item.price || 0) * (item.quantity || 0),
       0
     );
 
@@ -532,12 +618,12 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     const order = get().orders.find(o => o.id === orderId);
     if (!order) return;
 
-    const updatedItems = order.items.map(item =>
+    const updatedItems = (order?.items?.map(item =>
       item.id === itemId ? { ...item, ...updates } : item
-    ).filter(item => item.quantity > 0);
+    ) || []).filter(item => item.quantity > 0);
 
     const totalAmount = updatedItems.reduce(
-      (sum, item) => sum + item.price * item.quantity,
+      (sum, item) => sum + (item.price || 0) * (item.quantity || 0),
       0
     );
 
@@ -551,9 +637,9 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     const order = get().orders.find(o => o.id === orderId);
     if (!order) return;
 
-    const updatedItems = order.items.filter(item => item.id !== itemId);
+    const updatedItems = order?.items?.filter(item => item.id !== itemId) || [];
     const totalAmount = updatedItems.reduce(
-      (sum, item) => sum + item.price * item.quantity,
+      (sum, item) => sum + (item.price || 0) * (item.quantity || 0),
       0
     );
 
@@ -610,7 +696,117 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
   },
 
   getPaymentsByOrder: (orderId) => {
-    return get().payments.filter(payment => payment.orderId === orderId);
+    return get().payments.filter(payment => payment.order_id === orderId);
   },
 }));
 
+export const useUserStore = create<UserState>((set) => ({
+  users: [],
+  loading: false,
+  error: null,
+
+  fetchUsers: async () => {
+    try {
+      set({ loading: true, error: null });
+      const users = await userService.getUsers();
+      set({ users });
+    } catch (error) {
+      set({ error: 'Failed to fetch users' });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  addUser: async (user) => {
+    try {
+      set({ loading: true, error: null });
+      const newUser = await userService.createUser(user);
+      set(state => ({ users: [...state.users, newUser] }));
+    } catch (error) {
+      set({ error: 'Failed to add user' });
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  updateUser: async (id, updates) => {
+    try {
+      set({ loading: true, error: null });
+      const updatedUser = await userService.updateUser(id, updates);
+      set(state => ({
+        users: state.users.map(user => user.id === id ? updatedUser : user),
+      }));
+    } catch (error) {
+      set({ error: 'Failed to update user' });
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  deleteUser: async (id) => {
+    try {
+      set({ loading: true, error: null });
+      await userService.deleteUser(id);
+      set(state => ({
+        users: state.users.filter(user => user.id !== id),
+      }));
+    } catch (error) {
+      set({ error: 'Failed to delete user' });
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+}));
+
+export const useRestaurantStore = create<RestaurantState>((set, get) => ({
+  restaurant: null,
+  loading: false,
+  error: null,
+
+  fetchRestaurant: async () => {
+    try {
+      set({ loading: true, error: null });
+      const restaurant = await restaurantService.getRestaurant();
+      set({ restaurant });
+    } catch (error) {
+      set({ error: 'Failed to fetch restaurant' });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  updateRestaurant: async (updates) => {
+    try {
+      set({ loading: true, error: null });
+      const restaurant = get().restaurant;
+      if (!restaurant) {
+        throw new Error('No restaurant found');
+      }
+      const updatedRestaurant = await restaurantService.updateRestaurant(restaurant.id, updates);
+      set({ restaurant: updatedRestaurant });
+    } catch (error) {
+      set({ error: 'Failed to update restaurant' });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  updateGstSettings: async (sgstRate, cgstRate) => {
+    try {
+      set({ loading: true, error: null });
+      const restaurant = get().restaurant;
+      if (!restaurant) {
+        throw new Error('No restaurant found');
+      }
+      const updatedRestaurant = await restaurantService.updateGstSettings(restaurant.id, sgstRate, cgstRate);
+      set({ restaurant: updatedRestaurant });
+    } catch (error) {
+      set({ error: 'Failed to update GST settings' });
+    } finally {
+      set({ loading: false });
+    }
+  },
+}));

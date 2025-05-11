@@ -5,10 +5,11 @@ import { tokenService } from '@/lib/services/token.service';
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  requiredRole?: string; // Optional role-based access control
+  requiredRole?: string; // Optional single role-based access control
+  requiredRoles?: string[]; // Optional multiple roles-based access control
 }
 
-export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
+export const ProtectedRoute = ({ children, requiredRole, requiredRoles }: ProtectedRouteProps) => {
   const { isAuthenticated, user, initAuth, loading } = useAuthStore();
   const location = useLocation();
 
@@ -29,11 +30,18 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // If role is required, check if user has the required role
+  // If single role is required, check if user has the required role
   if (requiredRole && user?.role !== requiredRole) {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  // If authenticated and has required role (if any), render the children
+  // If multiple roles are required, check if user has one of the required roles
+  if (requiredRoles && requiredRoles.length > 0 && user?.role) {
+    if (!requiredRoles.includes(user.role)) {
+      return <Navigate to="/unauthorized" replace />;
+    }
+  }
+
+  // If authenticated and has required role(s) (if any), render the children
   return <>{children}</>;
 };

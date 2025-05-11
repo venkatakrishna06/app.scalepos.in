@@ -1,8 +1,8 @@
 export interface Category {
   parent_category_id: number | undefined;
-  mainCategory: string;
   id: number;
   name: string;
+  include_in_gst?: boolean;
 }
 
 export interface MenuItem {
@@ -14,6 +14,7 @@ export interface MenuItem {
   category_id: number; // Matches backend CategoryID
   image?: string;
   available?: boolean;
+  include_in_gst?: boolean;
 }
 
 export interface Customer {
@@ -86,4 +87,25 @@ export interface Reservation {
   customer_name?: string;
   phone?: string;
   guests?: number;
+}
+
+export interface Restaurant {
+  id: number;
+  name: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  gst_number?: string;
+  default_sgst_rate?: number;
+  default_cgst_rate?: number;
+}
+
+export interface User {
+  username: any;
+  staff: any;
+  id: number;
+  email: string;
+  role: string;
+  staff_id: string;
+  staffName?: string;
 }

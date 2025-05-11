@@ -1,5 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
-import { Plus, Edit2, Trash2, Search, Loader2, Filter, SortAsc, SortDesc, LayoutGrid, LayoutList, AlertCircle } from 'lucide-react';
+import { 
+  Plus, 
+  Edit2, 
+  Trash2, 
+  Search, 
+  Loader2, 
+  SortAsc, 
+  SortDesc, 
+  LayoutGrid, 
+  LayoutList, 
+  AlertCircle, 
+  FileText,
+  Tag,
+  CheckCircle,
+  XCircle
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -8,12 +23,29 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
 import { MenuItemForm } from '@/components/forms/menu-item-form';
 import { useMenuStore } from '@/lib/store';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
@@ -47,6 +79,7 @@ export default function Menu() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [availabilityFilter, setAvailabilityFilter] = useState<string>('all');
 
   // Using a ref to prevent duplicate API calls in StrictMode
   const isDataFetchedRef = useRef(false);
@@ -71,7 +104,10 @@ export default function Menu() {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                        item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
                        item.category.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    const matchesAvailability = availabilityFilter === 'all' || 
+                             (availabilityFilter === 'available' && item.available) ||
+                             (availabilityFilter === 'unavailable' && !item.available);
+    return matchesCategory && matchesSearch && matchesAvailability;
   }).sort((a, b) => {
     const multiplier = sortOrder === 'asc' ? 1 : -1;
 
@@ -133,14 +169,6 @@ export default function Menu() {
     }
   };
 
-  const toggleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortOrder('asc');
-    }
-  };
 
   if (loading) {
     return (
@@ -177,58 +205,28 @@ export default function Menu() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Page header with title and actions */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Menu Management</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Manage your restaurant's menu items and categories
           </p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
-            size="icon"
+            size="sm"
             onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
           >
             {viewMode === 'grid' ? (
-              <LayoutList className="h-4 w-4" />
+              <LayoutList className="mr-2 h-4 w-4" />
             ) : (
-              <LayoutGrid className="h-4 w-4" />
+              <LayoutGrid className="mr-2 h-4 w-4" />
             )}
+            {viewMode === 'grid' ? 'List View' : 'Grid View'}
           </Button>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search menu items..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-md border bg-background pl-9 pr-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Filter className="mr-2 h-4 w-4" />
-                {selectedCategory === 'all' ? 'All Categories' : selectedCategory}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setSelectedCategory('all')}>
-                All Categories
-              </DropdownMenuItem>
-              {categories.map((category) => (
-                category.parent_category_id && (
-                  <DropdownMenuItem
-                    key={category.id}
-                    onClick={() => setSelectedCategory(category.name)}
-                  >
-                    {category.name}
-                  </DropdownMenuItem>
-                )
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+
           <Button onClick={() => setShowAddDialog(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Add Item
@@ -236,97 +234,142 @@ export default function Menu() {
         </div>
       </div>
 
-      <div className="flex items-center gap-4 border-b pb-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => toggleSort('name')}
-          className="gap-2"
-        >
-          Name
-          {sortField === 'name' && (
-            sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
-          )}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => toggleSort('price')}
-          className="gap-2"
-        >
-          Price
-          {sortField === 'price' && (
-            sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
-          )}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => toggleSort('category')}
-          className="gap-2"
-        >
-          Category
-          {sortField === 'category' && (
-            sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
-          )}
-        </Button>
+      {/* Improved filtering and search */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center">
+        <div className="flex flex-1 flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search by name, description..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map((category) => (
+                category.parent_category_id && (
+                  <SelectItem key={category.id} value={category.name}>
+                    {category.name}
+                  </SelectItem>
+                )
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Availability" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Items</SelectItem>
+              <SelectItem value="available">Available</SelectItem>
+              <SelectItem value="unavailable">Unavailable</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Select value={sortField} onValueChange={(value) => {
+            setSortField(value as SortField);
+            setSortOrder('asc');
+          }}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name">Name</SelectItem>
+              <SelectItem value="price">Price</SelectItem>
+              <SelectItem value="category">Category</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+          >
+            {sortOrder === 'asc' ? (
+              <SortAsc className="h-4 w-4" />
+            ) : (
+              <SortDesc className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
       </div>
 
-      <div className={cn(
-        "grid gap-6",
-        viewMode === 'grid' ? "md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"
-      )}>
-        {filteredItems.map((item) => (
-          <div
-            key={item.id}
-            className={cn(
-              "group relative overflow-hidden rounded-lg border bg-card transition-all hover:shadow-lg",
-              viewMode === 'list' && "flex gap-6"
-            )}
-          >
-            <div className={cn(
-              "relative",
-              viewMode === 'list' ? "w-48" : "w-full"
-            )}>
-              <img
-                src={item.image}
-                alt={item.name}
-                className={cn(
-                  "object-cover",
-                  viewMode === 'list'
-                    ? "h-full w-full rounded-l-lg"
-                    : "aspect-[4/3] w-full rounded-t-lg"
-                )}
-              />
-              {!item.available && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                  <span className="rounded-full bg-red-100 px-3 py-1 text-sm font-medium text-red-800">
-                    Unavailable
-                  </span>
+      <div className="mt-6">
+        <div className={cn(
+          "grid gap-6",
+          viewMode === 'grid' ? "md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "grid-cols-1"
+        )}>
+          {filteredItems.map((item) => (
+            <Card key={item.id} className="overflow-hidden">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg">{item.name}</CardTitle>
+                    <Badge variant={item.available ? "default" : "destructive"}>
+                      {item.available ? "Available" : "Unavailable"}
+                    </Badge>
+                  </div>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8"
+                          onClick={() => handleToggleAvailability(item.id)}
+                          disabled={isSubmitting}
+                        >
+                          {item.available ? (
+                            <XCircle className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{item.available ? "Mark as Unavailable" : "Mark as Available"}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
-              )}
-            </div>
-            <div className={cn(
-              "flex flex-col",
-              viewMode === 'list' ? "flex-1 py-4 pr-6" : "p-6"
-            )}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-semibold">{item.name}</h3>
-                  <p className="text-sm text-muted-foreground">{item.category.name}</p>
+                <CardDescription className="line-clamp-2 mt-1">
+                  {item.description}
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent className="pb-3">
+                <div className="flex items-center gap-4">
+                  <div className="relative h-20 w-20 overflow-hidden rounded-md">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "https://via.placeholder.com/200?text=No+Image";
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Tag className="h-4 w-4 text-muted-foreground" />
+                      <span>Category: {item.category.name}</span>
+                    </div>
+                    <p className="mt-2 text-lg font-semibold">₹{item.price.toFixed(2)}</p>
+                  </div>
                 </div>
-                <p className="font-semibold">₹{item.price.toFixed(2)}</p>
-              </div>
-              <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{item.description}</p>
-              <div className="mt-4 flex gap-2">
-                <Button 
-                  variant={item.available ? 'outline' : 'secondary'}
-                  size="sm"
-                  onClick={() => handleToggleAvailability(item.id)}
-                  disabled={isSubmitting}
-                >
-                  {item.available ? 'Mark Unavailable' : 'Mark Available'}
-                </Button>
+              </CardContent>
+
+              <CardFooter className="flex items-center justify-end gap-2 border-t pt-3">
                 <Button
                   variant="outline"
                   size="sm"
@@ -340,7 +383,7 @@ export default function Menu() {
                   Edit
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="destructive"
                   size="sm"
                   onClick={() => handleDelete(item.id)}
                   disabled={isSubmitting}
@@ -348,10 +391,28 @@ export default function Menu() {
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete
                 </Button>
-              </div>
+              </CardFooter>
+            </Card>
+          ))}
+
+          {filteredItems.length === 0 && (
+            <div className="col-span-full rounded-lg border border-dashed p-8 text-center">
+              <FileText className="mx-auto h-8 w-8 text-muted-foreground" />
+              <h3 className="mt-2 text-lg font-semibold">No Menu Items Found</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Try adjusting your filters or search criteria
+              </p>
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={() => setShowAddDialog(true)}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add New Item
+              </Button>
             </div>
-          </div>
-        ))}
+          )}
+        </div>
       </div>
 
       {filteredItems.length === 0 && (

@@ -4,6 +4,23 @@ import { authService } from '@/lib/api/services/auth.service';
 import { tokenService } from '@/lib/services/token.service';
 import { api } from '@/lib/api/axios';
 
+// Key for storing user data in sessionStorage
+const USER_STORAGE_KEY = 'user_data';
+
+// Helper functions to store and retrieve user data from sessionStorage
+const saveUserToStorage = (user: User | null): void => {
+  if (user) {
+    sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+  } else {
+    sessionStorage.removeItem(USER_STORAGE_KEY);
+  }
+};
+
+const getUserFromStorage = (): User | null => {
+  const userData = sessionStorage.getItem(USER_STORAGE_KEY);
+  return userData ? JSON.parse(userData) : null;
+};
+
 interface AuthState {
   user: User | null;
   loading: boolean;
@@ -18,7 +35,7 @@ interface AuthState {
     restaurant_address?: string,
     restaurant_phone?: string,
     restaurant_email?: string,
-    restaurant_description?: string
+    restaurant_gst?: string
   ) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
@@ -40,22 +57,32 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (tokenService.isTokenValid()) {
       try {
         set({ loading: true });
-        // Temporarily disabled refreshToken API call
+        // Load user data from sessionStorage
+        const userData = getUserFromStorage();
+
+        // Set user data and authenticated state
+        set({ 
+          user: userData, 
+          isAuthenticated: true,
+          token: tokenService.getToken()
+        });
+
+        // If user data is not in sessionStorage, we could fetch it from the server
+        // This is commented out as per the original code
         // const user = await authService.refreshToken();
         // set({ user: user.user, isAuthenticated: true });
-
-        // Just set authenticated state based on token
-        set({ isAuthenticated: true });
       } catch {
-        // If getting user profile fails, clear tokens
+        // If getting user profile fails, clear tokens and user data
         tokenService.clearTokens();
+        saveUserToStorage(null);
         set({ user: null, isAuthenticated: false, token: null });
       } finally {
         set({ loading: false });
       }
     } else {
-      // If token is invalid, clear it
+      // If token is invalid, clear it and user data
       tokenService.clearTokens();
+      saveUserToStorage(null);
       set({ user: null, isAuthenticated: false, token: null });
     }
   },
@@ -76,9 +103,12 @@ export const useAuthStore = create<AuthState>((set) => ({
         tokenService.setRefreshToken(response.refreshToken);
       }
 
+      // Save user data to sessionStorage
+      saveUserToStorage(response.user_account);
+
       set(state => {
         state.setToken(response.token);
-        return { user: response.user, isAuthenticated: true };
+        return { user: response.user_account, isAuthenticated: true };
       });
     } catch {
       set({ error: 'Invalid credentials' });
@@ -94,7 +124,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     restaurant_address,
     restaurant_phone,
     restaurant_email,
-    restaurant_description
+    restaurant_gst
   ) => {
     try {
       set({ loading: true, error: null });
@@ -105,13 +135,16 @@ export const useAuthStore = create<AuthState>((set) => ({
         restaurant_address,
         restaurant_phone,
         restaurant_email,
-        restaurant_description
+        restaurant_gst
       });
 
       // Store both tokens if refresh token is provided
       // if (response.refreshToken) {
       //   tokenService.setRefreshToken(response.refreshToken);
       // }
+
+      // Save user data to sessionStorage
+      saveUserToStorage(response.user);
 
       set(state => {
         state.setToken(response.token);
@@ -132,8 +165,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch {
       // Continue with logout even if API call fails
     } finally {
+      // Clear tokens and user data from sessionStorage
       tokenService.clearTokens();
+      saveUserToStorage(null);
+
+      // Clear Authorization header
       delete api.defaults.headers.common['Authorization'];
+
+      // Reset state
       set({ user: null, isAuthenticated: false, loading: false, token: null });
     }
   },
@@ -142,6 +181,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       set({ loading: true, error: null });
       const updatedUser = await authService.updateProfile(data);
+
+      // Save updated user data to sessionStorage
+      saveUserToStorage(updatedUser);
+
       set({ user: updatedUser });
     } catch {
       set({ error: 'Failed to update profile' });

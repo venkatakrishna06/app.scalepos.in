@@ -1,9 +1,7 @@
 import { PropsWithChildren, useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 import Sidebar from './sidebar';
 import Navbar from './navbar';
-import { Menu } from 'lucide-react';
-import { Button } from './ui/button';
+import { MobileNav } from './MobileNav';
 import { cn } from '@/lib/utils';
 
 interface LayoutProps extends PropsWithChildren {
@@ -12,78 +10,75 @@ interface LayoutProps extends PropsWithChildren {
 }
 
 export default function Layout({ children, orderType, onOrderTypeChange }: LayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const location = useLocation();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Handle responsive sidebar
+  // Check if we're on mobile when component mounts
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
-
+    const checkIfMobile = () => {
+      setIsSidebarOpen(window.innerWidth >= 768); // 768px is the md breakpoint in Tailwind
     };
 
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    // Initial check
+    checkIfMobile();
+
+    // Add event listener for window resize
+    window.addEventListener('resize', checkIfMobile);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
 
-  // Close sidebar on mobile when route changes
-  useEffect(() => {
-    if (isMobile) {
-      setSidebarOpen(false);
-    }
-  }, [location.pathname, isMobile]);
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar orderType={orderType} onOrderTypeChange={onOrderTypeChange}>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-      </Navbar>
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
+      <Navbar 
+        orderType={orderType} 
+        onOrderTypeChange={onOrderTypeChange} 
+        toggleSidebar={toggleSidebar} 
+      />
 
-      <div className="flex">
-        {/* Sidebar with overlay for mobile */}
-        <div
-          className={cn(
-            "fixed inset-0 z-20 bg-black/50 lg:hidden",
-            sidebarOpen ? "block" : "hidden"
-          )}
-          onClick={() => setSidebarOpen(false)}
-        />
-
-        {/* Sidebar - fixed on mobile, static on desktop */}
-        {sidebarOpen && (
-          <div
-            className={cn(
-              "fixed inset-y-0 left-0 z-30 w-64 bg-white transition-all duration-200 ease-in-out dark:bg-gray-800",
-              "lg:static lg:block"
-            )}
-          >
-            <Sidebar isOpen={true} />
-          </div>
+      <div className="flex flex-1 overflow-hidden">
+        {/* Overlay - only visible when sidebar is open on mobile */}
+        {isSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-30 md:hidden" 
+            onClick={toggleSidebar}
+          />
         )}
 
-        {/* Main content */}
-        <main
-          className={cn(
-            "flex-1 overflow-auto transition-all duration-200 ease-in-out",
-            "p-4",
-            "w-full"
-          )}
-        >
-          <div className={cn(
-            sidebarOpen ? "mx-auto max-w-7xl" : "w-full"
-          )}>
+        {/* Sidebar - fixed width with independent scroll */}
+        <div className={cn(
+          "flex-shrink-0 overflow-hidden bg-white dark:bg-gray-800",
+          "fixed md:relative h-screen z-40 transition-all duration-300 ease-in-out",
+          "md:w-40", // Width on desktop
+          isSidebarOpen 
+            ? "w-[240px] translate-x-0 shadow-xl" // Width on mobile when open with shadow
+            : "w-[240px] -translate-x-full md:translate-x-0" // Width on mobile when closed
+        )}>
+          <Sidebar closeSidebar={toggleSidebar} />
+        </div>
+
+        {/* Main content - scrolls independently */}
+        <main className={cn(
+          "flex-1 overflow-y-auto transition-all duration-300 ease-in-out",
+          isSidebarOpen ? "md:ml-0" : "ml-0",
+          "pb-16 md:pb-0" // Add padding at the bottom for mobile nav
+        )}>
+          <div className="mx-auto max-w-7xl p-4">
             {children}
           </div>
         </main>
       </div>
+
+      {/* Mobile Navigation */}
+      <MobileNav 
+        orderType={orderType} 
+        onOrderTypeChange={onOrderTypeChange} 
+        toggleSidebar={toggleSidebar} 
+      />
     </div>
   );
 }

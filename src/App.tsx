@@ -1,6 +1,6 @@
-import { BrowserRouter as Router, Navigate, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from './components/layout';
 import AppRoutes from './routes';
 import Login from './pages/auth/login';
@@ -21,7 +21,16 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const [orderType, setOrderType] = useState<'dine-in' | 'takeaway' | 'orders'>('dine-in');
+  // Initialize orderType from localStorage or default to 'dine-in'
+  const [orderType, setOrderType] = useState<'dine-in' | 'takeaway' | 'orders'>(() => {
+    const savedOrderType = localStorage.getItem('orderType');
+    return (savedOrderType as 'dine-in' | 'takeaway' | 'orders') || 'dine-in';
+  });
+
+  // Save orderType to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('orderType', orderType);
+  }, [orderType]);
 
   return (
     <QueryClientProvider client={queryClient}>

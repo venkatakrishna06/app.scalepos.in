@@ -8,6 +8,16 @@ export const orderService = {
     return response.data;
   },
 
+  getAllRolesOrders: async () => {
+    const response = await api.get<Order[]>(API_ENDPOINTS.ORDERS.ALL_LIST);
+    return response.data;
+  },
+
+  getAllRolesOrderById: async (id: number) => {
+    const response = await api.get<Order>(API_ENDPOINTS.ORDERS.ALL_BY_ID(id));
+    return response.data;
+  },
+
   createOrder: async (order: Omit<Order, 'id'>) => {
     const response = await api.post<Order>(API_ENDPOINTS.ORDERS.CREATE, order);
     return response.data;
@@ -24,6 +34,11 @@ export const orderService = {
 
   getOrdersByTable: async (tableId: number) => {
     const response = await api.get<Order[]>(`${API_ENDPOINTS.ORDERS.LIST}?tableId=${tableId}`);
+    return response.data;
+  },
+
+  getAllRolesOrdersByTable: async (tableId: number) => {
+    const response = await api.get<Order[]>(`${API_ENDPOINTS.ORDERS.ALL_LIST}?tableId=${tableId}`);
     return response.data;
   },
 };

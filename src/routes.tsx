@@ -15,6 +15,11 @@ import Customers from '@/pages/customers';
 import Staff from '@/pages/staff';
 import Payments from '@/pages/payments';
 import Profile from '@/pages/profile';
+import UserManagement from './pages/UserManagement';
+import Settings from '@/pages/settings';
+import ProfileSettings from '@/pages/settings/profile-settings';
+import GstSettings from '@/pages/settings/gst-settings';
+import Unauthorized from '@/pages/unauthorized';
 
 interface AppRoutesProps {
   orderType: 'dine-in' | 'takeaway' | 'orders';
@@ -34,12 +39,13 @@ const AppRoutes = ({ orderType }: AppRoutesProps) => {
     <Routes>
       {/* Public routes */}
       <Route path="/login" element={<Login />} />
+      <Route path="/unauthorized" element={<Unauthorized />} />
 
       {/* Protected routes */}
       <Route 
         path="/dashboard" 
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredRoles={['admin', 'manager', 'kitchen', 'server']}>
             <Dashboard orderType={orderType} />
           </ProtectedRoute>
         } 
@@ -48,7 +54,7 @@ const AppRoutes = ({ orderType }: AppRoutesProps) => {
       <Route 
         path="/tables" 
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredRoles={['admin', 'manager', 'server']}>
             <Tables />
           </ProtectedRoute>
         } 
@@ -57,7 +63,7 @@ const AppRoutes = ({ orderType }: AppRoutesProps) => {
       <Route 
         path="/orders" 
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredRoles={['admin', 'manager', 'kitchen', 'server']}>
             <Orders />
           </ProtectedRoute>
         } 
@@ -66,7 +72,7 @@ const AppRoutes = ({ orderType }: AppRoutesProps) => {
       <Route 
         path="/menu" 
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredRoles={['admin', 'manager', 'kitchen']}>
             <Menu />
           </ProtectedRoute>
         } 
@@ -75,7 +81,7 @@ const AppRoutes = ({ orderType }: AppRoutesProps) => {
       <Route 
         path="/categories" 
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredRoles={['admin', 'manager']}>
             <Categories />
           </ProtectedRoute>
         } 
@@ -84,7 +90,7 @@ const AppRoutes = ({ orderType }: AppRoutesProps) => {
       <Route 
         path="/reservations" 
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredRoles={['admin', 'manager']}>
             <Reservations />
           </ProtectedRoute>
         } 
@@ -93,7 +99,7 @@ const AppRoutes = ({ orderType }: AppRoutesProps) => {
       <Route 
         path="/customers" 
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredRoles={['admin', 'manager']}>
             <Customers />
           </ProtectedRoute>
         } 
@@ -102,7 +108,7 @@ const AppRoutes = ({ orderType }: AppRoutesProps) => {
       <Route 
         path="/staff" 
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole="admin">
             <Staff />
           </ProtectedRoute>
         } 
@@ -111,18 +117,48 @@ const AppRoutes = ({ orderType }: AppRoutesProps) => {
       <Route 
         path="/payments" 
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredRoles={['admin', 'manager']}>
             <Payments />
+          </ProtectedRoute>
+        } 
+      />
+        <Route
+            path="/user-management"
+            element={
+            <ProtectedRoute requiredRole="admin">
+                <UserManagement />
+            </ProtectedRoute>
+            }/>
+
+      <Route 
+        path="/profile" 
+        element={
+          <ProtectedRoute requiredRoles={['admin', 'manager', 'kitchen', 'server']}>
+            <Profile />
           </ProtectedRoute>
         } 
       />
 
       <Route 
-        path="/profile" 
+        path="/settings" 
         element={
           <ProtectedRoute>
-            <Profile />
+            <Settings />
           </ProtectedRoute>
+        } 
+      >
+        <Route path="profile" element={<ProfileSettings />} />
+        <Route path="gst" element={
+          <ProtectedRoute requiredRole="admin">
+            <GstSettings />
+          </ProtectedRoute>
+        } />
+      </Route>
+
+      <Route 
+        path="/gst-settings" 
+        element={
+          <Navigate to="/settings/gst" replace />
         } 
       />
 
@@ -139,7 +175,7 @@ const AppRoutes = ({ orderType }: AppRoutesProps) => {
       {/* Redirect to dashboard if authenticated, otherwise to login */}
       <Route 
         path="/" 
-        element={<Navigate to="/dashboard" replace />} 
+        element={<Navigate to="/tables" replace />}
       />
 
       {/* Catch all route - 404 */}

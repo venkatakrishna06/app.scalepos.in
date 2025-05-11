@@ -4,8 +4,9 @@ export interface User {
   name: string;
   avatar_url?: string;
   phone?: string;
-  role: 'admin' | 'staff' | 'user';
+  role: 'admin' | 'manager' | 'kitchen' | 'server' | 'staff' | 'user';
   created_at: string;
+  staff_id?: number;
 }
 
 export interface LoginCredentials {
@@ -20,10 +21,11 @@ export interface SignupData {
   restaurant_address?: string;
   restaurant_phone?: string;
   restaurant_email?: string;
-  restaurant_description?: string;
+  restaurant_gst?: string;
 }
 
 export interface AuthResponse {
+  user_account: any | null | undefined;
   user: User;
   token: string;
 }

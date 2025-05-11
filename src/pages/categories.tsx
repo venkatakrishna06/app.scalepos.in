@@ -1,5 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Search, Loader2, AlertCircle } from 'lucide-react';
+import { 
+  Plus, 
+  Edit2, 
+  Trash2, 
+  Search, 
+  Loader2, 
+  AlertCircle, 
+  FolderTree
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -15,7 +23,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
@@ -25,6 +32,21 @@ import { useMenuStore } from '@/lib/store';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
 import { Category } from '@/types';
 import { toast } from 'sonner';
+import {
+  Card,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from '@/components/ui/badge';
 
 const categorySchema = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name cannot exceed 50 characters'),
@@ -48,6 +70,7 @@ export default function Categories() {
   const [showDialog, setShowDialog] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categoryTypeFilter, setCategoryTypeFilter] = useState<string>('all');
   const mainCategories = categories.filter(category => category.parent_category_id === undefined);
   const form = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
@@ -81,9 +104,20 @@ export default function Categories() {
     }
   }, [editingCategory, form]);
 
-  const filteredCategories = categories.filter((category) =>
-    category.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCategories = categories.filter((category) => {
+    const matchesSearch = category.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = categoryTypeFilter === 'all' || 
+                      (categoryTypeFilter === 'main' && category.parent_category_id === undefined) ||
+                      (categoryTypeFilter === 'sub' && category.parent_category_id !== undefined);
+    return matchesSearch && matchesType;
+  });
+
+  // Function to find parent category name for badges
+  const getParentCategoryName = (parentId?: number | null) => {
+    if (parentId === undefined || parentId === null) return null;
+    const parentCategory = categories.find(c => c.id === parentId);
+    return parentCategory ? parentCategory.name : null;
+  };
 
   const handleSubmit = async (data: CategoryFormData) => {
     try {
@@ -151,24 +185,15 @@ export default function Categories() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Page header with title and actions */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Categories</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Manage your menu categories
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search categories..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-md border bg-background pl-9 pr-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-          </div>
+        <div className="flex flex-wrap items-center gap-2">
           <Button onClick={() => setShowDialog(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Add Category
@@ -176,62 +201,107 @@ export default function Categories() {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredCategories.map((category) => (
-          <div
-            key={category.id}
-            className="group relative overflow-hidden rounded-lg border bg-card transition-all hover:shadow-lg"
-          >
-            <div className="p-6">
-              <h3 className="font-semibold">{category.name}</h3>
-              {/*{category.description && (*/}
-              {/*  <p className="mt-2 text-sm text-muted-foreground">*/}
-              {/*    {category.description}*/}
-              {/*  </p>*/}
-              {/*)}*/}
-              <div className="mt-4 flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setEditingCategory(category);
-                    setShowDialog(true);
-                  }}
-                  disabled={isSubmitting}
-                >
-                  <Edit2 className="mr-2 h-4 w-4" />
-                  Edit
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDelete(category.id)}
-                  disabled={isSubmitting}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
-                </Button>
-              </div>
-            </div>
-          </div>
-        ))}
+      {/* Improved filtering and search */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search categories..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+
+        <Select 
+          value={categoryTypeFilter}
+          onValueChange={setCategoryTypeFilter}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Category Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="main">Main Categories</SelectItem>
+            <SelectItem value="sub">Sub Categories</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      {filteredCategories.length === 0 && (
-        <div className="flex h-[400px] items-center justify-center rounded-lg border border-dashed">
-          <div className="text-center">
-            <p className="text-muted-foreground">No categories found</p>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() => setShowDialog(true)}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Category
-            </Button>
-          </div>
+      <div className="mt-6">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredCategories.length === 0 ? (
+            <div className="col-span-full rounded-lg border border-dashed p-8 text-center">
+              <FolderTree className="mx-auto h-8 w-8 text-muted-foreground" />
+              <h3 className="mt-2 text-lg font-semibold">No Categories Found</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {categoryTypeFilter === 'main' ? 'No main categories found.' : 
+                 categoryTypeFilter === 'sub' ? 'No sub-categories found.' : 
+                 'Add a new category to get started.'}
+              </p>
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={() => setShowDialog(true)}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Category
+              </Button>
+            </div>
+          ) : (
+            filteredCategories.map((category) => {
+              const parentCategoryName = getParentCategoryName(category.parent_category_id);
+              return (
+                <Card key={category.id} className="overflow-hidden">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <CardTitle className="text-lg">{category.name}</CardTitle>
+                      {parentCategoryName ? (
+                        <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                          {parentCategoryName}
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-purple-100 text-purple-800">
+                          Main
+                        </Badge>
+                      )}
+                    </div>
+                    <CardDescription className="mt-1">
+                      {parentCategoryName ? 
+                        `Sub-category of ${parentCategoryName}` : 
+                        'Main category for menu items'}
+                    </CardDescription>
+                  </CardHeader>
+
+                  <CardFooter className="flex items-center justify-end gap-2 border-t pt-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditingCategory(category);
+                        setShowDialog(true);
+                      }}
+                      disabled={isSubmitting}
+                    >
+                      <Edit2 className="mr-2 h-4 w-4" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDelete(category.id)}
+                      disabled={isSubmitting}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </Button>
+                  </CardFooter>
+                </Card>
+              );
+            })
+          )}
         </div>
-      )}
+      </div>
 
       <Dialog open={showDialog}>
         <DialogContent onClose={!isSubmitting ? () => {
@@ -280,9 +350,7 @@ export default function Categories() {
                           field.onChange(e.target.value ? Number(e.target.value) : null)
                         }
                       >
-                        <option value="" disabled>
-                          Select a main category
-                        </option>
+                        <option value="">None (This is a main category)</option>
                         {mainCategories.map((category) => (
                           <option key={category.id} value={category.id}>
                             {category.name}

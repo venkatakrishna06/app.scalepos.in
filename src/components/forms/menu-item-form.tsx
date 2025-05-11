@@ -144,11 +144,13 @@ export function MenuItemForm({ onSubmit, initialData }: MenuItemFormProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id.toString()}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
+                  {categories
+                    .filter((category) => category.parent_category_id)
+                    .map((category) => (
+                      <SelectItem key={category.id} value={category.id.toString()}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
               <FormMessage />

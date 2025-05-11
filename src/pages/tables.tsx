@@ -1,25 +1,36 @@
 import { useState, useEffect, useRef } from 'react';
-import { Users, Coffee, Clock, Plus, Trash2, Split, Merge, CreditCard, ClipboardList, Settings2, Loader2 } from 'lucide-react';
+import { Plus, Merge, Loader2, Search, LayoutGrid, Layout } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CreateOrderDialog } from '@/components/create-order-dialog';
 import { PaymentDialog } from '@/components/payment-dialog';
 import { TableManagementDialog } from '@/components/table-management-dialog';
 import { ViewOrdersDialog } from '@/components/view-orders-dialog';
-import {useTableStore, useOrderStore, useMenuStore} from '@/lib/store';
+import { TableReservationDialog } from '@/components/table-reservation-dialog';
+import { useTableStore, useOrderStore, useMenuStore } from '@/lib/store';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
 import { Table, Order } from '@/types';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import { TableCard } from '@/components/tableCard';
+import { Input } from '@/components/ui/input';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 export default function Tables() {
   const { tables, loading, error, fetchTables, deleteTable, updateTableStatus } = useTableStore();
   const { loading: ordersLoading, error: ordersError, getOrdersByTable, fetchOrders } = useOrderStore();
-  const {fetchMenuItems} = useMenuStore();
+  const { fetchMenuItems, fetchCategories } = useMenuStore();
   const { handleError } = useErrorHandler();
 
   const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
@@ -30,15 +41,26 @@ export default function Tables() {
   const [showOrdersDialog, setShowOrdersDialog] = useState(false);
   const [tableManagementAction, setTableManagementAction] = useState<'add' | 'merge' | 'split' | null>(null);
 
+  // Enhanced filtering and search
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterCapacity, setFilterCapacity] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Table reservation
+  const [showReservationDialog, setShowReservationDialog] = useState(false);
+  const [tableForReservation, setTableForReservation] = useState<Table | null>(null);
+
   // Using a ref to prevent duplicate API calls in StrictMode
   const isDataFetchedRef = useRef(false);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        await Promise.all([fetchTables(), fetchOrders(), fetchMenuItems()]);
+        await Promise.all([fetchTables(), fetchOrders(), fetchMenuItems(), fetchCategories()]);
       } catch (err) {
-        handleError(err);
+        toast.error("Failed to load data", {
+          description: err instanceof Error ? err.message : "An unknown error occurred",
+        });
       }
     };
 
@@ -46,7 +68,17 @@ export default function Tables() {
       loadData();
       isDataFetchedRef.current = true;
     }
-  }, [fetchTables, fetchOrders, fetchMenuItems, handleError]);
+  }, [fetchTables, fetchOrders, fetchMenuItems, handleError, fetchCategories]);
+
+  // Show errors as toast notifications if they exist
+  useEffect(() => {
+    if (error) {
+      toast.error("Table Error", { description: error });
+    }
+    if (ordersError) {
+      toast.error("Order Error", { description: ordersError });
+    }
+  }, [error, ordersError]);
 
   const getStatusColor = (status: Table['status']) => {
     switch (status) {
@@ -69,8 +101,8 @@ export default function Tables() {
     setShowOrderDialog(true);
     if (!isNew) {
       const tableOrders = getOrdersByTable(tableId);
-      const activeOrder = tableOrders.find(order => 
-        order.status !== 'paid' && order.status !== 'cancelled'
+      const activeOrder = tableOrders.find(order =>
+          order.status !== 'paid' && order.status !== 'cancelled'
       );
       if (activeOrder) {
         setSelectedOrder(activeOrder);
@@ -95,7 +127,7 @@ export default function Tables() {
   const handlePayment = (table: Table) => {
     const tableOrders = getOrdersByTable(table.id);
     const activeOrder = tableOrders.find(order =>
-      order.status !== 'paid' && order.status !== 'cancelled'
+        order.status !== 'paid' && order.status !== 'cancelled'
     );
     if (activeOrder) {
       setSelectedOrder(activeOrder);
@@ -110,7 +142,9 @@ export default function Tables() {
         await deleteTable(tableId);
       }
     } catch (err) {
-      handleError(err);
+      toast.error("Failed to delete table", {
+        description: err instanceof Error ? err.message : "An unknown error occurred",
+      });
     }
   };
 
@@ -118,7 +152,9 @@ export default function Tables() {
     try {
       await updateTableStatus(tableId, status);
     } catch (err) {
-      handleError(err);
+      toast.error(`Failed to update table status to ${status}`, {
+        description: err instanceof Error ? err.message : "An unknown error occurred",
+      });
     }
   };
 
@@ -135,235 +171,182 @@ export default function Tables() {
 
   if (loading || ordersLoading) {
     return (
-      <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading tables...</span>
+        <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span>Loading tables...</span>
+          </div>
         </div>
-      </div>
     );
   }
 
-  if (error || ordersError) {
-    return (
-      <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
-        <div className="text-center">
-          <p className="text-sm text-destructive">
-            {error || ordersError}
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-4"
-            onClick={() => {
-              fetchTables();
-              fetchOrders();
-              fetchMenuItems()
-            }}
-          >
-            Try Again
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  // Filter tables based on search and filter criteria
+  const filteredTables = tables.filter(table => {
+    // Filter by status
+    const matchesStatus = filterStatus === 'all' || table.status === filterStatus;
+
+    // Filter by capacity
+    const matchesCapacity = filterCapacity === 'all' || 
+      (filterCapacity === 'small' && table.capacity <= 4) ||
+      (filterCapacity === 'medium' && table.capacity > 4 && table.capacity <= 8) ||
+      (filterCapacity === 'large' && table.capacity > 8);
+
+    // Filter by search query (table number)
+    const matchesSearch = searchQuery === '' || 
+      table.table_number.toString().includes(searchQuery);
+
+    return matchesStatus && matchesCapacity && matchesSearch;
+  });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">Table Management</h1>
-        <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={() => setTableManagementAction('merge')}>
-            <Merge className="mr-2 h-4 w-4" />
-            Merge Tables
-          </Button>
-          <Button onClick={() => setTableManagementAction('add')}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Table
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {tables.map((table) => (
-          <div
-            key={table.id}
-            className="group relative overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-lg"
-          >
-            <div className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-xl font-semibold">Table {table.table_number}</h2>
-                    <span className={cn(
-                      "rounded-full px-2.5 py-0.5 text-xs font-semibold",
-                      getStatusColor(table.status)
-                    )}>
-                      {table.status.charAt(0).toUpperCase() + table.status.slice(1)}
-                    </span>
-                  </div>
-                  <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                    <Users className="h-4 w-4" />
-                    <span>Capacity: {table.capacity}</span>
-                  </div>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <Settings2 className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleStatusChange(table.id, 'available')}>
-                      Mark Available
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleStatusChange(table.id, 'reserved')}>
-                      Mark Reserved
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              {table.merged_with && (
-                <div className="mt-4 rounded-md bg-muted/50 p-2 text-sm text-muted-foreground">
-                  Merged with: Table {table.merged_with.map(id =>
-                    tables.find(t => t.id === id)?.table_number
-                  ).join(', ')}
-                </div>
-              )}
-
-              {table.current_order_id && (
-                <div className="mt-4 border-t pt-4">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Coffee className="h-4 w-4" />
-                    <span>Active Order #{table.current_order_id}</span>
-                    <Clock className="ml-2 h-4 w-4" />
-                    <span>In Progress</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="absolute inset-x-0 bottom-0 flex translate-y-full items-center justify-end gap-2 border-t bg-background/95 p-4 backdrop-blur transition-transform group-hover:translate-y-0">
-              {table.status === 'available' && (
-                <>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDeleteTable(table.id)}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                  </Button>
-                  <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setTableManagementAction('split')}
-                  >
-                    <Split className="mr-2 h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => handleNewOrder(table.id)}
-                  >
-                    New Order
-                  </Button>
-                </>
-              )}
-              {table.status === 'occupied' && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleNewOrder(table.id, false)}
-                  >
-                    Add Items
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleViewOrders(table.id)}
-                  >
-                    <ClipboardList className="mr-2 h-4 w-4" />
-                    Orders
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => handlePayment(table)}
-                  >
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    Pay
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {tables.length === 0 && (
-        <div className="flex h-[400px] items-center justify-center rounded-lg border border-dashed">
-          <div className="text-center">
-            <p className="text-muted-foreground">No tables found</p>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() => setTableManagementAction('add')}
-            >
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold tracking-tight">Order Table Wise</h1>
+          <div className="flex items-center gap-4">
+            <Button variant="outline" onClick={() => setTableManagementAction('merge')}>
+              <Merge className="mr-2 h-4 w-4" />
+              Merge Tables
+            </Button>
+            <Button onClick={() => setTableManagementAction('add')}>
               <Plus className="mr-2 h-4 w-4" />
               Add Table
             </Button>
           </div>
         </div>
-      )}
 
-      <CreateOrderDialog
-        open={showOrderDialog}
-        onClose={() => {
-          setShowOrderDialog(false);
-          setSelectedTableId(null);
-          setSelectedOrder(null);
-        }}
-        table_id={selectedTableId || 0}
-        onCreateOrder={handleCreateOrder}
-        existingOrder={!isNewOrder ? selectedOrder : undefined}
-      />
+        {/* Enhanced filtering and search */}
+        <div className="flex flex-col md:flex-row items-center gap-4 mb-4">
+          <div className="w-full md:w-auto">
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="available">Available</SelectItem>
+                <SelectItem value="occupied">Occupied</SelectItem>
+                <SelectItem value="reserved">Reserved</SelectItem>
+                <SelectItem value="cleaning">Cleaning</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-      {selectedOrder && (
-        <PaymentDialog
-          open={showPaymentDialog}
-          onClose={() => {
-            setShowPaymentDialog(false);
-            setSelectedOrder(null);
-          }}
-          order={selectedOrder}
+          <div className="w-full md:w-auto">
+            <Select value={filterCapacity} onValueChange={setFilterCapacity}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by capacity" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Capacities</SelectItem>
+                <SelectItem value="small">Small (1-4)</SelectItem>
+                <SelectItem value="medium">Medium (5-8)</SelectItem>
+                <SelectItem value="large">Large (8+)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="relative w-full md:w-auto flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input 
+              placeholder="Search tables..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 w-full"
+            />
+          </div>
+        </div>
+
+
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {filteredTables.map((table) => (
+                  <TableCard
+                      key={table.id}
+                      table={table}
+                      getStatusColor={getStatusColor}
+                      onDelete={handleDeleteTable}
+                      onNewOrder={handleNewOrder}
+                      onViewOrders={handleViewOrders}
+                      onPayment={handlePayment}
+                      onStatusChange={handleStatusChange}
+                      onSplit={() => setTableManagementAction('split')}
+                  />
+              ))}
+            </div>
+
+        {tables.length === 0 && (
+            <div className="flex h-[400px] items-center justify-center rounded-lg border border-dashed">
+              <div className="text-center">
+                <p className="text-muted-foreground">No tables found</p>
+                <Button
+                    variant="outline"
+                    className="mt-4"
+                    onClick={() => setTableManagementAction('add')}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Table
+                </Button>
+              </div>
+            </div>
+        )}
+
+        <CreateOrderDialog
+            open={showOrderDialog}
+            onClose={() => {
+              setShowOrderDialog(false);
+              setSelectedTableId(null);
+              setSelectedOrder(null);
+            }}
+            table_id={selectedTableId || 0}
+            onCreateOrder={handleCreateOrder}
+            existingOrder={!isNewOrder ? selectedOrder : undefined}
         />
-      )}
 
-      {selectedTableId && (
-        <ViewOrdersDialog
-          open={showOrdersDialog}
-          onClose={() => {
-            setShowOrdersDialog(false);
-            setSelectedTableId(null);
-          }}
-          orders={getOrdersByTable(selectedTableId)}
-          onPayment={handleOrderPayment}
-        />
-      )}
+        {selectedOrder && (
+            <PaymentDialog
+                open={showPaymentDialog}
+                onClose={() => {
+                  setShowPaymentDialog(false);
+                  setSelectedOrder(null);
+                }}
+                order={selectedOrder}
+            />
+        )}
 
-      {tableManagementAction && (
-        <TableManagementDialog
-          open={tableManagementAction !== null}
-          onClose={() => setTableManagementAction(null)}
-          action={tableManagementAction}
-          selectedTable={
-            tableManagementAction === 'split'
-              ? tables.find((t) => t.status === 'available')
-              : undefined
-          }
-        />
-      )}
-    </div>
+        {selectedTableId && (
+            <ViewOrdersDialog
+                open={showOrdersDialog}
+                onClose={() => {
+                  setShowOrdersDialog(false);
+                  setSelectedTableId(null);
+                }}
+                orders={getOrdersByTable(selectedTableId)}
+                onPayment={handleOrderPayment}
+            />
+        )}
+
+        {tableManagementAction && (
+            <TableManagementDialog
+                open={tableManagementAction !== null}
+                onClose={() => setTableManagementAction(null)}
+                action={tableManagementAction}
+                selectedTable={
+                  tableManagementAction === 'split'
+                      ? tables.find((t) => t.status === 'available')
+                      : undefined
+                }
+            />
+        )}
+
+        {tableForReservation && (
+            <TableReservationDialog
+                open={showReservationDialog}
+                onClose={() => {
+                    setShowReservationDialog(false);
+                    setTableForReservation(null);
+                }}
+                table={tableForReservation}
+            />
+        )}
+      </div>
   );
 }
