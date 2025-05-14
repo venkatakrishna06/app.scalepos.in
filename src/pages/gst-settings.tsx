@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { useToast } from '@/components/ui/use-toast';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2 } from 'lucide-react';
-import { menuService, restaurantService } from '@/lib/api/services';
-import { Restaurant, MenuItem, Category } from '@/types';
+import {useEffect, useState} from 'react';
+import {useToast} from '@/components/ui/use-toast';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {Checkbox} from '@/components/ui/checkbox';
+import {Loader2} from 'lucide-react';
+import {menuService, restaurantService} from '@/lib/api/services';
+import {Category, MenuItem, Restaurant} from '@/types';
 
 export default function GstSettings() {
   const { toast } = useToast();

@@ -1,30 +1,16 @@
-import { useState } from 'react';
-import { Calendar, Clock, Users, Loader2 } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from './ui/dialog';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
+import {useState} from 'react';
+import {Calendar, Clock, Loader2, Users} from 'lucide-react';
+import {Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,} from './ui/dialog';
+import {Button} from './ui/button';
+import {Input} from './ui/input';
 // import { Label } from './ui/label';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Table } from '@/types';
-import { toast } from 'sonner';
-import { useTableStore } from '@/lib/store';
+import {useForm} from 'react-hook-form';
+import {zodResolver} from '@hookform/resolvers/zod';
+import {z} from 'zod';
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form';
+import {Table} from '@/types';
+import {toast} from '@/lib/toast';
+import {useTableStore} from '@/lib/store';
 
 interface TableReservationDialogProps {
   open: boolean;

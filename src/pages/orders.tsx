@@ -1,93 +1,84 @@
-import { useState, useEffect, useMemo } from 'react';
-import { 
-  Search, 
-  Loader2, 
-  ArrowUpDown, 
-  CreditCard, 
-  User, 
-  Coffee, 
-  FileText,
-  Download,
-  Printer
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useOrderStore, useTableStore } from '@/lib/store';
-import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
-import { format, subDays, isToday, isYesterday } from 'date-fns';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from '@/components/ui/tabs';
+import {useCallback, useEffect, useMemo, useState} from 'react';
+import {ArrowUpDown, Coffee, CreditCard, Download, FileText, Loader2, Printer, Search, User} from 'lucide-react';
+import {Button} from '@/components/ui/button';
+import {useOrderStore} from '@/lib/store';
+import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
+import {format, isToday, isYesterday, subDays} from 'date-fns';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
+import {Input} from '@/components/ui/input';
+import {Tabs, TabsContent} from '@/components/ui/tabs';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
+import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,} from '@/components/ui/tooltip';
+import {Badge} from '@/components/ui/badge';
+import {cn} from '@/lib/utils';
+import {toast} from '@/lib/toast';
 
 export default function Orders() {
   const {
     orders,
     loading: ordersLoading,
     error: ordersError,
-    fetchOrders
+    fetchOrders: fetchOrdersFromStore
   } = useOrderStore();
-
-  // const {
-  //   tables,
-  //   loading: tablesLoading,
-  //   error: tablesError,
-  //   fetchTables
-  // } = useTableStore();
 
   const { handleError } = useErrorHandler();
 
   // Filtering and sorting state
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [filterTimeframe, setFilterTimeframe] = useState<string>('all');
+  const [filterTimeframe, setFilterTimeframe] = useState<string>('today');
   const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<string>('newest');
   const [activeTab, setActiveTab] = useState<string>('all');
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        await Promise.all([fetchOrders()]);
-      } catch (err) {
-        handleError(err);
+  // Memoize the fetchOrders function to prevent it from changing on each render
+  const fetchOrders = useCallback(async () => {
+    try {
+      const params: {
+        period?: 'day' | 'week' | 'month';
+        start_date?: string;
+        end_date?: string;
+        table_number?: number;
+      } = {};
+
+      // Map the UI filter timeframe to API parameters
+      switch (filterTimeframe) {
+        case 'today':
+          params.period = 'day';
+          break;
+        case 'week':
+          params.period = 'week';
+          break;
+        case 'month':
+          params.period = 'month';
+          break;
+        case 'yesterday':
+          // For yesterday, set explicit start_date and end_date
+          const yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd');
+          params.start_date = yesterday;
+          params.end_date = yesterday;
+          break;
+        case 'all':
+          // For "all time", don't set any time-related parameters
+          break;
       }
-    };
-    loadData();
-  }, [fetchOrders,  handleError]);
+
+      await fetchOrdersFromStore(params);
+    } catch (err) {
+      handleError(err);
+    }
+  }, [fetchOrdersFromStore, handleError, filterTimeframe]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   // const getTableNumber = (tableId: number | undefined) => {
   //   if (tableId === undefined || tableId === null) {
@@ -584,3 +575,4 @@ export default function Orders() {
     </div>
   );
 }
+

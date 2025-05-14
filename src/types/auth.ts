@@ -25,7 +25,8 @@ export interface SignupData {
 }
 
 export interface AuthResponse {
-  user_account: any | null | undefined;
+  user_account: User | null | undefined;
   user: User;
   token: string;
+  refreshToken?: string;
 }

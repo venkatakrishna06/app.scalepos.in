@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { useToast } from '@/components/ui/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, ChevronDown } from 'lucide-react';
-import { menuService } from '@/lib/api/services';
-import { Category } from '@/types';
+import {useEffect, useState} from 'react';
+import {useToast} from '@/components/ui/use-toast';
+import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
+import {Button} from '@/components/ui/button';
+import {Checkbox} from '@/components/ui/checkbox';
+import {ChevronDown, Loader2} from 'lucide-react';
+import {menuService} from '@/lib/api/services';
+import {Category} from '@/types';
 
 interface CategoryGstSettingsProps {
   categories: Category[];

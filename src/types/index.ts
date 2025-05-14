@@ -86,6 +86,9 @@ export interface StaffMember {
 }
 
 export interface Payment {
+  status: any;
+  paid_at: string | number | Date;
+  amount_paid: any;
   id: number;
   restaurant_id: number;
   order_id: number;

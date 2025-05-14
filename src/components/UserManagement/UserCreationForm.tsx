@@ -1,30 +1,16 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Loader2, Mail, Lock, Users } from 'lucide-react';
-import { toast } from 'sonner';
-import { useStaffStore, useUserStore } from '@/lib/store';
-import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
-import { User } from '@/types';
+import {useEffect, useState} from 'react';
+import {Button} from '@/components/ui/button';
+import {Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
+import {Input} from "@/components/ui/input";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select";
+import {useForm} from "react-hook-form";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {z} from "zod";
+import {Loader2, Lock, Mail} from 'lucide-react';
+import {toast} from '@/lib/toast';
+import {useStaffStore, useUserStore} from '@/lib/store';
+import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
+import {User} from '@/types';
 
 // Define form validation schema with conditional password validation
 const userBaseSchema = z.object({
@@ -83,10 +69,10 @@ export default function UserCreationForm({ initialData, onSuccess }: UserFormPro
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const isEditMode = !!initialData;
   const schema = isEditMode ? editUserSchema : newUserSchema;
-  
+
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -97,7 +83,7 @@ export default function UserCreationForm({ initialData, onSuccess }: UserFormPro
       role: initialData?.role || '',
     },
   });
-  
+
   // Watch for changes to the staff_id field
   const selectedStaffId = form.watch('staff_id');
 
@@ -122,12 +108,12 @@ export default function UserCreationForm({ initialData, onSuccess }: UserFormPro
     try {
       // Remove confirmPassword as it's not needed in the payload
       const { confirmPassword, ...payload } = data;
-      
+
       // If editing and no password provided, remove the password field
       if (isEditMode && !payload.password) {
         delete payload.password;
       }
-      
+
       if (isEditMode && initialData) {
         // Update existing user
         await updateUser(initialData.id, payload);
@@ -135,7 +121,7 @@ export default function UserCreationForm({ initialData, onSuccess }: UserFormPro
         // Create new user
         await addUser(payload);
       }
-      
+
       if (onSuccess) {
         onSuccess();
       } else {

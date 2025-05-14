@@ -1,6 +1,6 @@
-import { api } from '../axios';
-import { API_ENDPOINTS } from '../endpoints';
-import { StaffMember } from '@/types';
+import {api} from '../axios';
+import {API_ENDPOINTS} from '../endpoints';
+import {StaffMember} from '@/types';
 
 export const staffService = {
   getStaff: async () => {

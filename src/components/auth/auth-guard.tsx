@@ -1,7 +1,5 @@
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
-import { useAuthStore } from '@/lib/store/auth.store';
-import { api } from '@/lib/api/axios';
+import {Navigate, useLocation, useNavigate} from 'react-router-dom';
+import {useAuthStore} from '@/lib/store/auth.store';
 
 interface AuthGuardProps {
   children: React.ReactNode;

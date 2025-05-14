@@ -1,34 +1,20 @@
-import { useForm } from "react-hook-form"
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useState } from 'react';
-import { ImageIcon, Loader2 } from 'lucide-react';
-import { Button } from "@/components/ui/button"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { useMenuStore } from '@/lib/store';
-import { toast } from 'sonner';
+import {useForm} from "react-hook-form"
+import {zodResolver} from '@hookform/resolvers/zod';
+import {z} from 'zod';
+import {useState} from 'react';
+import {ImageIcon, Loader2} from 'lucide-react';
+import {Button} from "@/components/ui/button"
+import {Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form"
+import {Input} from "@/components/ui/input"
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select"
+import {useMenuStore} from '@/lib/store';
+import {toast} from '@/lib/toast';
 
 const menuItemSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().min(1, 'Description is required'),
   price: z.number().min(0.01, 'Price must be greater than 0'),
-  category_id: z.string().min(1, 'Category is required'),
+  category_id: z.string().min( 1,'Category is required'),
   image: z.string().url('Must be a valid URL'),
 });
 
@@ -43,21 +29,25 @@ export function MenuItemForm({ onSubmit, initialData }: MenuItemFormProps) {
   const { categories } = useMenuStore();
   const [imagePreviewUrl, setImagePreviewUrl] = useState(initialData?.image || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const form = useForm<MenuItemFormData>({
     resolver: zodResolver(menuItemSchema),
-    defaultValues: initialData,
+    defaultValues: {
+      ...initialData,
+      category_id: initialData?.category_id ? String(initialData.category_id) : undefined,
+    },
   });
 
   const handleSubmit = async (data: MenuItemFormData) => {
     try {
       setIsSubmitting(true);
-      await onSubmit({
-        ...data,
-        category_id: parseInt(data.category_id),
-      });
+        onSubmit({
+            ...data,
+            category_id: String(data.category_id),
+        });
       toast.success('Menu item saved successfully');
     } catch (error) {
+      console.error('Error saving menu item:', error);
       toast.error('Failed to save menu item');
     } finally {
       setIsSubmitting(false);

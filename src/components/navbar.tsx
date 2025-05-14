@@ -1,10 +1,10 @@
-import { Bell, Settings, LogOut, Menu, Table2, ShoppingBag, ClipboardList } from 'lucide-react';
-import { Button } from './ui/button';
-import { PropsWithChildren } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/lib/store/auth.store';
-import { useOrderStore } from '@/lib/store';
-import { ThemeToggle } from './theme/theme-toggle';
+import {BarChart2, Bell, ClipboardList, LogOut, Menu, PlusCircle, Settings, ShoppingBag, Table2} from 'lucide-react';
+import {Button} from './ui/button';
+import {PropsWithChildren} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {useAuthStore} from '@/lib/store/auth.store';
+import {useOrderStore} from '@/lib/store';
+import {ThemeToggle} from './theme/theme-toggle';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,13 +15,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 interface NavbarProps extends PropsWithChildren {
-  orderType: 'dine-in' | 'takeaway' | 'orders';
-  onOrderTypeChange: (type: 'dine-in' | 'takeaway' | 'orders') => void;
   toggleSidebar: () => void;
 }
 
-export default function Navbar({ orderType, onOrderTypeChange, toggleSidebar }: NavbarProps) {
-  const location = useLocation();
+export default function Navbar({ toggleSidebar }: NavbarProps) {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { orders } = useOrderStore();
@@ -31,20 +28,6 @@ export default function Navbar({ orderType, onOrderTypeChange, toggleSidebar }: 
   const dineInCount = activeOrders.filter(order => order.order_type === 'dine-in').length;
   const takeawayCount = activeOrders.filter(order => order.order_type === 'takeaway').length;
   const totalActiveCount = activeOrders.length;
-
-  const handleOrderTypeChange = (type: 'dine-in' | 'takeaway' | 'orders') => {
-    onOrderTypeChange(type);
-    if (type === 'dine-in') {
-      navigate('/tables');
-      return;
-    }
-    if (type === 'orders') {
-      navigate('/orders');
-    }
-    if (location.pathname !== '/dashboard') {
-      navigate('/dashboard');
-    }
-  };
 
   const handleLogout = async () => {
     await logout();
@@ -80,46 +63,46 @@ export default function Navbar({ orderType, onOrderTypeChange, toggleSidebar }: 
               {/* Order type buttons - hidden on small screens, visible on medium and larger screens */}
               <div className="hidden md:flex ml-4 lg:ml-12 items-center gap-1 sm:gap-2 rounded-full bg-muted p-1">
                 <Button
-                    variant={orderType === 'dine-in' ? 'default' : 'ghost'}
+                    variant="ghost"
                     size="sm"
-                    onClick={() => handleOrderTypeChange('dine-in')}
+                    onClick={() => navigate('/tables')}
                     className="rounded-full text-xs sm:text-sm px-2 sm:px-4 h-8 relative"
                 >
-                  <Table2 className="mr-2 h-4 w-4" />
-                  <span>Dine In</span>
-                  {dineInCount > 0 && (
-                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
-                      {dineInCount}
-                    </span>
-                  )}
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  <span>New Order</span>
+                  {/*{dineInCount > 0 && (*/}
+                  {/*  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">*/}
+                  {/*    {dineInCount}*/}
+                  {/*  </span>*/}
+                  {/*)}*/}
                 </Button>
                 <Button
-                    variant={orderType === 'takeaway' ? 'default' : 'ghost'}
+                    variant="ghost"
                     size="sm"
-                    onClick={() => handleOrderTypeChange('takeaway')}
+                    onClick={() => navigate('/takeaway')}
                     className="rounded-full text-xs sm:text-sm px-2 sm:px-4 h-8 relative"
                 >
                   <ShoppingBag className="mr-2 h-4 w-4" />
                   <span>Takeaway</span>
-                  {takeawayCount > 0 && (
-                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
-                      {takeawayCount}
-                    </span>
-                  )}
+                  {/*{takeawayCount > 0 && (*/}
+                  {/*  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">*/}
+                  {/*    {takeawayCount}*/}
+                  {/*  </span>*/}
+                  {/*)}*/}
                 </Button>
                 <Button
-                    variant={orderType === 'orders' ? 'default' : 'ghost'}
+                    variant="ghost"
                     size="sm"
-                    onClick={() => handleOrderTypeChange('orders')}
+                    onClick={() => navigate('/orders')}
                     className="rounded-full text-xs sm:text-sm px-2 sm:px-4 h-8 relative"
                 >
                   <ClipboardList className="mr-2 h-4 w-4" />
                   <span>Orders</span>
-                  {totalActiveCount > 0 && (
-                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
-                      {totalActiveCount}
-                    </span>
-                  )}
+                  {/*{totalActiveCount > 0 && (*/}
+                  {/*  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">*/}
+                  {/*    {totalActiveCount}*/}
+                  {/*  </span>*/}
+                  {/*)}*/}
                 </Button>
               </div>
 
@@ -128,41 +111,12 @@ export default function Navbar({ orderType, onOrderTypeChange, toggleSidebar }: 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-8 relative">
-                      {orderType === 'dine-in' ? (
-                        <>
-                          <Table2 className="mr-2 h-4 w-4" />
-                          <span>Dine In</span>
-                          {dineInCount > 0 && (
-                            <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
-                              {dineInCount}
-                            </span>
-                          )}
-                        </>
-                      ) : orderType === 'takeaway' ? (
-                        <>
-                          <ShoppingBag className="mr-2 h-4 w-4" />
-                          <span>Takeaway</span>
-                          {takeawayCount > 0 && (
-                            <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
-                              {takeawayCount}
-                            </span>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          <ClipboardList className="mr-2 h-4 w-4" />
-                          <span>Orders</span>
-                          {totalActiveCount > 0 && (
-                            <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
-                              {totalActiveCount}
-                            </span>
-                          )}
-                        </>
-                      )}
+                      <Menu className="mr-2 h-4 w-4" />
+                      <span>Menu</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => handleOrderTypeChange('dine-in')}>
+                    <DropdownMenuItem onClick={() => navigate('/tables')}>
                       <div className="flex items-center">
                         <Table2 className="mr-2 h-4 w-4" />
                         <span>Dine In</span>
@@ -173,7 +127,7 @@ export default function Navbar({ orderType, onOrderTypeChange, toggleSidebar }: 
                         )}
                       </div>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleOrderTypeChange('takeaway')}>
+                    <DropdownMenuItem onClick={() => navigate('/takeaway')}>
                       <div className="flex items-center">
                         <ShoppingBag className="mr-2 h-4 w-4" />
                         <span>Takeaway</span>
@@ -184,7 +138,7 @@ export default function Navbar({ orderType, onOrderTypeChange, toggleSidebar }: 
                         )}
                       </div>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleOrderTypeChange('orders')}>
+                    <DropdownMenuItem onClick={() => navigate('/orders')}>
                       <div className="flex items-center">
                         <ClipboardList className="mr-2 h-4 w-4" />
                         <span>Orders</span>
@@ -244,6 +198,10 @@ export default function Navbar({ orderType, onOrderTypeChange, toggleSidebar }: 
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {/* Show settings in dropdown on small screens */}
+                  <DropdownMenuItem onClick={() => navigate('/analytics')}>
+                    <BarChart2 className="mr-2 h-4 w-4" />
+                    Analytics
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/settings')}>
                     <Settings className="mr-2 h-4 w-4" />
                     Settings

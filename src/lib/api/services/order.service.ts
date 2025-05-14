@@ -1,6 +1,6 @@
-import { api } from '../axios';
-import { API_ENDPOINTS } from '../endpoints';
-import { Order, OrderItem } from '@/types';
+import {api} from '../axios';
+import {API_ENDPOINTS} from '../endpoints';
+import {Order, OrderItem} from '@/types';
 
 // Define error type for better type safety
 interface ApiErrorResponse {
@@ -27,9 +27,20 @@ const handleApiError = (error: ApiErrorResponse | Error, defaultMessage: string)
 };
 
 export const orderService = {
-  getOrders: async () => {
+  getOrders: async (params?: {
+    period?: 'day' | 'week' | 'month';
+    start_date?: string;
+    end_date?: string;
+    table_number?: number;
+  }) => {
     try {
-      const response = await api.get<Order[]>(API_ENDPOINTS.ORDERS.LIST);
+      // Default to current day if no period or date range is specified
+      const finalParams = params || { period: 'day' };
+      if (!finalParams.period && !finalParams.start_date && !finalParams.end_date) {
+        finalParams.period = 'day';
+      }
+
+      const response = await api.get<Order[]>(API_ENDPOINTS.ORDERS.LIST, { params: finalParams });
       return response.data;
     } catch (error) {
       handleApiError(error, 'Failed to fetch orders');

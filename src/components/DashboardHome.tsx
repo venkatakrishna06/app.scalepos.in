@@ -1,29 +1,12 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  Table2, 
-  ShoppingBag, 
-  ClipboardList, 
-  Users, 
-  DollarSign, 
-  TrendingUp,
-  Plus,
-  Clock,
-  ArrowRight
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useOrderStore, useMenuStore } from '@/lib/store';
-import { CreateOrderDialog } from '@/components/create-order-dialog';
-import { usePermissions } from '@/hooks/usePermissions';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import {useState} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {ArrowRight, ClipboardList, Clock, DollarSign, Plus, ShoppingBag, Table2, TrendingUp, Users} from 'lucide-react';
+import {Button} from '@/components/ui/button';
+import {useMenuStore, useOrderStore} from '@/lib/store';
+import {CreateOrderDialog} from '@/components/create-order-dialog';
+import {usePermissions} from '@/hooks/usePermissions';
+import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
+import {Badge} from '@/components/ui/badge';
 
 export function DashboardHome() {
   const [showOrderDialog, setShowOrderDialog] = useState(false);

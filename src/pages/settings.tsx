@@ -1,5 +1,5 @@
-import { Outlet, Navigate, useLocation } from 'react-router-dom';
-import { Settings as SettingsIcon } from 'lucide-react';
+import {Navigate, Outlet, useLocation} from 'react-router-dom';
+import {Settings as SettingsIcon} from 'lucide-react';
 import SettingsSidebar from '@/components/settings-sidebar';
 
 export default function Settings() {

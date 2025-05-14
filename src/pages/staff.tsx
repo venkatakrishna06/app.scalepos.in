@@ -1,24 +1,13 @@
-import { User, Phone, Clock, Plus, Search, Edit2, Trash2, Loader2, Filter, SortAsc, SortDesc } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { StaffForm } from '@/components/forms/staff-form';
-import { useStaffStore } from '@/lib/store';
-import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
-import { useState, useEffect, useRef } from 'react';
-import { StaffMember } from '@/types';
-import { toast } from 'sonner';
+import {Clock, Edit2, Filter, Loader2, Phone, Plus, Search, Trash2} from 'lucide-react';
+import {Button} from '@/components/ui/button';
+import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from '@/components/ui/dialog';
+import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,} from "@/components/ui/dropdown-menu"
+import {StaffForm} from '@/components/forms/staff-form';
+import {useStaffStore} from '@/lib/store';
+import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
+import {useEffect, useRef, useState} from 'react';
+import {StaffMember} from '@/types';
+import {toast} from '@/lib/toast';
 
 type SortField = 'name' | 'role' | 'status';
 type SortOrder = 'asc' | 'desc';
@@ -279,7 +268,7 @@ export default function Staff() {
             setEditingStaff(null);
           }}
         >
-          <DialogHeader className="mb-4 sm:mb-6">
+          <DialogHeader className="mb-1 sm:mb-2">
             <DialogTitle className="text-xl">
               {editingStaff ? 'Edit Staff Member' : 'Add Staff Member'}
             </DialogTitle>

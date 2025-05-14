@@ -1,13 +1,13 @@
 import * as React from "react";
 import {
   Toast,
+  type ToastActionElement,
   ToastClose,
   ToastDescription,
+  type ToastProps,
   ToastProvider,
   ToastTitle,
   ToastViewport,
-  type ToastProps,
-  type ToastActionElement,
 } from "@/components/ui/toast";
 
 const TOAST_LIMIT = 5;

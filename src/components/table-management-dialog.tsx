@@ -1,30 +1,16 @@
-import { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from './ui/dialog';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
-} from '@/components/ui/form';
-import { useTableStore } from '@/lib/store';
-import { toast } from 'sonner';
-import { Table } from '@/types';
+import {useEffect, useState} from 'react';
+import {Loader2} from 'lucide-react';
+import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from './ui/dialog';
+import {Button} from './ui/button';
+import {Input} from './ui/input';
+import {Label} from './ui/label';
+import {useForm} from 'react-hook-form';
+import {zodResolver} from '@hookform/resolvers/zod';
+import {z} from 'zod';
+import {Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form';
+import {useTableStore} from '@/lib/store';
+import {toast} from '@/lib/toast';
+import {Table} from '@/types';
 
 interface TableManagementDialogProps {
   open: boolean;
@@ -98,7 +84,6 @@ export function TableManagementDialog({
               status: 'available',
             });
           })();
-          toast.success('Table added successfully');
           onClose();
           break;
 

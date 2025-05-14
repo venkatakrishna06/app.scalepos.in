@@ -1,15 +1,14 @@
-import { PropsWithChildren, useState, useEffect } from 'react';
+import {ReactNode, useEffect, useState} from 'react';
 import Sidebar from './sidebar';
 import Navbar from './navbar';
-import { MobileNav } from './MobileNav';
-import { cn } from '@/lib/utils';
+import {MobileNav} from './MobileNav';
+import {cn} from '@/lib/utils';
 
-interface LayoutProps extends PropsWithChildren {
-  orderType: 'dine-in' | 'takeaway' | 'orders';
-  onOrderTypeChange: (type: 'dine-in' | 'takeaway' | 'orders') => void;
+interface LayoutProps {
+  children: ReactNode;
 }
 
-export default function Layout({ children, orderType, onOrderTypeChange }: LayoutProps) {
+export default function Layout({ children }: LayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Check if we're on mobile when component mounts
@@ -35,8 +34,6 @@ export default function Layout({ children, orderType, onOrderTypeChange }: Layou
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       <Navbar 
-        orderType={orderType} 
-        onOrderTypeChange={onOrderTypeChange} 
         toggleSidebar={toggleSidebar} 
       />
 
@@ -75,8 +72,6 @@ export default function Layout({ children, orderType, onOrderTypeChange }: Layou
 
       {/* Mobile Navigation */}
       <MobileNav 
-        orderType={orderType} 
-        onOrderTypeChange={onOrderTypeChange} 
         toggleSidebar={toggleSidebar} 
       />
     </div>

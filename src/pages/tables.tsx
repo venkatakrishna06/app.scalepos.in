@@ -1,31 +1,18 @@
-import { useState, useEffect, useRef } from 'react';
-import { Plus, Merge, Loader2, Search, LayoutGrid, Layout } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { CreateOrderDialog } from '@/components/create-order-dialog';
-import { PaymentDialog } from '@/components/payment-dialog';
-import { TableManagementDialog } from '@/components/table-management-dialog';
-import { ViewOrdersDialog } from '@/components/view-orders-dialog';
-import { TableReservationDialog } from '@/components/table-reservation-dialog';
-import { useTableStore, useOrderStore, useMenuStore } from '@/lib/store';
-import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
-import { Table, Order } from '@/types';
-import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
-import { TableCard } from '@/components/tableCard';
-import { Input } from '@/components/ui/input';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import {useEffect, useRef, useState} from 'react';
+import {Loader2, Merge, Plus, Search} from 'lucide-react';
+import {Button} from '@/components/ui/button';
+import {CreateOrderDialog} from '@/components/create-order-dialog';
+import {PaymentDialog} from '@/components/payment-dialog';
+import {TableManagementDialog} from '@/components/table-management-dialog';
+import {ViewOrdersDialog} from '@/components/view-orders-dialog';
+import {TableReservationDialog} from '@/components/table-reservation-dialog';
+import {useMenuStore, useOrderStore, useTableStore} from '@/lib/store';
+import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
+import {Order, Table} from '@/types';
+import {toast} from '@/lib/toast';
+import {TableCard} from '@/components/tableCard';
+import {Input} from '@/components/ui/input';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select";
 
 export default function Tables() {
   const { tables, loading, error, fetchTables, deleteTable, updateTableStatus } = useTableStore();
@@ -110,15 +97,16 @@ export default function Tables() {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleCreateOrder = async (items: OrderItem[]) => {
     if (!selectedTableId) return;
     try {
       // Update table status after order is created
       await updateTableStatus(selectedTableId, 'occupied');
+
+      // Only update the state, don't close the dialog here
+      // The dialog is already being closed by its internal onClose call
       setSelectedTableId(null);
       setSelectedOrder(null);
-      setShowOrderDialog(false);
     } catch (err) {
       handleError(err);
     }

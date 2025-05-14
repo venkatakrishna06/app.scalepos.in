@@ -1,8 +1,8 @@
-import { create } from 'zustand';
-import { User } from '@/types/auth';
-import { authService } from '@/lib/api/services/auth.service';
-import { tokenService } from '@/lib/services/token.service';
-import { api } from '@/lib/api/axios';
+import {create} from 'zustand';
+import {User} from '@/types/auth';
+import {authService} from '@/lib/api/services/auth.service';
+import {tokenService} from '@/lib/services/token.service';
+import {api} from '@/lib/api/axios';
 
 // Key for storing user data in sessionStorage
 const USER_STORAGE_KEY = 'user_data';
@@ -66,11 +66,6 @@ export const useAuthStore = create<AuthState>((set) => ({
           isAuthenticated: true,
           token: tokenService.getToken()
         });
-
-        // If user data is not in sessionStorage, we could fetch it from the server
-        // This is commented out as per the original code
-        // const user = await authService.refreshToken();
-        // set({ user: user.user, isAuthenticated: true });
       } catch {
         // If getting user profile fails, clear tokens and user data
         tokenService.clearTokens();
@@ -80,10 +75,41 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ loading: false });
       }
     } else {
-      // If token is invalid, clear it and user data
-      tokenService.clearTokens();
-      saveUserToStorage(null);
-      set({ user: null, isAuthenticated: false, token: null });
+      // If token is invalid but refresh token exists, try to refresh
+      const refreshToken = tokenService.getRefreshToken();
+      if (refreshToken) {
+        try {
+          set({ loading: true });
+          // Try to refresh the token
+          const response = await authService.refreshToken();
+
+          // Store the new tokens
+          tokenService.setToken(response.token);
+          if (response.refreshToken) {
+            tokenService.setRefreshToken(response.refreshToken);
+          }
+
+          // Set user data and authenticated state
+          saveUserToStorage(response.user_account);
+          set({ 
+            user: response.user_account, 
+            isAuthenticated: true,
+            token: response.token
+          });
+        } catch {
+          // If refresh fails, clear tokens and user data
+          tokenService.clearTokens();
+          saveUserToStorage(null);
+          set({ user: null, isAuthenticated: false, token: null });
+        } finally {
+          set({ loading: false });
+        }
+      } else {
+        // If no refresh token, clear everything
+        tokenService.clearTokens();
+        saveUserToStorage(null);
+        set({ user: null, isAuthenticated: false, token: null });
+      }
     }
   },
 
@@ -139,9 +165,9 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
 
       // Store both tokens if refresh token is provided
-      // if (response.refreshToken) {
-      //   tokenService.setRefreshToken(response.refreshToken);
-      // }
+      if (response.refreshToken) {
+        tokenService.setRefreshToken(response.refreshToken);
+      }
 
       // Save user data to sessionStorage
       saveUserToStorage(response.user);

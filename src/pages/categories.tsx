@@ -1,52 +1,19 @@
-import { useState, useEffect } from 'react';
-import { 
-  Plus, 
-  Edit2, 
-  Trash2, 
-  Search, 
-  Loader2, 
-  AlertCircle, 
-  FolderTree
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useMenuStore } from '@/lib/store';
-import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
-import { Category } from '@/types';
-import { toast } from 'sonner';
-import {
-  Card,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Badge } from '@/components/ui/badge';
+import {useCallback, useEffect, useState} from 'react';
+import {AlertCircle, Edit2, FolderTree, Loader2, Plus, Search, Trash2} from 'lucide-react';
+import {Button} from '@/components/ui/button';
+import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from '@/components/ui/dialog';
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
+import {Input} from "@/components/ui/input";
+import {useForm} from "react-hook-form";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {z} from "zod";
+import {useMenuStore} from '@/lib/store';
+import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
+import {Category} from '@/types';
+import {toast} from '@/lib/toast';
+import {Card, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select";
+import {Badge} from '@/components/ui/badge';
 
 const categorySchema = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name cannot exceed 50 characters'),
@@ -60,7 +27,7 @@ export default function Categories() {
     categories,
     loading,
     error,
-    fetchCategories,
+    fetchCategories: fetchCategoriesFromStore,
     addCategory,
     updateCategory,
     deleteCategory
@@ -79,16 +46,18 @@ export default function Categories() {
     },
   });
 
+  // Memoize the fetchCategories function to prevent it from changing on each render
+  const fetchCategories = useCallback(async () => {
+    try {
+      await fetchCategoriesFromStore();
+    } catch (err) {
+      handleError(err);
+    }
+  }, [fetchCategoriesFromStore, handleError]);
+
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        await fetchCategories();
-      } catch (err) {
-        handleError(err);
-      }
-    };
-    loadData();
-  }, [fetchCategories, handleError]);
+    fetchCategories();
+  }, [fetchCategories]);
 
   useEffect(() => {
     if (editingCategory) {
@@ -127,7 +96,6 @@ export default function Categories() {
         toast.success('Category updated successfully');
       } else {
         await addCategory(data);
-        toast.success('Category added successfully');
       }
       setShowDialog(false);
       setEditingCategory(null);

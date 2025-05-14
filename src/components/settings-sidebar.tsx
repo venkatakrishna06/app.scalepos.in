@@ -1,11 +1,7 @@
-import { Link, useLocation } from 'react-router-dom';
-import {
-  User,
-  Percent,
-  ChevronRight,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useAuthStore } from '@/lib/store/auth.store';
+import {Link, useLocation} from 'react-router-dom';
+import {ChevronRight, Percent, User,} from 'lucide-react';
+import {cn} from '@/lib/utils';
+import {useAuthStore} from '@/lib/store/auth.store';
 
 const settingsNavigation = [
   { name: 'Profile', href: '/settings/profile', icon: User, roles: ['admin', 'manager', 'kitchen', 'server', 'staff', 'user'] },

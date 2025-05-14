@@ -1,6 +1,6 @@
-import { api } from '../axios';
-import { API_ENDPOINTS } from '../endpoints';
-import { Payment } from '@/types';
+import {api} from '../axios';
+import {API_ENDPOINTS} from '../endpoints';
+import {Payment} from '@/types';
 
 // Import the ApiErrorResponse interface
 interface ApiErrorResponse {

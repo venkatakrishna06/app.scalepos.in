@@ -1,6 +1,7 @@
-import { api } from '../axios';
-import { AuthResponse, LoginCredentials, SignupData, User } from '@/types/auth';
-import { API_ENDPOINTS } from '../endpoints';
+import {api} from '../axios';
+import {AuthResponse, LoginCredentials, SignupData, User} from '@/types/auth';
+import {API_ENDPOINTS} from '../endpoints';
+import {tokenService} from '@/lib/services/token.service';
 
 export const authService = {
   login: async (credentials: LoginCredentials) => {
@@ -19,7 +20,8 @@ export const authService = {
   },
 
   refreshToken: async () => {
-    const response = await api.post<AuthResponse>(API_ENDPOINTS.AUTH.REFRESH);
+    const refreshToken = tokenService.getRefreshToken();
+    const response = await api.post<AuthResponse>(API_ENDPOINTS.AUTH.REFRESH, { refreshToken });
     return response.data;
   },
 

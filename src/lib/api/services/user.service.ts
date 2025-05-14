@@ -1,6 +1,6 @@
-import { User } from '@/types';
-import { API_ENDPOINTS } from '../endpoints';
-import { api } from '../axios';
+import {User} from '@/types';
+import {API_ENDPOINTS} from '../endpoints';
+import {api} from '../axios';
 
 
 export const userService = {

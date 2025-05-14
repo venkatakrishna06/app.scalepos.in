@@ -1,54 +1,29 @@
-import { useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Table2, 
-  ShoppingBag, 
-  ClipboardList, 
-  Menu as MenuIcon 
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useOrderStore } from '@/lib/store';
-import { usePermissions } from '@/hooks/usePermissions';
+import {useNavigate} from 'react-router-dom';
+import {ClipboardList, LayoutDashboard, Menu as MenuIcon, ShoppingBag, Table2} from 'lucide-react';
+import {useOrderStore} from '@/lib/store';
+import {usePermissions} from '@/hooks/usePermissions';
 
 interface MobileNavProps {
-  orderType: 'dine-in' | 'takeaway' | 'orders';
-  onOrderTypeChange: (type: 'dine-in' | 'takeaway' | 'orders') => void;
   toggleSidebar: () => void;
 }
 
-export function MobileNav({ orderType, onOrderTypeChange, toggleSidebar }: MobileNavProps) {
+export function MobileNav({ toggleSidebar }: MobileNavProps) {
   const navigate = useNavigate();
   const { orders } = useOrderStore();
   const { canManageTables, canCreateOrders, canViewOrders } = usePermissions();
-  
+
   // Count active orders by type
   const activeOrders = orders.filter(order => order.status !== 'paid' && order.status !== 'cancelled');
   const dineInCount = activeOrders.filter(order => order.order_type === 'dine-in').length;
   const takeawayCount = activeOrders.filter(order => order.order_type === 'takeaway').length;
   const totalActiveCount = activeOrders.length;
 
-  const handleOrderTypeChange = (type: 'dine-in' | 'takeaway' | 'orders') => {
-    onOrderTypeChange(type);
-    if (type === 'dine-in') {
-      navigate('/tables');
-      return;
-    }
-    if (type === 'orders') {
-      navigate('/orders');
-      return;
-    }
-    navigate('/dashboard');
-  };
-
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background md:hidden">
       <div className="flex h-16 items-center justify-around">
         <button
-          className={cn(
-            "flex flex-1 flex-col items-center justify-center h-full",
-            orderType === 'dine-in' ? "text-primary" : "text-muted-foreground"
-          )}
-          onClick={() => canManageTables && handleOrderTypeChange('dine-in')}
+          className="flex flex-1 flex-col items-center justify-center h-full"
+          onClick={() => canManageTables && navigate('/tables')}
           disabled={!canManageTables}
         >
           <div className="relative">
@@ -63,11 +38,8 @@ export function MobileNav({ orderType, onOrderTypeChange, toggleSidebar }: Mobil
         </button>
 
         <button
-          className={cn(
-            "flex flex-1 flex-col items-center justify-center h-full",
-            orderType === 'takeaway' ? "text-primary" : "text-muted-foreground"
-          )}
-          onClick={() => canCreateOrders && handleOrderTypeChange('takeaway')}
+          className="flex flex-1 flex-col items-center justify-center h-full"
+          onClick={() => canCreateOrders && navigate('/takeaway')}
           disabled={!canCreateOrders}
         >
           <div className="relative">
@@ -82,10 +54,7 @@ export function MobileNav({ orderType, onOrderTypeChange, toggleSidebar }: Mobil
         </button>
 
         <button
-          className={cn(
-            "flex flex-1 flex-col items-center justify-center h-full",
-            !orderType || (orderType !== 'dine-in' && orderType !== 'takeaway' && orderType !== 'orders') ? "text-primary" : "text-muted-foreground"
-          )}
+          className="flex flex-1 flex-col items-center justify-center h-full"
           onClick={() => navigate('/dashboard')}
         >
           <LayoutDashboard className="h-5 w-5" />
@@ -93,11 +62,8 @@ export function MobileNav({ orderType, onOrderTypeChange, toggleSidebar }: Mobil
         </button>
 
         <button
-          className={cn(
-            "flex flex-1 flex-col items-center justify-center h-full",
-            orderType === 'orders' ? "text-primary" : "text-muted-foreground"
-          )}
-          onClick={() => canViewOrders && handleOrderTypeChange('orders')}
+          className="flex flex-1 flex-col items-center justify-center h-full"
+          onClick={() => canViewOrders && navigate('/orders')}
           disabled={!canViewOrders}
         >
           <div className="relative">

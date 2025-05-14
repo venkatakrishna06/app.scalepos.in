@@ -1,57 +1,33 @@
-import { useState, useEffect, useRef } from 'react';
-import { 
-  Plus, 
-  Edit2, 
-  Trash2, 
-  Search, 
-  Loader2, 
-  SortAsc, 
-  SortDesc, 
-  LayoutGrid, 
-  LayoutList, 
-  AlertCircle, 
-  FileText,
-  Tag,
+import {useEffect, useRef, useState} from 'react';
+import {
+  AlertCircle,
   CheckCircle,
+  Edit2,
+  FileText,
+  LayoutGrid,
+  LayoutList,
+  Loader2,
+  Plus,
+  Search,
+  SortAsc,
+  SortDesc,
+  Tag,
+  Trash2,
   XCircle
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { Badge } from '@/components/ui/badge';
-import { MenuItemForm } from '@/components/forms/menu-item-form';
-import { useMenuStore } from '@/lib/store';
-import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
-import { MenuItem } from '@/types';
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import {Button} from '@/components/ui/button';
+import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from '@/components/ui/dialog';
+import {Input} from '@/components/ui/input';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select";
+import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
+import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,} from '@/components/ui/tooltip';
+import {Badge} from '@/components/ui/badge';
+import {MenuItemForm} from '@/components/forms/menu-item-form';
+import {useMenuStore} from '@/lib/store';
+import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
+import {MenuItem} from '@/types';
+import {toast} from '@/lib/toast';
+import {cn} from '@/lib/utils';
 
 type SortField = 'name' | 'price' | 'category';
 type ViewMode = 'grid' | 'list';
@@ -132,7 +108,6 @@ export default function Menu() {
         setEditingItem(null);
       } else {
         await addMenuItem({ ...data, available: true });
-        toast.success('Menu item added successfully');
       }
       setShowAddDialog(false);
     } catch (err) {
@@ -415,28 +390,8 @@ export default function Menu() {
         </div>
       </div>
 
-      {filteredItems.length === 0 && (
-        <div className="flex h-[400px] items-center justify-center rounded-lg border border-dashed">
-          <div className="text-center">
-            <p className="text-muted-foreground">No menu items found</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Try adjusting your search or filters
-            </p>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() => setShowAddDialog(true)}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add New Item
-            </Button>
-          </div>
-        </div>
-      )}
-
       <Dialog
         open={showAddDialog}
-
       >
         <DialogContent className="sm:max-w-[600px]"  onClose={!isSubmitting ? () => {
           setShowAddDialog(false);

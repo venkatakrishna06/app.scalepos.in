@@ -1,49 +1,28 @@
-import { User, Mail, Search, Edit2, Trash2, Loader2, Filter, Plus, SortAsc, SortDesc } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import {Edit2, Filter, Loader2, Mail, Plus, Search, Trash2, User} from 'lucide-react';
+import {Button} from '@/components/ui/button';
+import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from '@/components/ui/dialog';
+import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,} from "@/components/ui/dropdown-menu";
 import UserCreationForm from '@/components/UserManagement/UserCreationForm';
-import { useState, useEffect, useRef } from 'react';
-import { toast } from 'sonner';
-import { useUserStore } from '@/lib/store';
-import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
-import { User as UserType } from '@/types';
+import {useEffect, useState} from 'react';
+import {toast} from '@/lib/toast';
+import {useUserStore} from '@/lib/store';
+import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
+import {User as UserType} from '@/types';
 
-type SortField = 'email' | 'role';
-type SortOrder = 'asc' | 'desc';
 
 const UserManagement: React.FC = () => {
   const { users, loading, error, fetchUsers, deleteUser } = useUserStore();
   const { handleError } = useErrorHandler();
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [sortField, setSortField] = useState<SortField>('email');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [showDialog, setShowDialog] = useState(false);
   const [editingUser, setEditingUser] = useState<UserType | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Using a ref to prevent duplicate API calls in StrictMode
-  const isDataFetchedRef = useRef(false);
-
   useEffect(() => {
-    if (!isDataFetchedRef.current) {
-      fetchUsers();
-      isDataFetchedRef.current = true;
-    }
-  }, [fetchUsers]);
 
+      fetchUsers();
+    }, [fetchUsers]);
   const handleDelete = async (id: number) => {
     const confirmed = window.confirm('Are you sure you want to delete this user?');
     if (!confirmed) return;
@@ -71,11 +50,11 @@ const UserManagement: React.FC = () => {
     .filter((user) => {
       const matchesSearch = 
         (user.staff?.name?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
-          user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.role.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesRole = roleFilter === 'all' || user.role === roleFilter;
       return matchesSearch && matchesRole;
     });
+
 
 
   if (loading) {

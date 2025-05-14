@@ -1,18 +1,19 @@
-import { Link, useLocation } from 'react-router-dom';
+import {Link, useLocation} from 'react-router-dom';
 import {
-  LayoutDashboard,
-  Users,
-  Coffee,
-  ClipboardList,
+  BarChart2,
   Calendar,
-  Table2,
-  UserCircle,
-  Receipt,
-  Tags,
   ChevronRight,
+  ClipboardList,
+  Coffee,
+  LayoutDashboard,
+  Receipt,
+  Table2,
+  Tags,
+  UserCircle,
+  Users,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useAuthStore } from '@/lib/store/auth.store';
+import {cn} from '@/lib/utils';
+import {useAuthStore} from '@/lib/store/auth.store';
 
 // Define navigation items with role-based access
 const navigationWithRoles = [
@@ -25,6 +26,7 @@ const navigationWithRoles = [
   { name: 'Customers', href: '/customers', icon: Users, roles: ['admin', 'manager'] },
   { name: 'Staff', href: '/staff', icon: UserCircle, roles: ['admin'] },
   { name: 'Payments', href: '/payments', icon: Receipt, roles: ['admin', 'manager'] },
+  { name: 'Analytics', href: '/analytics', icon: BarChart2, roles: ['admin', 'manager'] },
   { name: 'Access', href: '/user-management', icon: Users, roles: ['admin'] },
 ];
 
@@ -43,7 +45,7 @@ export default function Sidebar({ closeSidebar }: SidebarProps) {
 
   return (
     <div className="h-[calc(100vh-4rem)] w-full overflow-y-auto overflow-x-hidden pt-0 md:pt-0">
-      <div className="py-4 px-3 mt-16 md:mt-0"> {/* Add top margin on mobile to account for navbar */}
+      <div className="py-4 px-3 md:mt-0"> {/* Add top margin on mobile to account for navbar */}
         <nav className="space-y-3 px-1">
           {filteredNavigation.map((item) => {
             const isActive = location.pathname === item.href;

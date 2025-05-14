@@ -1,6 +1,6 @@
-import { api } from '../axios';
-import { API_ENDPOINTS } from '../endpoints';
-import { MenuItem, Category } from '@/types';
+import {api} from '../axios';
+import {API_ENDPOINTS} from '../endpoints';
+import {Category, MenuItem} from '@/types';
 
 export const menuService = {
   getItems: async () => {

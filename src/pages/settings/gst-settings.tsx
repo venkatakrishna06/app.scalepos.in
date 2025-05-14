@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import { RestaurantGstRates } from './gst/restaurant-rates';
-import { CategoryGstSettings } from './gst/category-settings';
-import { MenuItemGstSettings } from './gst/menu-item-settings';
-import { menuService, restaurantService } from '@/lib/api/services';
-import { Restaurant, MenuItem, Category } from '@/types';
-import { Loader2 } from 'lucide-react';
+import {useEffect, useState} from 'react';
+import {RestaurantGstRates} from './gst/restaurant-rates';
+import {CategoryGstSettings} from './gst/category-settings';
+import {MenuItemGstSettings} from './gst/menu-item-settings';
+import {menuService, restaurantService} from '@/lib/api/services';
+import {Category, MenuItem, Restaurant} from '@/types';
+import {Loader2} from 'lucide-react';
 
 export default function GstSettings() {
   const [loading, setLoading] = useState(true);

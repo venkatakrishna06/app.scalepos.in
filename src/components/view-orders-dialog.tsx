@@ -1,25 +1,12 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from './ui/dialog';
-import { Button } from './ui/button';
-import {
-  Clock,
-  CreditCard,
-  Plus,
-  Minus,
-  XCircle,
-  CheckCircle2,
-  Loader2
-} from 'lucide-react';
-import { Order } from '@/types';
-import { format } from 'date-fns';
-import { useOrderStore, useRestaurantStore } from '@/lib/store';
-import { toast } from 'sonner';
-import { useState, useEffect } from 'react';
-import { usePermissions } from '@/hooks/usePermissions';
+import {Dialog, DialogContent, DialogHeader, DialogTitle,} from './ui/dialog';
+import {Button} from './ui/button';
+import {CheckCircle2, Clock, CreditCard, Loader2, XCircle} from 'lucide-react';
+import {Order} from '@/types';
+import {format} from 'date-fns';
+import {useOrderStore, useRestaurantStore} from '@/lib/store';
+import {toast} from '@/lib/toast';
+import {useEffect, useState} from 'react';
+import {usePermissions} from '@/hooks/usePermissions';
 
 interface ViewOrdersDialogProps {
   open: boolean;
@@ -204,35 +191,35 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                                         )}
                                       </td>
                                       <td className="py-1">
-                                        {canEditOrder(order.status) && item.status === 'placed' && (
-                                            <div className="flex items-center gap-2">
-                                              <Button
-                                                  variant="outline"
-                                                  size="sm"
-                                                  onClick={() => handleQuantityChange(order.id, item.id, -1, item.quantity)}
-                                                  disabled={processingItemId === item.id}
-                                              >
-                                                {processingItemId === item.id ? (
-                                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                                ) : (
-                                                    <Minus className="h-3 w-3" />
-                                                )}
-                                              </Button>
-                                              <Button
-                                                  variant="outline"
-                                                  size="sm"
-                                                  onClick={() => handleQuantityChange(order.id, item.id, 1, item.quantity)}
-                                                  disabled={processingItemId === item.id}
-                                              >
-                                                {processingItemId === item.id ? (
-                                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                                ) : (
-                                                    <Plus className="h-3 w-3" />
-                                                )}
-                                              </Button>
-                                            </div>
-                                        )}
-                                        { canEditOrder(order.status) && item.status === 'placed' && (
+                                        {/*{canEditOrder(order.status) && item.status === 'placed' && (*/}
+                                        {/*    <div className="flex items-center gap-2">*/}
+                                        {/*      <Button*/}
+                                        {/*          variant="outline"*/}
+                                        {/*          size="sm"*/}
+                                        {/*          onClick={() => handleQuantityChange(order.id, item.id, -1, item.quantity)}*/}
+                                        {/*          disabled={processingItemId === item.id}*/}
+                                        {/*      >*/}
+                                        {/*        {processingItemId === item.id ? (*/}
+                                        {/*            <Loader2 className="h-3 w-3 animate-spin" />*/}
+                                        {/*        ) : (*/}
+                                        {/*            <Minus className="h-3 w-3" />*/}
+                                        {/*        )}*/}
+                                        {/*      </Button>*/}
+                                        {/*      <Button*/}
+                                        {/*          variant="outline"*/}
+                                        {/*          size="sm"*/}
+                                        {/*          onClick={() => handleQuantityChange(order.id, item.id, 1, item.quantity)}*/}
+                                        {/*          disabled={processingItemId === item.id}*/}
+                                        {/*      >*/}
+                                        {/*        {processingItemId === item.id ? (*/}
+                                        {/*            <Loader2 className="h-3 w-3 animate-spin" />*/}
+                                        {/*        ) : (*/}
+                                        {/*            <Plus className="h-3 w-3" />*/}
+                                        {/*        )}*/}
+                                        {/*      </Button>*/}
+                                        {/*    </div>*/}
+                                        {/*)}*/}
+                                        { !isServer && item.status === 'placed' && (
                                             <div className="flex items-center gap-2 mt-2">
                                               <Button
                                                   variant="outline"
@@ -284,118 +271,118 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                             {/* Card view for small screens */}
                             <div className="md:hidden space-y-4">
                               {(order?.items || []).map((item) => (
-                                <div key={item.id} className="border rounded-md p-3 bg-background">
-                                  <div className="flex justify-between items-start mb-2">
-                                    <div>
-                                      <h4 className="font-medium">{item.name}</h4>
-                                      <div className="text-sm text-muted-foreground mt-1">
-                                        {item.quantity} × ₹{item?.price?.toFixed(2)} = ₹{(item.quantity * item?.price)?.toFixed(2)}
+                                  <div key={item.id} className="border rounded-md p-3 bg-background">
+                                    <div className="flex justify-between items-start mb-2">
+                                      <div>
+                                        <h4 className="font-medium">{item.name}</h4>
+                                        <div className="text-sm text-muted-foreground mt-1">
+                                          {item.quantity} × ₹{item?.price?.toFixed(2)} = ₹{(item.quantity * item?.price)?.toFixed(2)}
+                                        </div>
                                       </div>
-                                    </div>
-                                    <div>
-                                      {item.status === 'cancelled' && (
-                                        <span className="rounded-full px-2 py-1 text-xs font-medium bg-red-100 text-red-800">
+                                      <div>
+                                        {item.status === 'cancelled' && (
+                                            <span className="rounded-full px-2 py-1 text-xs font-medium bg-red-100 text-red-800">
                                           Cancelled
                                         </span>
-                                      )}
-                                      {item.status === 'served' && (
-                                        <span className="rounded-full px-2 py-1 text-xs font-medium bg-green-100 text-green-800">
+                                        )}
+                                        {item.status === 'served' && (
+                                            <span className="rounded-full px-2 py-1 text-xs font-medium bg-green-100 text-green-800">
                                           Served
                                         </span>
-                                      )}
-                                      {item.status === 'preparing' && (
-                                        <span className="rounded-full px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        )}
+                                        {item.status === 'preparing' && (
+                                            <span className="rounded-full px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800">
                                           Preparing
                                         </span>
-                                      )}
-                                      {item.status === 'placed' && (
-                                        <span className="rounded-full px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800">
+                                        )}
+                                        {item.status === 'placed' && (
+                                            <span className="rounded-full px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800">
                                           Placed
                                         </span>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/*{canEditOrder(order.status) && item.status === 'placed' && (*/}
+                                    {/*    <div className="flex items-center gap-2 mt-3">*/}
+                                    {/*      <Button*/}
+                                    {/*          variant="outline"*/}
+                                    {/*          size="sm"*/}
+                                    {/*          className="h-8 w-8"*/}
+                                    {/*          onClick={() => handleQuantityChange(order.id, item.id, -1, item.quantity)}*/}
+                                    {/*          disabled={processingItemId === item.id}*/}
+                                    {/*      >*/}
+                                    {/*        {processingItemId === item.id ? (*/}
+                                    {/*            <Loader2 className="h-4 w-4 animate-spin" />*/}
+                                    {/*        ) : (*/}
+                                    {/*            <Minus className="h-4 w-4" />*/}
+                                    {/*        )}*/}
+                                    {/*      </Button>*/}
+                                    {/*      <span className="w-8 text-center">{item.quantity}</span>*/}
+                                    {/*      <Button*/}
+                                    {/*          variant="outline"*/}
+                                    {/*          size="sm"*/}
+                                    {/*          className="h-8 w-8"*/}
+                                    {/*          onClick={() => handleQuantityChange(order.id, item.id, 1, item.quantity)}*/}
+                                    {/*          disabled={processingItemId === item.id}*/}
+                                    {/*      >*/}
+                                    {/*        {processingItemId === item.id ? (*/}
+                                    {/*            <Loader2 className="h-4 w-4 animate-spin" />*/}
+                                    {/*        ) : (*/}
+                                    {/*            <Plus className="h-4 w-4" />*/}
+                                    {/*        )}*/}
+                                    {/*      </Button>*/}
+                                    {/*    </div>*/}
+                                    {/*)}*/}
+
+                                    <div className="flex flex-wrap gap-2 mt-3">
+                                      {item.status === 'placed' && (
+                                          <>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-9"
+                                                onClick={() => handleItemStatusChange(order.id, item.id, 'cancelled')}
+                                                disabled={processingItemId === item.id}
+                                            >
+                                              {processingItemId === item.id ? (
+                                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                              ) : (
+                                                  <XCircle className="mr-2 h-4 w-4" />
+                                              )}
+                                              Cancel
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                className="h-9"
+                                                onClick={() => handleItemStatusChange(order.id, item.id, 'preparing')}
+                                                disabled={processingItemId === item.id}
+                                            >
+                                              {processingItemId === item.id ? (
+                                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                              ) : (
+                                                  <span>Start Preparing</span>
+                                              )}
+                                            </Button>
+                                          </>
+                                      )}
+                                      {item.status === 'preparing' && !isServer && (
+                                          <Button
+                                              size="sm"
+                                              className="h-9"
+                                              onClick={() => handleItemStatusChange(order.id, item.id, 'served')}
+                                              disabled={processingItemId === item.id}
+                                          >
+                                            {processingItemId === item.id ? (
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <CheckCircle2 className="mr-2 h-4 w-4" />
+                                            )}
+                                            Mark Served
+                                          </Button>
                                       )}
                                     </div>
                                   </div>
-
-                                  {canEditOrder(order.status) && item.status === 'placed' && (
-                                    <div className="flex items-center gap-2 mt-3">
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8 w-8"
-                                        onClick={() => handleQuantityChange(order.id, item.id, -1, item.quantity)}
-                                        disabled={processingItemId === item.id}
-                                      >
-                                        {processingItemId === item.id ? (
-                                          <Loader2 className="h-4 w-4 animate-spin" />
-                                        ) : (
-                                          <Minus className="h-4 w-4" />
-                                        )}
-                                      </Button>
-                                      <span className="w-8 text-center">{item.quantity}</span>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8 w-8"
-                                        onClick={() => handleQuantityChange(order.id, item.id, 1, item.quantity)}
-                                        disabled={processingItemId === item.id}
-                                      >
-                                        {processingItemId === item.id ? (
-                                          <Loader2 className="h-4 w-4 animate-spin" />
-                                        ) : (
-                                          <Plus className="h-4 w-4" />
-                                        )}
-                                      </Button>
-                                    </div>
-                                  )}
-
-                                  <div className="flex flex-wrap gap-2 mt-3">
-                                    {item.status === 'placed' && (
-                                      <>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          className="h-9"
-                                          onClick={() => handleItemStatusChange(order.id, item.id, 'cancelled')}
-                                          disabled={processingItemId === item.id}
-                                        >
-                                          {processingItemId === item.id ? (
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                          ) : (
-                                            <XCircle className="mr-2 h-4 w-4" />
-                                          )}
-                                          Cancel
-                                        </Button>
-                                        <Button
-                                          size="sm"
-                                          className="h-9"
-                                          onClick={() => handleItemStatusChange(order.id, item.id, 'preparing')}
-                                          disabled={processingItemId === item.id}
-                                        >
-                                          {processingItemId === item.id ? (
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                          ) : (
-                                            <span>Start Preparing</span>
-                                          )}
-                                        </Button>
-                                      </>
-                                    )}
-                                    {item.status === 'preparing' && !isServer && (
-                                      <Button
-                                        size="sm"
-                                        className="h-9"
-                                        onClick={() => handleItemStatusChange(order.id, item.id, 'served')}
-                                        disabled={processingItemId === item.id}
-                                      >
-                                        {processingItemId === item.id ? (
-                                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        ) : (
-                                          <CheckCircle2 className="mr-2 h-4 w-4" />
-                                        )}
-                                        Mark Served
-                                      </Button>
-                                    )}
-                                  </div>
-                                </div>
                               ))}
                             </div>
                           </div>
@@ -408,15 +395,15 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                               <div className="text-left sm:text-right">
                                 {/* Show GST details if available */}
                                 {order.sub_total > 0 && (
-                                  <div className="text-xs text-muted-foreground mb-1 space-y-0.5">
-                                    <p>Subtotal: ₹{getGstDetails(order).subTotal.toFixed(2)}</p>
-                                    {getGstDetails(order).sgstAmount > 0 && (
-                                      <p>SGST ({getGstDetails(order).sgstRate}%): ₹{getGstDetails(order).sgstAmount.toFixed(2)}</p>
-                                    )}
-                                    {getGstDetails(order).cgstAmount > 0 && (
-                                      <p>CGST ({getGstDetails(order).cgstRate}%): ₹{getGstDetails(order).cgstAmount.toFixed(2)}</p>
-                                    )}
-                                  </div>
+                                    <div className="text-xs text-muted-foreground mb-1 space-y-0.5">
+                                      <p>Subtotal: ₹{getGstDetails(order).subTotal.toFixed(2)}</p>
+                                      {getGstDetails(order).sgstAmount > 0 && (
+                                          <p>SGST ({getGstDetails(order).sgstRate}%): ₹{getGstDetails(order).sgstAmount.toFixed(2)}</p>
+                                      )}
+                                      {getGstDetails(order).cgstAmount > 0 && (
+                                          <p>CGST ({getGstDetails(order).cgstRate}%): ₹{getGstDetails(order).cgstAmount.toFixed(2)}</p>
+                                      )}
+                                    </div>
                                 )}
                                 <p className="text-sm text-muted-foreground">Total</p>
                                 <p className="text-lg font-semibold">₹{getOrderTotal(order).toFixed(2)}</p>

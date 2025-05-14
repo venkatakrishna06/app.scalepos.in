@@ -1,13 +1,14 @@
-import { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuthStore } from '@/lib/store/auth.store';
-import { ProtectedRoute } from '@/components/auth/protected-route';
+import {useEffect} from 'react';
+import {Navigate, Route, Routes} from 'react-router-dom';
+import {useAuthStore} from '@/lib/store/auth.store';
+import {ProtectedRoute} from '@/components/auth/protected-route';
 
 // Import your pages
 import Login from '@/pages/auth/login';
 import Dashboard from '@/pages/dashboard';
 import Tables from '@/pages/tables';
 import Orders from '@/pages/orders';
+import Takeaway from '@/pages/takeaway';
 import Menu from '@/pages/menu';
 import Categories from '@/pages/categories';
 import Reservations from '@/pages/reservations';
@@ -20,14 +21,9 @@ import Settings from '@/pages/settings';
 import ProfileSettings from '@/pages/settings/profile-settings';
 import GstSettings from '@/pages/settings/gst-settings';
 import Unauthorized from '@/pages/unauthorized';
+import Analytics from '@/pages/analytics';
 
-interface AppRoutesProps {
-  orderType: 'dine-in' | 'takeaway' | 'orders';
-}
-
-const AppRoutes = ({ orderType }: AppRoutesProps) => {
-  // This will be used in the future when implementing order-specific routes
-  console.log('Current order type:', orderType);
+const AppRoutes = () => {
   const { initAuth } = useAuthStore();
 
   // Initialize authentication on app startup
@@ -46,7 +42,16 @@ const AppRoutes = ({ orderType }: AppRoutesProps) => {
         path="/dashboard" 
         element={
           <ProtectedRoute requiredRoles={['admin', 'manager', 'kitchen', 'server']}>
-            <Dashboard orderType={orderType} />
+            <Dashboard />
+          </ProtectedRoute>
+        } 
+      />
+
+      <Route 
+        path="/takeaway" 
+        element={
+          <ProtectedRoute requiredRoles={['admin', 'manager', 'server']}>
+            <Takeaway />
           </ProtectedRoute>
         } 
       />
@@ -122,13 +127,23 @@ const AppRoutes = ({ orderType }: AppRoutesProps) => {
           </ProtectedRoute>
         } 
       />
-        <Route
-            path="/user-management"
-            element={
-            <ProtectedRoute requiredRole="admin">
-                <UserManagement />
-            </ProtectedRoute>
-            }/>
+
+      <Route 
+        path="/analytics" 
+        element={
+          <ProtectedRoute requiredRoles={['admin', 'manager']}>
+            <Analytics />
+          </ProtectedRoute>
+        } 
+      />
+
+      <Route
+        path="/user-management"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <UserManagement />
+          </ProtectedRoute>
+        }/>
 
       <Route 
         path="/profile" 

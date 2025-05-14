@@ -1,4 +1,4 @@
-import { jwtDecode } from 'jwt-decode';
+import {jwtDecode} from 'jwt-decode';
 
 interface DecodedToken {
   exp: number;
@@ -55,6 +55,23 @@ class TokenService {
     } catch {
       // If token can't be decoded, consider it invalid
       return false;
+    }
+  }
+
+  isTokenExpiringSoon(thresholdMinutes: number = 5): boolean {
+    const token = this.getToken();
+    if (!token) return false;
+
+    try {
+      const decoded = jwtDecode<DecodedToken>(token);
+      const currentTime = Date.now() / 1000;
+      const thresholdSeconds = thresholdMinutes * 60;
+
+      // Check if token will expire within the threshold time
+      return decoded.exp > currentTime && decoded.exp - currentTime < thresholdSeconds;
+    } catch {
+      // If token can't be decoded, consider it invalid
+      return true;
     }
   }
 

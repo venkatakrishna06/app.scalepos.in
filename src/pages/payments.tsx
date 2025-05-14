@@ -1,9 +1,8 @@
-import { CreditCard, Calendar, Search, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { usePaymentStore, useOrderStore } from '@/lib/store';
-import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
-import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import {Calendar, CreditCard, Loader2, Search} from 'lucide-react';
+import {Button} from '@/components/ui/button';
+import {useOrderStore, usePaymentStore} from '@/lib/store';
+import {useCallback, useEffect, useState} from 'react';
+import {format} from 'date-fns';
 
 
 export default function Payments() {
@@ -11,13 +10,16 @@ export default function Payments() {
     payments,
     loading,
     error,
-    fetchPayments,
-    updatePaymentStatus
+    fetchPayments: fetchPaymentsFromStore
   } = usePaymentStore();
 
   const { orders } = useOrderStore();
-  const { handleError } = useErrorHandler();
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Memoize the fetchPayments function to prevent it from changing on each render
+  const fetchPayments = useCallback(() => {
+    fetchPaymentsFromStore();
+  }, [fetchPaymentsFromStore]);
 
   useEffect(() => {
     fetchPayments();
@@ -92,7 +94,7 @@ export default function Payments() {
               <thead>
               <tr className="border-b bg-muted/50">
                 <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Order ID</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Customer</th>
+                {/*<th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Customer</th>*/}
                 <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Items</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Amount</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Method</th>
@@ -106,7 +108,7 @@ export default function Payments() {
                 return (
                     <tr key={payment.id} className="border-b">
                       <td className="px-6 py-4 font-medium">Order #{payment.order_id}</td>
-                      <td className="px-6 py-4">{order?.customer || 'N/A'}</td>
+                      {/*<td className="px-6 py-4">{order?.customer || 'N/A'}</td>*/}
                       <td className="px-6 py-4">
                         <div className="max-w-xs truncate text-sm text-muted-foreground">
                           {order?.items.map(item => `${item.name} x${item.quantity}`).join(', ')}

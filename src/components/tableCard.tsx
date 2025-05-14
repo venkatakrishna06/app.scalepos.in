@@ -1,13 +1,27 @@
 import React from 'react';
 import {
-    Users, Coffee, Clock, ClipboardList, CreditCard, Settings2, Trash2, Split,
-    AlertCircle, CheckCircle, Calendar, RefreshCw, Timer
+    AlertCircle,
+    Calendar,
+    CheckCircle,
+    ClipboardList,
+    Coffee,
+    CreditCard,
+    RefreshCw,
+    Settings2,
+    Split,
+    Trash2,
+    Users
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Table } from '@/types';
-import { cn } from '@/lib/utils';
-import { format, formatDistanceToNow } from 'date-fns';
+import {Button} from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import {Table} from '@/types';
+import {cn} from '@/lib/utils';
 
 type TableCardProps = {
     table: Table;
@@ -134,18 +148,18 @@ export const TableCard = React.memo(({
 
             {/* Action buttons section */}
             <div className="border-t p-3 bg-muted/30">
-                <div className="flex items-center justify-end gap-2">
+                <div className="flex items-center justify-center ">
                     {table.status === 'available' && (
                         <>
-                            <Button variant="outline" size="sm" className="h-8" onClick={() => onDelete(table.id)}>
-                                <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button variant="outline" size="sm" className="h-8" onClick={onSplit}>
-                                <Split className="h-3.5 w-3.5" />
-                                Split
-                            </Button>
+                            {/*<Button variant="outline" size="sm" className="h-8" onClick={() => onDelete(table.id)}>*/}
+                            {/*    <Trash2 className="h-3.5 w-3.5" />*/}
+                            {/*</Button>*/}
+                            {/*<Button variant="outline" size="sm" className="h-8" onClick={onSplit}>*/}
+                            {/*    <Split className="h-3.5 w-3.5" />*/}
+                            {/*    Split*/}
+                            {/*</Button>*/}
 
-                            <Button size="sm" className="h-8" onClick={() => onNewOrder(table.id)}>
+                            <Button size="lg" className="h-8" onClick={() => onNewOrder(table.id)}>
                                 New Order
                             </Button>
                         </>

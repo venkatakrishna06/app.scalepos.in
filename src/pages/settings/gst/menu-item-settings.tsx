@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { useToast } from '@/components/ui/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2 } from 'lucide-react';
-import { menuService } from '@/lib/api/services';
-import { MenuItem } from '@/types';
+import {useEffect, useState} from 'react';
+import {useToast} from '@/components/ui/use-toast';
+import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
+import {Button} from '@/components/ui/button';
+import {Checkbox} from '@/components/ui/checkbox';
+import {Loader2} from 'lucide-react';
+import {menuService} from '@/lib/api/services';
+import {MenuItem} from '@/types';
 
 interface MenuItemGstSettingsProps {
   menuItems: MenuItem[];

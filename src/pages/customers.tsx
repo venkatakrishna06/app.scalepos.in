@@ -1,27 +1,14 @@
-import { User, Phone, Mail, Plus, Search, Filter, SortAsc, SortDesc, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { format } from 'date-fns';
-import { toast } from 'sonner';
-import { useState } from 'react';
+import {Loader2, Mail, Phone, Plus, Search, SortAsc, SortDesc, User} from 'lucide-react';
+import {Button} from '@/components/ui/button';
+import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from "@/components/ui/dialog";
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
+import {Input} from "@/components/ui/input";
+import {useForm} from "react-hook-form";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {z} from "zod";
+import {format} from 'date-fns';
+import {toast} from '@/lib/toast';
+import {useState} from 'react';
 
 const MOCK_CUSTOMERS = [
   {
@@ -108,7 +95,7 @@ export default function Customers() {
     )
     .sort((a, b) => {
       const multiplier = sortOrder === 'asc' ? 1 : -1;
-      
+
       switch (sortField) {
         case 'name':
           return multiplier * a.name.localeCompare(b.name);

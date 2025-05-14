@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { useToast } from '@/components/ui/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Loader2 } from 'lucide-react';
-import { restaurantService } from '@/lib/api/services';
-import { Restaurant } from '@/types';
+import {useEffect, useState} from 'react';
+import {useToast} from '@/components/ui/use-toast';
+import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {Loader2} from 'lucide-react';
+import {restaurantService} from '@/lib/api/services';
+import {Restaurant} from '@/types';
 
 interface RestaurantGstRatesProps {
   restaurant: Restaurant;

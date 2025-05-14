@@ -1,5 +1,5 @@
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import {Button} from '@/components/ui/button';
+import {useNavigate} from 'react-router-dom';
 
 export default function Unauthorized() {
   const navigate = useNavigate();

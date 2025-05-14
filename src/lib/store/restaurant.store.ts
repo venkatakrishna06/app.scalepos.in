@@ -1,0 +1,82 @@
+import {create} from 'zustand';
+import {Restaurant} from '@/types';
+import {restaurantService} from '@/lib/api/services/restaurant.service';
+import {toast} from '@/lib/toast';
+
+interface RestaurantState {
+  restaurant: Restaurant | null;
+  loading: boolean;
+  error: string | null;
+  fetchRestaurant: () => Promise<void>;
+  updateRestaurant: (updates: Partial<Restaurant>) => Promise<void>;
+  updateGstSettings: (sgstRate: number, cgstRate: number) => Promise<void>;
+}
+
+/**
+ * Store for managing restaurant information
+ * 
+ * This store handles:
+ * - Fetching restaurant information from the API
+ * - Updating restaurant details
+ * - Updating GST settings
+ */
+export const useRestaurantStore = create<RestaurantState>((set, get) => ({
+  restaurant: null,
+  loading: false,
+  error: null,
+
+  fetchRestaurant: async () => {
+    try {
+      set({ loading: true, error: null });
+      const restaurant = await restaurantService.getRestaurant();
+      set({ restaurant });
+    } catch (err) {
+      console.error('Failed to fetch restaurant:', err);
+      const errorMessage = 'Failed to fetch restaurant information';
+      set({ error: errorMessage });
+      toast.error(errorMessage);
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  updateRestaurant: async (updates) => {
+    try {
+      set({ loading: true, error: null });
+      const restaurant = get().restaurant;
+      if (!restaurant) {
+        throw new Error('No restaurant found');
+      }
+      const updatedRestaurant = await restaurantService.updateRestaurant(restaurant.id, updates);
+      set({ restaurant: updatedRestaurant });
+      toast.success('Restaurant information updated successfully');
+    } catch (err) {
+      console.error('Failed to update restaurant:', err);
+      const errorMessage = 'Failed to update restaurant information';
+      set({ error: errorMessage });
+      toast.error(errorMessage);
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  updateGstSettings: async (sgstRate, cgstRate) => {
+    try {
+      set({ loading: true, error: null });
+      const restaurant = get().restaurant;
+      if (!restaurant) {
+        throw new Error('No restaurant found');
+      }
+      const updatedRestaurant = await restaurantService.updateGstSettings(restaurant.id, sgstRate, cgstRate);
+      set({ restaurant: updatedRestaurant });
+      toast.success('GST settings updated successfully');
+    } catch (err) {
+      console.error('Failed to update GST settings:', err);
+      const errorMessage = 'Failed to update GST settings';
+      set({ error: errorMessage });
+      toast.error(errorMessage);
+    } finally {
+      set({ loading: false });
+    }
+  },
+}));

@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { useAuthStore } from '@/lib/store/auth.store';
-import { Button } from '@/components/ui/button';
-import { Dialog } from '@/components/ui/dialog';
-import { Loader2, Camera, Key } from 'lucide-react';
+import {useEffect, useState} from 'react';
+import {useAuthStore} from '@/lib/store/auth.store';
+import {Button} from '@/components/ui/button';
+import {Dialog} from '@/components/ui/dialog';
+import {Camera, Key, Loader2} from 'lucide-react';
 
 export default function Profile() {
   const { user, loading, error, updateProfile, changePassword, clearError, initAuth } = useAuthStore();

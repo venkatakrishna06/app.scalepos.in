@@ -1,22 +1,14 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuthStore } from '@/lib/store/auth.store';
-import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Loader2, Mail, Lock, Building2, Phone, MapPin, CreditCard } from 'lucide-react';
-import { toast } from 'sonner';
+import {useState} from 'react';
+import {Link, useNavigate} from 'react-router-dom';
+import {useAuthStore} from '@/lib/store/auth.store';
+import {Button} from '@/components/ui/button';
+import {Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
+import {Input} from "@/components/ui/input";
+import {useForm} from "react-hook-form";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {z} from "zod";
+import {Building2, CreditCard, Loader2, Lock, Mail, MapPin, Phone} from 'lucide-react';
+import {toast} from '@/lib/toast';
 
 const signupSchema = z.object({
   email: z.string()

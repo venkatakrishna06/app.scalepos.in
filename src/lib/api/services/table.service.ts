@@ -1,6 +1,6 @@
-import { api } from '../axios';
-import { API_ENDPOINTS } from '../endpoints';
-import { Table } from '@/types';
+import {api} from '../axios';
+import {API_ENDPOINTS} from '../endpoints';
+import {Table} from '@/types';
 
 export const tableService = {
   getTables: async () => {

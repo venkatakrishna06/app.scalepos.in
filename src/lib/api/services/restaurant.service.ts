@@ -1,6 +1,6 @@
-import { api } from '../axios';
-import { API_ENDPOINTS } from '../endpoints';
-import { Restaurant } from '@/types';
+import {api} from '../axios';
+import {API_ENDPOINTS} from '../endpoints';
+import {Restaurant} from '@/types';
 
 export const restaurantService = {
   getRestaurant: async () => {
