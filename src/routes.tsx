@@ -23,6 +23,30 @@ import GstSettings from '@/pages/settings/gst-settings';
 import Unauthorized from '@/pages/unauthorized';
 import Analytics from '@/pages/analytics';
 
+// Component to handle role-based redirection
+const RoleBasedRedirect = () => {
+  const { user, isAuthenticated } = useAuthStore();
+
+  // If not authenticated, redirect to login
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Redirect based on user role
+  if (user) {
+    if (user.role === 'admin') {
+      return <Navigate to="/dashboard" replace />;
+    } else if (user.role === 'kitchen') {
+      return <Navigate to="/orders" replace />;
+    } else if (user.role === 'manager' || user.role === 'server') {
+      return <Navigate to="/tables" replace />;
+    }
+  }
+
+  // Default fallback
+  return <Navigate to="/tables" replace />;
+};
+
 const AppRoutes = () => {
   const { initAuth } = useAuthStore();
 
@@ -41,7 +65,7 @@ const AppRoutes = () => {
       <Route 
         path="/dashboard" 
         element={
-          <ProtectedRoute requiredRoles={['admin', 'manager', 'kitchen', 'server']}>
+          <ProtectedRoute requiredRole="admin">
             <Dashboard />
           </ProtectedRoute>
         } 
@@ -131,7 +155,7 @@ const AppRoutes = () => {
       <Route 
         path="/analytics" 
         element={
-          <ProtectedRoute requiredRoles={['admin', 'manager']}>
+          <ProtectedRoute requiredRole="admin">
             <Analytics />
           </ProtectedRoute>
         } 
@@ -187,10 +211,12 @@ const AppRoutes = () => {
         } 
       />
 
-      {/* Redirect to dashboard if authenticated, otherwise to login */}
+      {/* Redirect based on user role if authenticated, otherwise to login */}
       <Route 
         path="/" 
-        element={<Navigate to="/tables" replace />}
+        element={
+          <RoleBasedRedirect />
+        }
       />
 
       {/* Catch all route - 404 */}

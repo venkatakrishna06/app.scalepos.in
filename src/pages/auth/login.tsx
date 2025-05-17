@@ -30,7 +30,13 @@ export default function Login() {
   const { login, loading, error, clearError } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
 
-  const from = location.state?.from?.pathname || '/tables';
+  // Default path is determined by user role, fallback to from or tables
+  const getDefaultPath = (role: string) => {
+    if (role === 'admin') return '/dashboard';
+    if (role === 'kitchen') return '/orders';
+    if (role === 'manager' || role === 'server') return '/tables';
+    return '/tables'; // Default fallback
+  };
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -51,8 +57,15 @@ export default function Login() {
     try {
       await login(data.email, data.password);
       toast.success('Welcome back!');
-      navigate(from, { replace: true });
-    } catch (err) {
+
+      // Get the user from auth store to determine role-based redirect
+      const user = useAuthStore.getState().user;
+      const from = location.state?.from?.pathname;
+
+      // If there's a specific 'from' path, use it, otherwise use role-based default
+      const redirectPath = from || (user ? getDefaultPath(user.role) : '/tables');
+      navigate(redirectPath, { replace: true });
+    } catch {
       toast.warning('Unable to login, please try again');
     }
   };

@@ -136,14 +136,14 @@ export const TableCard = React.memo(({
                     </div>
                 )}
 
-                {table.current_order_id && (
-                    <div className="mt-2 rounded-md bg-muted/50 p-2">
-                        <div className="flex items-center gap-2 text-sm">
-                            <Coffee className="h-4 w-4 text-orange-500" />
-                            <span className="font-medium">Active Order #{table.current_order_id}</span>
-                        </div>
-                    </div>
-                )}
+                {/*{table.current_order_id && (*/}
+                {/*    <div className="mt-2 rounded-md bg-muted/50 p-2">*/}
+                {/*        <div className="flex items-center gap-2 text-sm">*/}
+                {/*            <Coffee className="h-4 w-4 text-orange-500" />*/}
+                {/*            /!*<span className="font-medium">Active Order #{table.current_order_id}</span>*!/*/}
+                {/*        </div>*/}
+                {/*    </div>*/}
+                {/*)}*/}
             </div>
 
             {/* Action buttons section */}

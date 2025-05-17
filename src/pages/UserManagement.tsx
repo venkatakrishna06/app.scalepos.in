@@ -1,4 +1,5 @@
-import {Edit2, Filter, Loader2, Mail, Plus, Search, Trash2, User} from 'lucide-react';
+import {Edit2, Filter, Mail, Plus, Search, Trash2, User} from 'lucide-react';
+import {UserManagementSkeleton} from '@/components/skeletons/user-management-skeleton';
 import {Button} from '@/components/ui/button';
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from '@/components/ui/dialog';
 import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,} from "@/components/ui/dropdown-menu";
@@ -58,14 +59,7 @@ const UserManagement: React.FC = () => {
 
 
   if (loading) {
-    return (
-      <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span>Loading users...</span>
-        </div>
-      </div>
-    );
+    return <UserManagementSkeleton />;
   }
 
   if (error) {

@@ -4,20 +4,30 @@ import {authService} from '@/lib/api/services/auth.service';
 import {tokenService} from '@/lib/services/token.service';
 import {api} from '@/lib/api/axios';
 
-// Key for storing user data in sessionStorage
+// Key for storing user data in storage
 const USER_STORAGE_KEY = 'user_data';
 
-// Helper functions to store and retrieve user data from sessionStorage
+// Helper functions to store and retrieve user data from storage
+// Uses the same storage type (session or local) as the token service
 const saveUserToStorage = (user: User | null): void => {
   if (user) {
-    sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+    if (tokenService.isPersistentSession()) {
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+    } else {
+      sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+    }
   } else {
+    // Clear from both storages to ensure it's completely removed
+    localStorage.removeItem(USER_STORAGE_KEY);
     sessionStorage.removeItem(USER_STORAGE_KEY);
   }
 };
 
 const getUserFromStorage = (): User | null => {
-  const userData = sessionStorage.getItem(USER_STORAGE_KEY);
+  const isPersistent = tokenService.isPersistentSession();
+  const userData = isPersistent 
+    ? localStorage.getItem(USER_STORAGE_KEY)
+    : sessionStorage.getItem(USER_STORAGE_KEY);
   return userData ? JSON.parse(userData) : null;
 };
 
@@ -27,7 +37,7 @@ interface AuthState {
   error: string | null;
   isAuthenticated: boolean;
   token: string | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   signup: (
     email: string, 
     password: string, 
@@ -86,7 +96,9 @@ export const useAuthStore = create<AuthState>((set) => ({
           // Store the new tokens
           tokenService.setToken(response.token);
           if (response.refreshToken) {
-            tokenService.setRefreshToken(response.refreshToken);
+            // This now just sets a flag indicating we have a refresh token
+            // The actual token is stored as an HttpOnly cookie by the server
+            tokenService.setRefreshToken();
           }
 
           // Set user data and authenticated state
@@ -119,17 +131,23 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ token, isAuthenticated: true });
   },
 
-  login: async (email, password) => {
+  login: async (email, password, rememberMe = true) => {
     try {
       set({ loading: true, error: null });
+
+      // Set persistent session preference before making the login request
+      tokenService.setPersistentSession(rememberMe);
+
       const response = await authService.login({ email, password });
 
       // Store both tokens if refresh token is provided
       if (response.refreshToken) {
+        // This now just sets a flag indicating we have a refresh token
+        // The actual token is stored as an HttpOnly cookie by the server
         tokenService.setRefreshToken(response.refreshToken);
       }
 
-      // Save user data to sessionStorage
+      // Save user data to storage (will use localStorage or sessionStorage based on rememberMe)
       saveUserToStorage(response.user_account);
 
       set(state => {
@@ -166,6 +184,8 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       // Store both tokens if refresh token is provided
       if (response.refreshToken) {
+        // This now just sets a flag indicating we have a refresh token
+        // The actual token is stored as an HttpOnly cookie by the server
         tokenService.setRefreshToken(response.refreshToken);
       }
 

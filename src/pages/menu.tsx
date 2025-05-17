@@ -6,7 +6,6 @@ import {
   FileText,
   LayoutGrid,
   LayoutList,
-  Loader2,
   Plus,
   Search,
   SortAsc,
@@ -15,6 +14,7 @@ import {
   Trash2,
   XCircle
 } from 'lucide-react';
+import {MenuSkeleton} from '@/components/skeletons/menu-skeleton';
 import {Button} from '@/components/ui/button';
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from '@/components/ui/dialog';
 import {Input} from '@/components/ui/input';
@@ -146,14 +146,7 @@ export default function Menu() {
 
 
   if (loading) {
-    return (
-        <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Loader2 className="h-6 w-6 animate-spin"/>
-            <span>Loading menu items...</span>
-          </div>
-        </div>
-    );
+    return <MenuSkeleton />;
   }
 
   if (error) {

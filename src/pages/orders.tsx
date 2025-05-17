@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
-import {ArrowUpDown, Coffee, CreditCard, Download, FileText, Loader2, Printer, Search, User} from 'lucide-react';
+import {ArrowUpDown, Coffee, CreditCard, Download, FileText, Printer, Search, User} from 'lucide-react';
+import {OrdersSkeleton} from '@/components/skeletons/orders-skeleton';
 import {Button} from '@/components/ui/button';
 import {useOrderStore} from '@/lib/store';
 import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
@@ -59,12 +60,13 @@ export default function Orders() {
         case 'month':
           params.period = 'month';
           break;
-        case 'yesterday':
+        case 'yesterday': {
           // For yesterday, set explicit start_date and end_date
           const yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd');
           params.start_date = yesterday;
           params.end_date = yesterday;
           break;
+        }
         case 'all':
           // For "all time", don't set any time-related parameters
           break;
@@ -211,14 +213,7 @@ export default function Orders() {
 
   // Loading state
   if (ordersLoading) {
-    return (
-      <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
-        <div className="flex flex-col items-center gap-2 text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Loading orders...</p>
-        </div>
-      </div>
-    );
+    return <OrdersSkeleton />;
   }
 
   // Error state
@@ -575,4 +570,3 @@ export default function Orders() {
     </div>
   );
 }
-

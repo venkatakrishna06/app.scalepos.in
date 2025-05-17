@@ -1,25 +1,54 @@
-import {useState} from 'react';
+
+import {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {ArrowRight, ClipboardList, Clock, DollarSign, Plus, ShoppingBag, Table2, TrendingUp, Users} from 'lucide-react';
+import {ArrowRight, ClipboardList, Clock, DollarSign, Loader2, RefreshCw, ShoppingBag, Table2, TrendingUp, Users} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {useMenuStore, useOrderStore} from '@/lib/store';
-import {CreateOrderDialog} from '@/components/create-order-dialog';
-import {usePermissions} from '@/hooks/usePermissions';
+import {toast} from '@/lib/toast';
+
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
 import {Badge} from '@/components/ui/badge';
 
 export function DashboardHome() {
-  const [showOrderDialog, setShowOrderDialog] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { orders } = useOrderStore();
-  const { menuItems } = useMenuStore();
-  const { canCreateOrders } = usePermissions();
+  const { orders, fetchOrders } = useOrderStore();
+  const { menuItems, fetchMenuItems } = useMenuStore();
+
+  // Function to fetch data directly from API
+  const fetchDashboardData = async (skipCache = true) => {
+    try {
+      setLoading(true);
+
+      // Fetch data directly from API and update the stores
+      // Pass skipCache=true to bypass cache and fetch fresh data
+      await Promise.all([
+        fetchOrders({period:"day"}, skipCache),
+        fetchMenuItems(skipCache)
+      ]);
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+      toast.error('Failed to fetch dashboard data');
+      setLoading(false);
+    }
+  };
+
+  // Fetch data on initial load
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  // Function to handle refresh button click
+  const handleRefresh = () => {
+    fetchDashboardData();
+  };
 
   // Filter active orders
   const activeOrders = orders.filter(order => 
     order.status !== 'paid' && order.status !== 'cancelled'
   );
-  
+
   // Calculate metrics
   const todaySales = orders
     .filter(order => {
@@ -28,7 +57,7 @@ export function DashboardHome() {
       return orderDate.toDateString() === today.toDateString();
     })
     .reduce((sum, order) => sum + (order.total_amount || 0), 0);
-  
+
   const tablesInUse = activeOrders
     .filter(order => order.order_type === 'dine-in')
     .reduce((tables, order) => {
@@ -37,7 +66,7 @@ export function DashboardHome() {
       }
       return tables;
     }, [] as number[]).length;
-  
+
   const popularItems = menuItems
     .map(item => {
       const orderCount = orders.reduce((count, order) => {
@@ -54,13 +83,10 @@ export function DashboardHome() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-2xl font-semibold tracking-tight">Dashboard</h2>
-        
-        {canCreateOrders && (
-          <Button onClick={() => setShowOrderDialog(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Order
-          </Button>
-        )}
+        <Button onClick={handleRefresh} variant="outline" disabled={loading}>
+          {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+          Refresh
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -168,10 +194,7 @@ export function DashboardHome() {
               <Table2 className="h-8 w-8" />
               <span>Manage Tables</span>
             </Button>
-            <Button variant="outline" className="flex h-24 flex-col items-center justify-center gap-1" onClick={() => setShowOrderDialog(true)}>
-              <ShoppingBag className="h-8 w-8" />
-              <span>New Takeaway</span>
-            </Button>
+
             <Button variant="outline" className="flex h-24 flex-col items-center justify-center gap-1" onClick={() => navigate('/menu')}>
               <ClipboardList className="h-8 w-8" />
               <span>Menu Items</span>
@@ -220,11 +243,6 @@ export function DashboardHome() {
         </CardContent>
       </Card>
 
-      <CreateOrderDialog
-        open={showOrderDialog}
-        onClose={() => setShowOrderDialog(false)}
-        onCreateOrder={() => setShowOrderDialog(false)}
-      />
     </div>
   );
 }

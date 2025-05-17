@@ -8,6 +8,7 @@ import {useUserStore} from './user.store';
 import {useRestaurantStore} from './restaurant.store';
 import {useAuthStore} from './auth.store';
 import {useAnalyticsStore} from './analytics.store';
+import {useNotificationStore} from './notification.store';
 
 /**
  * Root store that combines all stores
@@ -15,11 +16,18 @@ import {useAnalyticsStore} from './analytics.store';
  * This store provides a clean way to access all stores in one place
  * and enables proper store composition.
  * 
+ * Note: Some stores (table, order, payment) have been migrated to React Query
+ * and are no longer included in the root store. Access them directly using
+ * their respective hooks.
+ * 
  * Example usage:
  * ```
- * const { menuStore, orderStore } = useRootStore();
+ * // For Zustand stores:
+ * const { menuStore } = useRootStore();
  * const menuItems = menuStore.menuItems;
- * const orders = orderStore.orders;
+ * 
+ * // For React Query stores:
+ * const { orders } = useOrderStore();
  * ```
  */
 export const useRootStore = create(() => ({
@@ -33,6 +41,7 @@ export const useRootStore = create(() => ({
   restaurantStore: useRestaurantStore.getState(),
   authStore: useAuthStore.getState(),
   analyticsStore: useAnalyticsStore.getState(),
+  notificationStore: useNotificationStore.getState(),
 
   // Subscribe to store changes
   subscribeToStores: () => {
@@ -73,6 +82,10 @@ export const useRootStore = create(() => ({
       state => useRootStore.setState({ analyticsStore: state })
     );
 
+    const unsubscribeNotification = useNotificationStore.subscribe(
+      state => useRootStore.setState({ notificationStore: state })
+    );
+
     // Return unsubscribe function
     return () => {
       unsubscribeStaff();
@@ -84,6 +97,7 @@ export const useRootStore = create(() => ({
       unsubscribeRestaurant();
       unsubscribeAuth();
       unsubscribeAnalytics();
+      unsubscribeNotification();
     };
   }
 }));

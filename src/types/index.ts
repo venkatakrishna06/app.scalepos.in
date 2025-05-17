@@ -93,7 +93,7 @@ export interface Payment {
   restaurant_id: number;
   order_id: number;
   amount: number;
-  payment_method: 'cash' | 'credit_card' | 'debit_card' | 'upi';
+  payment_method: 'cash' | 'card' | 'upi';
   payment_status: 'completed' | 'pending' | 'failed';
   transaction_id?: string;
   card_details?: {

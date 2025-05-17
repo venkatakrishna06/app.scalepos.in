@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useState} from 'react';
 import {AlertCircle, Edit2, FolderTree, Loader2, Plus, Search, Trash2} from 'lucide-react';
+import {CategoriesSkeleton} from '@/components/skeletons/categories-skeleton';
 import {Button} from '@/components/ui/button';
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from '@/components/ui/dialog';
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
@@ -122,14 +123,7 @@ export default function Categories() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading categories...</span>
-        </div>
-      </div>
-    );
+    return <CategoriesSkeleton />;
   }
 
   if (error) {

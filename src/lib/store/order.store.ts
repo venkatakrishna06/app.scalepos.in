@@ -2,6 +2,7 @@ import {create} from 'zustand';
 import {MenuItem, Order, OrderItem} from '@/types';
 import {orderService} from '@/lib/api/services/order.service';
 import {toast} from '@/lib/toast';
+import {cacheService, CACHE_KEYS} from '@/lib/services/cache.service';
 
 // Default tax rates
 const DEFAULT_SGST_RATE = 2.5;
@@ -13,9 +14,9 @@ const DEFAULT_CGST_RATE = 2.5;
  * @returns Default tax rates or fallback values
  */
 const getDefaultTaxRates = (): { sgstRate: number; cgstRate: number } => {
-  return { 
-    sgstRate: DEFAULT_SGST_RATE, 
-    cgstRate: DEFAULT_CGST_RATE 
+  return {
+    sgstRate: DEFAULT_SGST_RATE,
+    cgstRate: DEFAULT_CGST_RATE
   };
 };
 
@@ -31,7 +32,7 @@ interface OrderState {
     start_date?: string;
     end_date?: string;
     table_number?: number;
-  }) => Promise<void>;
+  }, skipCache?: boolean) => Promise<void>;
   addOrder: (order: Omit<Order, 'id'>) => Promise<Order>;
   updateOrder: (id: number, updates: Partial<Order>) => Promise<void>;
   updateOrderStatus: (id: number, status: Order['status']) => Promise<void>;
@@ -41,11 +42,11 @@ interface OrderState {
   removeOrderItem: (orderId: number, itemId: number) => Promise<void>;
 
   // Calculations
-  calculateOrderTotals: (items: OrderItem[], sgstRate?: number, cgstRate?: number) => { 
-    subTotal: number; 
-    sgstAmount: number; 
-    cgstAmount: number; 
-    totalAmount: number; 
+  calculateOrderTotals: (items: OrderItem[], sgstRate?: number, cgstRate?: number) => {
+    subTotal: number;
+    sgstAmount: number;
+    cgstAmount: number;
+    totalAmount: number;
   };
 
   // Selectors
@@ -60,7 +61,7 @@ interface OrderState {
 
 /**
  * Store for managing orders
- * 
+ *
  * This store handles:
  * - Fetching orders from the API
  * - Adding, updating, and deleting orders
@@ -73,10 +74,36 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   loading: false,
   error: null,
 
-  fetchOrders: async (params ) => {
+  fetchOrders: async (params, skipCache = false) => {
     try {
       set({ loading: true, error: null });
+
+      // Try to get data from cache first if skipCache is false
+      if (!skipCache) {
+        const cachedOrders = cacheService.getCache<Order[]>(CACHE_KEYS.ORDERS);
+        if (cachedOrders) {
+          console.log('Using cached orders data');
+          set({ orders: cachedOrders });
+          set({ loading: false });
+
+          // Fetch in background to update cache silently
+          orderService.getOrders(params).then(freshOrders => {
+            cacheService.setCache(CACHE_KEYS.ORDERS, freshOrders);
+            set({ orders: freshOrders });
+          }).catch(err => {
+            console.error('Background fetch for orders failed:', err);
+          });
+
+          return;
+        }
+      }
+
+      // If skipCache is true or no valid cache, fetch from API
       const orders = await orderService.getOrders(params);
+
+      // Update cache
+      cacheService.setCache(CACHE_KEYS.ORDERS, orders);
+
       set({ orders });
     } catch (err) {
       console.error('Failed to fetch orders:', err);
@@ -99,8 +126,8 @@ export const useOrderStore = create<OrderState>((set, get) => ({
         const finalSgstRate = order.sgst_rate ?? sgstRate;
         const finalCgstRate = order.cgst_rate ?? cgstRate;
 
-        const { subTotal, sgstAmount, cgstAmount, totalAmount } = 
-          get().calculateOrderTotals(order.items, finalSgstRate, finalCgstRate);
+        const { subTotal, sgstAmount, cgstAmount, totalAmount } =
+            get().calculateOrderTotals(order.items, finalSgstRate, finalCgstRate);
 
         order = {
           ...order,
@@ -141,8 +168,8 @@ export const useOrderStore = create<OrderState>((set, get) => ({
           const finalSgstRate = updates.sgst_rate ?? order.sgst_rate ?? sgstRate;
           const finalCgstRate = updates.cgst_rate ?? order.cgst_rate ?? cgstRate;
 
-          const { subTotal, sgstAmount, cgstAmount, totalAmount } = 
-            get().calculateOrderTotals(updates.items, finalSgstRate, finalCgstRate);
+          const { subTotal, sgstAmount, cgstAmount, totalAmount } =
+              get().calculateOrderTotals(updates.items, finalSgstRate, finalCgstRate);
 
           updates = {
             ...updates,
@@ -159,7 +186,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       const updatedOrder = await orderService.updateOrder(id, updates);
       set(state => ({
         orders: state.orders.map(order =>
-          order.id === id ? updatedOrder : order
+            order.id === id ? updatedOrder : order
         ),
       }));
       toast.success('Order updated successfully');
@@ -207,10 +234,10 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   },
 
   getOrdersByTable: (tableId) => {
-    return get().orders.filter(order => 
-      order.table_id === tableId && 
-      order.status !== 'paid' && 
-      order.status !== 'cancelled'
+    return get().orders.filter(order =>
+        order.table_id === tableId &&
+        order.status !== 'paid' &&
+        order.status !== 'cancelled'
     );
   },
 
@@ -226,7 +253,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       const updatedItems = [...(order.items || [])];
       newItems.forEach(newItem => {
         const existingItemIndex = updatedItems.findIndex(
-          item => item.menu_item_id === newItem.menu_item_id
+            item => item.menu_item_id === newItem.menu_item_id
         );
         if (existingItemIndex >= 0) {
           updatedItems[existingItemIndex].quantity += newItem.quantity;
@@ -240,12 +267,12 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       const finalSgstRate = order.sgst_rate ?? sgstRate;
       const finalCgstRate = order.cgst_rate ?? cgstRate;
 
-      const { subTotal, sgstAmount, cgstAmount, totalAmount } = 
-        get().calculateOrderTotals(
-          updatedItems, 
-          finalSgstRate,
-          finalCgstRate
-        );
+      const { subTotal, sgstAmount, cgstAmount, totalAmount } =
+          get().calculateOrderTotals(
+              updatedItems,
+              finalSgstRate,
+              finalCgstRate
+          );
 
       await get().updateOrder(orderId, {
         items: updatedItems,
@@ -280,7 +307,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       }
 
       const updatedItems = order.items.map(item =>
-        item.id === itemId ? { ...item, ...updates } : item
+          item.id === itemId ? { ...item, ...updates } : item
       );
 
       // Get default tax rates
@@ -288,12 +315,12 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       const finalSgstRate = order.sgst_rate ?? sgstRate;
       const finalCgstRate = order.cgst_rate ?? cgstRate;
 
-      const { subTotal, sgstAmount, cgstAmount, totalAmount } = 
-        get().calculateOrderTotals(
-          updatedItems, 
-          finalSgstRate,
-          finalCgstRate
-        );
+      const { subTotal, sgstAmount, cgstAmount, totalAmount } =
+          get().calculateOrderTotals(
+              updatedItems,
+              finalSgstRate,
+              finalCgstRate
+          );
 
       await get().updateOrder(orderId, {
         items: updatedItems,
@@ -335,12 +362,12 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       const finalSgstRate = order.sgst_rate ?? sgstRate;
       const finalCgstRate = order.cgst_rate ?? cgstRate;
 
-      const { subTotal, sgstAmount, cgstAmount, totalAmount } = 
-        get().calculateOrderTotals(
-          updatedItems, 
-          finalSgstRate,
-          finalCgstRate
-        );
+      const { subTotal, sgstAmount, cgstAmount, totalAmount } =
+          get().calculateOrderTotals(
+              updatedItems,
+              finalSgstRate,
+              finalCgstRate
+          );
 
       await get().updateOrder(orderId, {
         items: updatedItems,
@@ -368,8 +395,8 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
     // Calculate subtotal
     const subTotal = validItems.reduce(
-      (sum, item) => sum + (item.price * item.quantity),
-      0
+        (sum, item) => sum + (item.price * item.quantity),
+        0
     );
 
     // Calculate tax amounts
@@ -395,18 +422,18 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   getOrdersByTable: (tableId) => {
     const { orders } = get();
-    return orders.filter(order => 
-      order.table_id === tableId && 
-      order.status !== 'paid' && 
-      order.status !== 'cancelled'
+    return orders.filter(order =>
+        order.table_id === tableId &&
+        order.status !== 'paid' &&
+        order.status !== 'cancelled'
     );
   },
 
   getActiveOrders: () => {
     const { orders } = get();
-    return orders.filter(order => 
-      order.status !== 'paid' && 
-      order.status !== 'cancelled'
+    return orders.filter(order =>
+        order.status !== 'paid' &&
+        order.status !== 'cancelled'
     );
   },
 

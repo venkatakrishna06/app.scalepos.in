@@ -20,8 +20,15 @@ export const authService = {
   },
 
   refreshToken: async () => {
-    const refreshToken = tokenService.getRefreshToken();
-    const response = await api.post<AuthResponse>(API_ENDPOINTS.AUTH.REFRESH, { refreshToken });
+    // Check if we should have a refresh token
+    const hasRefreshToken = tokenService.getRefreshToken();
+    console.log('[Auth] Sending refresh token request to:', API_ENDPOINTS.AUTH.REFRESH);
+    console.log('[Auth] Should have refresh token:', hasRefreshToken ? 'Yes' : 'No');
+
+    // No need to send the refresh token in the request body
+    // It will be automatically sent as an HttpOnly cookie
+    const response = await api.post<AuthResponse>(API_ENDPOINTS.AUTH.REFRESH, {});
+    console.log('[Auth] Refresh token response received:', response.status);
     return response.data;
   },
 

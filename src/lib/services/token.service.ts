@@ -10,33 +10,83 @@ interface DecodedToken {
 class TokenService {
   private readonly TOKEN_KEY = 'auth_token';
   private readonly REFRESH_TOKEN_KEY = 'refresh_token';
+  private readonly REMEMBER_ME_KEY = 'remember_me';
 
-  // Use sessionStorage for better security (tokens are cleared when browser is closed)
-  // For persistent login, you could use a combination of both with user preference
+  // Check if user has chosen to be remembered
+  isPersistentSession(): boolean {
+    console.log(localStorage.getItem(this.REMEMBER_ME_KEY) === "true");
+
+    return localStorage.getItem(this.REMEMBER_ME_KEY) === "true";
+  }
+
+  // Set remember me preference
+  setPersistentSession(remember: boolean): void {
+    if (remember) {
+      localStorage.setItem(this.REMEMBER_ME_KEY, 'true');
+    } else {
+      localStorage.removeItem(this.REMEMBER_ME_KEY);
+    }
+  }
+
+  // Get token from appropriate storage based on remember me preference
   getToken(): string | null {
-    return sessionStorage.getItem(this.TOKEN_KEY);
+    return this.isPersistentSession()
+      ? localStorage.getItem(this.TOKEN_KEY)
+      : sessionStorage.getItem(this.TOKEN_KEY);
   }
 
+  // Set token in appropriate storage based on remember me preference
   setToken(token: string): void {
-    sessionStorage.setItem(this.TOKEN_KEY, token);
+    if (this.isPersistentSession()) {
+      localStorage.setItem(this.TOKEN_KEY, token);
+    } else {
+      sessionStorage.setItem(this.TOKEN_KEY, token);
+    }
   }
 
+  // Remove token from both storages to ensure it's completely cleared
   removeToken(): void {
+    localStorage.removeItem(this.TOKEN_KEY);
     sessionStorage.removeItem(this.TOKEN_KEY);
   }
 
-  getRefreshToken(): string | null {
-    return sessionStorage.getItem(this.REFRESH_TOKEN_KEY);
+  // For HttpOnly cookies, we can't access them via JavaScript
+  // This method returns a boolean indicating if we're in a session that should have a refresh token
+  getRefreshToken(): boolean {
+    // We can't access HttpOnly cookies, but we can track if we should have one
+    // This helps with UI state management (e.g., showing login button)
+    // const refreshTokenFlag = this.isPersistentSession()
+    //   ? localStorage.getItem(this.REFRESH_TOKEN_KEY)
+    //   : sessionStorage.getItem(this.REFRESH_TOKEN_KEY);
+    // Return true if the flag exists and is set to 'true'
+    // return refreshTokenFlag === 'true';
+    return true;
+    // The actual token is sent automatically with requests via HttpOnly cookie
   }
 
-  setRefreshToken(token: string): void {
-    sessionStorage.setItem(this.REFRESH_TOKEN_KEY, token);
+  // Set refresh token - for HttpOnly cookies, this is handled by the server
+  // We just store a flag to indicate that we have a valid refresh token
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  setRefreshToken(refreshToken?: string): void {
+    // Store a flag indicating we have a refresh token
+    // The actual token is stored as an HttpOnly cookie by the server
+    // refreshToken parameter is ignored as we don't store the actual token
+    if (this.isPersistentSession()) {
+      localStorage.setItem(this.REFRESH_TOKEN_KEY, 'true');
+    } else {
+      sessionStorage.setItem(this.REFRESH_TOKEN_KEY, 'true');
+    }
   }
 
+  // Remove refresh token flag from storage
+  // The actual HttpOnly cookie needs to be cleared by the server
   removeRefreshToken(): void {
+    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     sessionStorage.removeItem(this.REFRESH_TOKEN_KEY);
+    // The actual cookie will be cleared by the server on logout
   }
 
+  // Clear all tokens from both storages
   clearTokens(): void {
     this.removeToken();
     this.removeRefreshToken();
@@ -58,7 +108,7 @@ class TokenService {
     }
   }
 
-  isTokenExpiringSoon(thresholdMinutes: number = 5): boolean {
+  isTokenExpiringSoon(thresholdMinutes: number = 15): boolean {
     const token = this.getToken();
     if (!token) return false;
 

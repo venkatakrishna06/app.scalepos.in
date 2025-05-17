@@ -2,12 +2,13 @@ import {create} from 'zustand';
 import {Table} from '@/types';
 import {tableService} from '@/lib/api/services/table.service';
 import {toast} from '@/lib/toast';
+import {cacheService, CACHE_KEYS} from '@/lib/services/cache.service';
 
 interface TableState {
   tables: Table[];
   loading: boolean;
   error: string | null;
-  fetchTables: () => Promise<void>;
+  fetchTables: (skipCache?: boolean) => Promise<void>;
   addTable: (table: Omit<Table, 'id'>) => Promise<void>;
   deleteTable: (id: number) => Promise<void>;
   updateTableStatus: (id: number, status: Table['status']) => Promise<void>;
@@ -19,7 +20,7 @@ interface TableState {
 
 /**
  * Store for managing restaurant tables
- * 
+ *
  * This store handles:
  * - Fetching tables from the API
  * - Adding, updating, and deleting tables
@@ -33,10 +34,36 @@ export const useTableStore = create<TableState>((set, get) => ({
   loading: false,
   error: null,
 
-  fetchTables: async () => {
+  fetchTables: async (skipCache = false) => {
     try {
       set({ loading: true, error: null });
+
+      // Try to get data from cache first if skipCache is false
+      if (!skipCache) {
+        const cachedTables = cacheService.getCache<Table[]>(CACHE_KEYS.TABLES);
+        if (cachedTables) {
+          console.log('Using cached tables data');
+          set({ tables: cachedTables });
+          set({ loading: false });
+
+          // Fetch in background to update cache silently
+          tableService.getTables().then(freshTables => {
+            cacheService.setCache(CACHE_KEYS.TABLES, freshTables);
+            set({ tables: freshTables });
+          }).catch(err => {
+            console.error('Background fetch for tables failed:', err);
+          });
+
+          return;
+        }
+      }
+
+      // If skipCache is true or no valid cache, fetch from API
       const tables = await tableService.getTables();
+
+      // Update cache
+      cacheService.setCache(CACHE_KEYS.TABLES, tables);
+
       set({ tables });
     } catch (err) {
       console.error('Error fetching tables:', err);
@@ -93,7 +120,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       // Optimistically update UI
       set(state => ({
         tables: state.tables.map(table =>
-          table.id === id ? { ...table, status } : table
+            table.id === id ? { ...table, status } : table
         ),
       }));
 
@@ -103,20 +130,20 @@ export const useTableStore = create<TableState>((set, get) => ({
       // Update with server response
       set(state => ({
         tables: state.tables.map(table =>
-          table.id === id ? updatedTable : table
+            table.id === id ? updatedTable : table
         ),
       }));
 
       toast.success(`Table status updated to ${status}`);
     } catch (err) {
       console.error('Error updating table status:', err);
-      
+
       // Revert on error
       const originalTable = get().tables.find(t => t.id === id);
       if (originalTable) {
         set(state => ({
           tables: state.tables.map(table =>
-            table.id === id ? { ...table, status: originalTable.status } : table
+              table.id === id ? { ...table, status: originalTable.status } : table
           ),
           error: 'Failed to update table status',
         }));
@@ -131,7 +158,7 @@ export const useTableStore = create<TableState>((set, get) => ({
   mergeTables: async (tableIds) => {
     try {
       set({ loading: true, error: null });
-      
+
       const mainTable = get().tables.find(t => t.id === tableIds[0]);
       if (!mainTable) {
         throw new Error('Main table not found');
@@ -173,12 +200,12 @@ export const useTableStore = create<TableState>((set, get) => ({
         });
 
         await Promise.all(
-          tableIds.slice(1).map(id =>
-            tableService.updateTable(id, {
-              status: 'occupied',
-              mergedWith: [mainTable.id],
-            })
-          )
+            tableIds.slice(1).map(id =>
+                tableService.updateTable(id, {
+                  status: 'occupied',
+                  mergedWith: [mainTable.id],
+                })
+            )
         );
 
         // Fetch updated tables from server to ensure consistency
@@ -187,7 +214,7 @@ export const useTableStore = create<TableState>((set, get) => ({
         toast.success('Tables merged successfully');
       } catch (apiError) {
         console.error('Error in API calls during merge:', apiError);
-        
+
         // Revert optimistic update on API error
         set(state => ({
           tables: state.tables.map(table => {
@@ -234,7 +261,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       set(state => ({
         tables: [
           ...state.tables.map(t =>
-            t.id === tableId ? updatedTable : t
+              t.id === tableId ? updatedTable : t
           ),
           newTable,
         ],
@@ -262,7 +289,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       });
       set(state => ({
         tables: state.tables.map(table =>
-          table.id === tableId ? updatedTable : table
+            table.id === tableId ? updatedTable : table
         ),
       }));
       toast.success('Order assigned to table');
@@ -287,7 +314,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       });
       set(state => ({
         tables: state.tables.map(table =>
-          table.id === id ? updatedTable : table
+            table.id === id ? updatedTable : table
         ),
       }));
       toast.success('Table cleared successfully');

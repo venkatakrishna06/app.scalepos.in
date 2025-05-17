@@ -1,5 +1,6 @@
 import {useEffect, useRef, useState} from 'react';
-import {Loader2, Merge, Plus, Search} from 'lucide-react';
+import {Merge, Plus, Search} from 'lucide-react';
+import {TablesSkeleton} from '@/components/skeletons/tables-skeleton';
 import {Button} from '@/components/ui/button';
 import {CreateOrderDialog} from '@/components/create-order-dialog';
 import {PaymentDialog} from '@/components/payment-dialog';
@@ -16,7 +17,7 @@ import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/
 
 export default function Tables() {
   const { tables, loading, error, fetchTables, deleteTable, updateTableStatus } = useTableStore();
-  const { loading: ordersLoading, error: ordersError, getOrdersByTable, fetchOrders } = useOrderStore();
+  const { error: ordersError, getOrdersByTable, fetchOrders } = useOrderStore();
   const { fetchMenuItems, fetchCategories } = useMenuStore();
   const { handleError } = useErrorHandler();
 
@@ -97,11 +98,12 @@ export default function Tables() {
     }
   };
 
-  const handleCreateOrder = async (items: OrderItem[]) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleCreateOrder = async (_items: OrderItem[]) => {
     if (!selectedTableId) return;
     try {
-      // Update table status after order is created
-      await updateTableStatus(selectedTableId, 'occupied');
+      // No need to update table status here as it will be updated via WebSocket
+      // The WebSocket service will receive the table update and update the store
 
       // Only update the state, don't close the dialog here
       // The dialog is already being closed by its internal onClose call
@@ -157,15 +159,10 @@ export default function Tables() {
     setShowPaymentDialog(true);
   };
 
-  if (loading || ordersLoading) {
-    return (
-        <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Loader2 className="h-6 w-6 animate-spin" />
-            <span>Loading tables...</span>
-          </div>
-        </div>
-    );
+  // Only show skeleton when initially loading tables, not when placing an order
+  // This allows WebSocket updates to handle table updates after order placement
+  if (loading && tables.length === 0) {
+    return <TablesSkeleton />;
   }
 
   // Filter tables based on search and filter criteria

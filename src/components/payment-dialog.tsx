@@ -1,12 +1,11 @@
 import {useEffect, useState} from 'react';
-import {AlertCircle, CheckCircle, CreditCard, Loader2, Receipt, Wallet} from 'lucide-react';
+import {AlertCircle, CheckCircle, Loader2} from 'lucide-react';
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from './ui/dialog';
 import {Button} from './ui/button';
 import {Input} from './ui/input';
 import {useOrderStore, usePaymentStore, useRestaurantStore, useTableStore} from '@/lib/store';
-import {toast} from '@/lib/toast';
+import {showToast} from '@/lib/toast';
 import {Order, Payment} from '@/types';
-import {cn} from '@/lib/utils';
 
 interface PaymentDialogProps {
   open: boolean;
@@ -19,7 +18,7 @@ interface PaymentDialogProps {
 type PaymentStep = 'method' | 'processing' | 'complete';
 
 export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentComplete }: PaymentDialogProps) {
-  const [paymentMethod, setPaymentMethod] = useState<Payment['payment_method']>('cash');
+  const [paymentMethod, setPaymentMethod] = useState<Payment['payment_method']>('card');
   const [currentStep, setCurrentStep] = useState<PaymentStep>('method');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,6 +38,8 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
       setIsSubmitting(false);
       setError(null);
       setCashGiven('');
+      // Set default payment method to 'card' instead of 'cash'
+      setPaymentMethod('card');
 
       // Fetch restaurant data if not already loaded
       if (!restaurant) {
@@ -50,14 +51,14 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
   const handlePrintBill = () => {
     // Check if we have an order to print
     if (!currentOrder && !draftOrder) {
-      toast.error('No order data available for printing');
+      showToast('error', 'No order data available for printing');
       return;
     }
 
     // Create a new window for the bill
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      toast.error('Please allow pop-ups to print the bill');
+      showToast('error', 'Please allow pop-ups to print the bill');
       return;
     }
 
@@ -201,8 +202,8 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
             </thead>
             <tbody>
               ${orderItems
-                .filter(item => item.status !== 'cancelled')
-                .map(item => `
+        .filter(item => item.status !== 'cancelled')
+        .map(item => `
                   <tr>
                     <td>${item.name}</td>
                     <td>${item.quantity}</td>
@@ -284,7 +285,7 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
       // };
     };
 
-    toast.success('Bill generated successfully');
+    showToast('success', 'Bill generated successfully');
   };
 
   const handlePrintBillAndPayment = async () => {
@@ -292,9 +293,7 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
     handlePrintBill();
 
     // Then process the payment after a short delay
-    setTimeout(async () => {
       await handlePayment();
-    }, 1000);
   };
 
   // Function to create an order from a draft
@@ -308,7 +307,7 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create order';
       setError(errorMessage);
-      toast.error(errorMessage);
+      showToast('error', errorMessage);
       throw err;
     }
   };
@@ -316,7 +315,7 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
   const handlePayment = async () => {
     setIsSubmitting(true);
     setError(null);
-    setCurrentStep('processing');
+    //setCurrentStep('processing');
 
     try {
       // If we have a draft order but no actual order yet, create it first
@@ -340,9 +339,9 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
         payment_method: paymentMethod,
         payment_status: 'completed',
         transaction_id: `txn_${Date.now()}`,
-        card_details: paymentMethod === 'credit_card' || paymentMethod === 'debit_card' 
-          ? { last_four: '1234', card_type: paymentMethod === 'credit_card' ? 'visa' : 'mastercard' } 
-          : undefined
+        card_details: paymentMethod === 'card'
+            ? { last_four: '1234', card_type: 'card' }
+            : undefined
       };
 
       await addPayment(payment);
@@ -357,7 +356,7 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
       });
 
       setCurrentStep('complete');
-      toast.success('Payment processed successfully');
+      showToast('success', 'Payment processed successfully');
 
       // Notify parent component if callback is provided
       if (onPaymentComplete) {
@@ -365,13 +364,11 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
       }
 
       // Wait a moment before closing to show the success message
-      setTimeout(() => {
         onClose();
-      }, 2000);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to process payment';
       setError(errorMessage);
-      toast.error(errorMessage);
+      showToast('error', errorMessage);
       setCurrentStep('method');
     } finally {
       setIsSubmitting(false);
@@ -415,38 +412,39 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
 
   const renderStep = () => {
     switch (currentStep) {
-      case 'processing':
+      // Processing case removed - now using inline spinner in buttons
+      /*case 'processing':
         return (
-            <div className="flex flex-col items-center justify-center py-12 sm:py-16 md:py-20">
+            <div className="flex flex-col items-center justify-center py-6">
               <div className="relative mb-2">
-                <div className="absolute -inset-4 sm:-inset-5 rounded-full bg-primary/15 animate-pulse"></div>
-                <div className="absolute -inset-8 sm:-inset-10 rounded-full bg-primary/5 animate-pulse animation-delay-200"></div>
-                <Loader2 className="h-16 sm:h-20 md:h-24 w-16 sm:w-20 md:w-24 animate-spin text-primary relative" />
+                <div className="absolute -inset-3 rounded-full bg-primary/15 animate-pulse"></div>
+                <div className="absolute -inset-6 rounded-full bg-primary/5 animate-pulse animation-delay-200"></div>
+                <Loader2 className="h-12 w-12 animate-spin text-primary relative" />
               </div>
-              <p className="mt-8 sm:mt-10 text-xl sm:text-2xl font-semibold text-center">Processing Payment...</p>
-              <p className="mt-3 sm:mt-4 text-sm sm:text-base text-muted-foreground text-center max-w-md">
+              <p className="mt-4 text-base font-semibold text-center">Processing Payment...</p>
+              <p className="mt-2 text-xs text-muted-foreground text-center max-w-md">
                 Please wait while we process your payment. This may take a few moments.
               </p>
             </div>
-        );
+        );*/
 
       case 'complete':
         return (
-            <div className="flex flex-col items-center justify-center py-12 sm:py-16 md:py-20">
+            <div className="flex flex-col items-center justify-center py-6">
               <div className="relative mb-2">
-                <div className="absolute -inset-3 sm:-inset-4 rounded-full bg-green-100/50 animate-pulse"></div>
-                <div className="absolute -inset-6 sm:-inset-8 rounded-full bg-green-50/30 animate-pulse animation-delay-200"></div>
-                <div className="rounded-full bg-green-100 p-4 sm:p-5 relative">
-                  <CheckCircle className="h-16 sm:h-20 md:h-24 w-16 sm:w-20 md:w-24 text-green-600" />
+                <div className="absolute -inset-2 rounded-full bg-green-100/50 animate-pulse"></div>
+                <div className="absolute -inset-4 rounded-full bg-green-50/30 animate-pulse animation-delay-200"></div>
+                <div className="rounded-full bg-green-100 p-3 relative">
+                  <CheckCircle className="h-12 w-12 text-green-600" />
                 </div>
               </div>
-              <p className="mt-8 sm:mt-10 text-xl sm:text-2xl font-semibold text-center">Payment Complete!</p>
-              <p className="mt-3 sm:mt-4 text-sm sm:text-base text-muted-foreground text-center max-w-md">
+              <p className="mt-4 text-base font-semibold text-center">Payment Complete!</p>
+              <p className="mt-2 text-xs text-muted-foreground text-center max-w-md">
                 Thank you for your payment. Your order has been successfully processed.
               </p>
-              <Button 
-                className="mt-8 sm:mt-10 px-8 sm:px-10 h-12 sm:h-14 text-base sm:text-lg font-medium" 
-                onClick={onClose}
+              <Button
+                  className="mt-4 px-4 h-8 text-xs font-medium"
+                  onClick={onClose}
               >
                 Close
               </Button>
@@ -455,261 +453,193 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
 
       default:
         return (
-            <>
-              <div className="flex flex-col md:flex-row gap-5 sm:gap-6 md:gap-8">
-                {/* Order Items - Left Side */}
-                <div className="w-full md:w-1/2">
-                  <h3 className="text-lg font-semibold mb-3 sm:mb-4">Order Items</h3>
-                  <div className="rounded-lg border shadow-sm bg-card/50 p-4 sm:p-5 max-h-[40vh] md:max-h-[50vh] overflow-auto">
-                    <div className="space-y-3 sm:space-y-4">
-                      {/* Get items from either current order or draft order */}
-                      {(() => {
-                        const items = currentOrder?.items || draftOrder?.items || [];
-                        return items.length === 0 ? (
-                          <p className="text-center text-muted-foreground py-6">No items in this order</p>
-                        ) : (
+            <div className="flex flex-col gap-3">
+              {/* Two column layout */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* Left column */}
+                <div className="rounded-lg p-3">
+                  <h3 className="text-sm font-semibold mb-2">Order Items ({currentOrder?.items?.filter(item => item.status !== 'cancelled').length || draftOrder?.items?.filter(item => item.status !== 'cancelled').length || 0})</h3>
+                  <div className="space-y-0 max-h-[40vh] overflow-y-auto pr-1 custom-scrollbar">
+                    {/* Get items from either current order or draft order */}
+                    {(() => {
+                      const items = currentOrder?.items || draftOrder?.items || [];
+                      return items.length === 0 ? (
+                          <p className="text-center text-muted-foreground py-3 text-xs">No items in this order</p>
+                      ) : (
                           items
-                            .filter(item => item.status !== 'cancelled')
-                            .map((item) => (
-                              <div key={item.id || `draft-${item.menu_item_id}`} className="flex justify-between items-center py-3 border-b border-border/30 last:border-0">
-                                <div className="flex-1">
-                                  <p className="font-medium text-base">{item.name}</p>
-                                  <p className="text-sm text-muted-foreground mt-1">Qty: {item.quantity}</p>
-                                </div>
-                                <span className="font-medium text-right ml-4">₹{(item.price * item.quantity).toFixed(2)}</span>
-                              </div>
-                            ))
-                        );
-                      })()}
-                    </div>
+                              .filter(item => item.status !== 'cancelled')
+                              .map((item) => (
+                                  <div key={item.id || `draft-${item.menu_item_id}`} className="flex justify-between items-center py-2 border-b border-border/30 last:border-0">
+                                    <div>
+                                      <p className="font-medium text-sm">{item.name}</p>
+                                      <p className="text-xs text-muted-foreground">Qty {item.quantity}</p>
+                                    </div>
+                                    <span className="font-medium text-sm">₹{(item.price * item.quantity).toFixed(2)}</span>
+                                  </div>
+                              ))
+                      );
+                    })()}
                   </div>
 
-                  {/* Payment Method - Now on left side below order items */}
-                  <div className="mt-6 sm:mt-8">
-                    <h3 className="text-lg font-semibold mb-3 sm:mb-4">Payment Method</h3>
-                    <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 max-h-[30vh] overflow-auto pr-1">
-                      <button
-                          className={cn(
-                              "flex items-center gap-4 rounded-lg border p-4 sm:p-5 text-left transition-colors",
-                              paymentMethod === 'cash'
-                                  ? "border-primary bg-primary/10 ring-1 ring-primary"
-                                  : "hover:bg-accent"
-                          )}
-                          onClick={() => setPaymentMethod('cash')}
-                      >
-                        <div className={cn(
-                          "flex items-center justify-center w-12 h-12 rounded-full",
-                          paymentMethod === 'cash' ? "bg-primary/20" : "bg-muted"
-                        )}>
-                          <Wallet className={cn("h-6 w-6", paymentMethod === 'cash' ? "text-primary" : "text-muted-foreground")} />
-                        </div>
-                        <div>
-                          <p className="font-medium text-base">Cash</p>
-                          <p className="text-sm text-muted-foreground mt-1">Pay with cash</p>
-                        </div>
-                      </button>
-                      <button
-                          className={cn(
-                              "flex items-center gap-4 rounded-lg border p-4 sm:p-5 text-left transition-colors",
-                              paymentMethod === 'credit_card'
-                                  ? "border-primary bg-primary/10 ring-1 ring-primary"
-                                  : "hover:bg-accent"
-                          )}
-                          onClick={() => setPaymentMethod('credit_card')}
-                      >
-                        <div className={cn(
-                          "flex items-center justify-center w-12 h-12 rounded-full",
-                          paymentMethod === 'credit_card' ? "bg-primary/20" : "bg-muted"
-                        )}>
-                          <CreditCard className={cn("h-6 w-6", paymentMethod === 'credit_card' ? "text-primary" : "text-muted-foreground")} />
-                        </div>
-                        <div>
-                          <p className="font-medium text-base">Credit Card</p>
-                          <p className="text-sm text-muted-foreground mt-1">Pay with credit card</p>
-                        </div>
-                      </button>
-                      <button
-                          className={cn(
-                              "flex items-center gap-4 rounded-lg border p-4 sm:p-5 text-left transition-colors",
-                              paymentMethod === 'debit_card'
-                                  ? "border-primary bg-primary/10 ring-1 ring-primary"
-                                  : "hover:bg-accent"
-                          )}
-                          onClick={() => setPaymentMethod('debit_card')}
-                      >
-                        <div className={cn(
-                          "flex items-center justify-center w-12 h-12 rounded-full",
-                          paymentMethod === 'debit_card' ? "bg-primary/20" : "bg-muted"
-                        )}>
-                          <CreditCard className={cn("h-6 w-6", paymentMethod === 'debit_card' ? "text-primary" : "text-muted-foreground")} />
-                        </div>
-                        <div>
-                          <p className="font-medium text-base">Debit Card</p>
-                          <p className="text-sm text-muted-foreground mt-1">Pay with debit card</p>
-                        </div>
-                      </button>
-                      <button
-                          className={cn(
-                              "flex items-center gap-4 rounded-lg border p-4 sm:p-5 text-left transition-colors",
-                              paymentMethod === 'upi'
-                                  ? "border-primary bg-primary/10 ring-1 ring-primary"
-                                  : "hover:bg-accent"
-                          )}
-                          onClick={() => setPaymentMethod('upi')}
-                      >
-                        <div className={cn(
-                          "flex items-center justify-center w-12 h-12 rounded-full",
-                          paymentMethod === 'upi' ? "bg-primary/20" : "bg-muted"
-                        )}>
-                          <svg 
-                            className={cn("h-6 w-6", paymentMethod === 'upi' ? "text-primary" : "text-muted-foreground")}
-                            viewBox="0 0 24 24" 
-                            fill="none" 
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path d="M12 2L4 6V18L12 22L20 18V6L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M12 22V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M20 6L12 10L4 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M4 14L12 18L20 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M12 10V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="font-medium text-base">UPI</p>
-                          <p className="text-sm text-muted-foreground mt-1">Pay with UPI</p>
-                        </div>
-                      </button>
-                    </div>
+                  <div className="mt-3 pt-2 border-t">
 
-                    {/* Cash payment input field */}
-                    {paymentMethod === 'cash' && (
-                      <div className="mt-5 p-5 border rounded-lg bg-card/30">
-                        <div className="mb-4">
-                          <label htmlFor="cash-amount" className="block text-sm font-medium mb-2">
-                            Cash Amount Given
-                          </label>
-                          <Input
-                            id="cash-amount"
-                            type="number"
-                            placeholder="Enter amount"
-                            value={cashGiven}
-                            onChange={(e) => setCashGiven(e.target.value)}
-                            className="w-full h-10"
-                          />
-                        </div>
-
-                        {cashGivenNumber > 0 && (
-                          <div className="text-sm space-y-2 mt-3 pt-3 border-t border-border/30">
-                            <div className="flex justify-between py-1">
-                              <span className="text-muted-foreground">Amount to Pay</span>
-                              <span className="font-medium">₹{roundedAmount.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between py-1">
-                              <span className="text-muted-foreground">Cash Given</span>
-                              <span className="font-medium">₹{cashGivenNumber.toFixed(2)}</span>
-                            </div>
-                            {changeAmount > 0 && (
-                              <div className="flex justify-between py-2 mt-1 font-medium text-base border-t border-border/30">
-                                <span>Return Amount</span>
-                                <span className="text-primary">₹{changeAmount.toFixed(2)}</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
+                    <div className="">
+                      <div className="flex justify-between py-1">
+                        <span className="text-xs text-muted-foreground">Sub Total</span>
+                        <span className="text-xs font-medium">₹{gstDetails.subTotal.toFixed(2)}</span>
                       </div>
-                    )}
+                      {gstDetails.sgstAmount > 0 && (
+                          <div className="flex justify-between py-1">
+                            <span className="text-xs text-muted-foreground">SGST ({gstDetails.sgstRate}%)</span>
+                            <span className="text-xs font-medium">₹{gstDetails.sgstAmount.toFixed(2)}</span>
+                          </div>
+                      )}
+                      {gstDetails.cgstAmount > 0 && (
+                          <div className="flex justify-between py-1">
+                            <span className="text-xs text-muted-foreground">CGST ({gstDetails.cgstRate}%)</span>
+                            <span className="text-xs font-medium">₹{gstDetails.cgstAmount.toFixed(2)}</span>
+                          </div>
+                      )}
+                      <div className="flex justify-between py-1">
+                        <span className="text-xs text-muted-foreground">Rounding Adjustment</span>
+                        <span className="text-xs font-medium">₹{roundingDifference.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between py-2 pt-1 border-t border-border/50">
+                        <span className="text-sm font-medium">Total Amount</span>
+                        <span className="text-sm font-bold">₹{roundedAmount.toFixed(2)}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Payment Section - Right Side */}
-                <div className="w-full md:w-1/2 flex flex-col">
-                  <div className="flex flex-col h-full">
-                    <h3 className="text-lg font-semibold mb-3 sm:mb-4">Amount Details</h3>
-                    <div className="rounded-lg border shadow-sm bg-card/50 p-4 sm:p-6 mb-5 sm:mb-6">
-                      {/* Subtotal and GST details */}
-                      <div className="mb-5 space-y-3 text-sm">
-                        <div className="flex justify-between py-1">
-                          <span className="text-muted-foreground">Subtotal</span>
-                          <span className="font-medium">₹{gstDetails.subTotal.toFixed(2)}</span>
-                        </div>
-
-                        {gstDetails.sgstAmount > 0 && (
-                          <div className="flex justify-between py-1">
-                            <span className="text-muted-foreground">SGST ({gstDetails.sgstRate}%)</span>
-                            <span className="font-medium">₹{gstDetails.sgstAmount.toFixed(2)}</span>
-                          </div>
-                        )}
-
-                        {gstDetails.cgstAmount > 0 && (
-                          <div className="flex justify-between py-1">
-                            <span className="text-muted-foreground">CGST ({gstDetails.cgstRate}%)</span>
-                            <span className="font-medium">₹{gstDetails.cgstAmount.toFixed(2)}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Rounding difference */}
-                      <div className="flex justify-between py-1 mb-3">
-                        <span className="text-muted-foreground">Rounding Adjustment</span>
-                        <span className="font-medium">₹{roundingDifference.toFixed(2)}</span>
-                      </div>
-
-                      {/* Total amount */}
-                      <div className="flex justify-between py-3 border-t border-border/50">
-                        <span className="font-medium text-base">Total Amount</span>
-                        <span className="text-lg font-bold">₹{roundedAmount.toFixed(2)}</span>
-                      </div>
-
-                      {/* Rounded amount */}
-                      {/*<div className="flex justify-between py-3 mt-1 bg-primary/5 rounded-md px-3">*/}
-                      {/*  <span className="font-medium text-base">Rounded Amount</span>*/}
-                      {/*  <span className="text-lg font-bold text-primary">₹{roundedAmount.toFixed(2)}</span>*/}
-                      {/*</div>*/}
+                {/* Right column */}
+                <div className="rounded-lg p-3">
+                  <h3 className="text-sm font-semibold mb-2">Payment Method</h3>
+                  <div className="space-y-2">
+                    {/* Card Option */}
+                    <div className="flex items-center p-2 rounded-lg">
+                      <input
+                          type="radio"
+                          id="card-payment"
+                          name="payment-method"
+                          className="mr-2"
+                          checked={paymentMethod === 'card'}
+                          onChange={() => setPaymentMethod('card')}
+                      />
+                      <label htmlFor="card-payment" className="flex-1 text-sm">Card (Pay with Credit/Debit Card)</label>
                     </div>
 
-                    <div className="space-y-3 sm:space-y-4 mt-auto">
-                      <Button 
-                        onClick={handlePrintBill} 
-                        className="w-full h-11 sm:h-12 text-base"
+
+                    {/* UPI Option */}
+                    <div className="flex items-center p-2 rounded-lg">
+                      <input
+                          type="radio"
+                          id="upi-payment"
+                          name="payment-method"
+                          className="mr-2"
+                          checked={paymentMethod === 'upi'}
+                          onChange={() => setPaymentMethod('upi')}
+                      />
+                      <label htmlFor="upi-payment" className="flex-1 text-sm">UPI (Pay with UPI)</label>
+                    </div>
+                    {/* Cash Option */}
+                    <div className="flex items-center p-2 rounded-lg">
+                      <input
+                          type="radio"
+                          id="cash-payment"
+                          name="payment-method"
+                          className="mr-2"
+                          checked={paymentMethod === 'cash'}
+                          onChange={() => setPaymentMethod('cash')}
+                      />
+                      <label htmlFor="cash-payment" className="flex-1 text-sm">Cash (Pay with Cash)</label>
+                    </div>
+
+                    {/* Cash amount input field */}
+                    {paymentMethod === 'cash' && (
+                        <div className="mt-2 ml-5">
+                          <label className="block text-xs font-medium mb-1">Cash Amount Given</label>
+                          <Input
+                              type="text"
+                              placeholder="Enter Amount"
+                              value={cashGiven}
+                              onChange={(e) => {
+                                // Only allow positive numbers
+                                const value = e.target.value;
+                                if (value === '' || (/^\d*\.?\d*$/.test(value) && parseFloat(value) >= 0)) {
+                                  setCashGiven(value);
+                                }
+                              }}
+                              className="w-full h-8 text-sm"
+                          />
+
+                          {cashGiven && (
+                            <div className="mt-1 p-1 border-t">
+                              <div className="flex justify-between py-1 text-xs">
+                                <span>Amount to Pay</span>
+                                <span>₹{roundedAmount.toFixed(2)}</span>
+                              </div>
+                              <div className="flex justify-between py-1 text-xs">
+                                <span>Cash Given</span>
+                                <span>₹{cashGivenNumber > 0 ? cashGivenNumber.toFixed(2) : '0.00'}</span>
+                              </div>
+                              <div className="flex justify-between py-1 text-xs font-medium">
+                                <span>Return Amount</span>
+                                <span>₹{changeAmount > 0 ? changeAmount.toFixed(2) : '0.00'}</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                    )}
+
+
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="mt-4 grid grid-cols-1 gap-2">
+                    <Button
+                        onClick={handlePrintBill}
+                        className="w-full h-8 text-xs"
                         disabled={isSubmitting}
                         variant="outline"
-                      >
-                        <Receipt className="mr-3 h-5 w-5" />
-                        Print Bill
-                      </Button>
+                    >
+                      Print Bill
+                    </Button>
 
-                      <Button 
-                        onClick={handlePrintBillAndPayment} 
-                        className="w-full h-11 sm:h-12 text-base"
+                    <Button
+                        onClick={handlePrintBillAndPayment}
+                        className="w-full h-8 text-xs"
                         disabled={isSubmitting}
                         variant="secondary"
-                      >
-                        <Receipt className="mr-3 h-5 w-5" />
-                        <span className="truncate">Print Bill and Complete Payment</span>
-                      </Button>
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        "Print Bill & Complete Payment"
+                      )}
+                    </Button>
 
-                      <Button 
-                        onClick={handlePayment} 
-                        className="w-full h-12 sm:h-14 text-base sm:text-lg font-medium mt-2"
+                    <Button
+                        onClick={handlePayment}
+                        className="w-full h-8 text-xs font-medium"
                         disabled={isSubmitting}
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <Loader2 className="mr-3 h-5 w-5 animate-spin" />
-                            <span className="truncate">Processing...</span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="truncate">Complete Payment</span>
-                          </>
-                        )}
-                      </Button>
-                    </div>
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        "Complete Payment"
+                      )}
+                    </Button>
                   </div>
-                  {/* Payment Method box has been moved to the left side */}
                 </div>
               </div>
-            </>
+            </div>
         );
     }
   };
@@ -717,26 +647,26 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
   return (
       <Dialog open={open}>
         <DialogContent
-            onClose={currentStep !== 'processing' ? onClose : undefined}
-            className="max-w-[95vw] sm:max-w-[90vw] md:max-w-[800px] max-h-[90vh] overflow-auto p-4 sm:p-6">
-          <DialogHeader className="pb-4">
-            <DialogTitle className="text-xl font-bold">Process Payment</DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">
-              {currentOrder ? `Order #${currentOrder.id}` : 'New Order'} 
-              {currentOrder?.table_id ? ` - Table ${currentOrder.table_id}` : 
-               draftOrder?.table_id ? ` - Table ${draftOrder.table_id}` : 
-               ' - Takeaway'}
+            onClose={onClose}
+            className="max-w-[95vw] sm:max-w-[90vw] md:max-w-[800px] max-h-[90vh] overflow-hidden p-3 sm:p-4">
+          <DialogHeader className="pb-1 text-center">
+            <DialogTitle className="text-lg font-bold text-center">Process Payment</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground text-center">
+              {currentOrder ? `(Order #${currentOrder.id}` : '(New Order'}
+              {currentOrder?.table_id ? ` - Table ${currentOrder.table_id})` :
+                  draftOrder?.table_id ? ` - Table ${draftOrder.table_id})` :
+                      ' - Takeaway)'}
             </DialogDescription>
           </DialogHeader>
 
           {/* Error message if any */}
           {error && (
-            <div className="mb-6 rounded-md bg-destructive/10 p-4 text-sm text-destructive">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="h-4 w-4" />
-                <p>{error}</p>
+              <div className="mb-6 rounded-md bg-destructive/10 p-4 text-sm text-destructive">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <p>{error}</p>
+                </div>
               </div>
-            </div>
           )}
 
           {renderStep()}

@@ -3,6 +3,7 @@ import Sidebar from './sidebar';
 import Navbar from './navbar';
 import {MobileNav} from './MobileNav';
 import {cn} from '@/lib/utils';
+import {useWebSocket} from '@/hooks';
 
 interface LayoutProps {
   children: ReactNode;
@@ -10,6 +11,10 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Initialize WebSocket connection
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { isConnected } = useWebSocket();
 
   // Check if we're on mobile when component mounts
   useEffect(() => {

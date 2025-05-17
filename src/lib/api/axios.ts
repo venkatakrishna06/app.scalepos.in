@@ -1,7 +1,7 @@
 import axios from 'axios';
 import {tokenService} from '@/lib/services/token.service';
-import {API_ENDPOINTS} from './endpoints';
-import {handleApiError, toast} from '@/lib/toast';
+import {handleApiError, showToast} from '@/lib/toast';
+import {authService} from '@/lib/api/services/auth.service';
 
 // Flag to prevent multiple simultaneous refresh token requests
 let isRefreshing = false;
@@ -15,6 +15,7 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
 // Function to add a request to the queue
@@ -30,40 +31,23 @@ const onTokenRefreshed = (token: string) => {
 
 api.interceptors.request.use(
   async (config) => {
-    // Check if token is about to expire and refresh it proactively
-    if (tokenService.isTokenValid() && tokenService.isTokenExpiringSoon() && !isRefreshing) {
-      isRefreshing = true;
+    // Token refresh is now handled by the auth-guard component on a schedule
 
-      try {
-        const refreshToken = tokenService.getRefreshToken();
-        if (refreshToken) {
-          // Try to refresh the token
-          const response = await api.post(API_ENDPOINTS.AUTH.REFRESH, {
-            refreshToken: refreshToken
-          });
+    // If a token refresh is in progress, queue this request
+    if (isRefreshing && tokenService.isTokenValid()) {
+      console.log('[Axios] Token refresh in progress, queuing request');
 
-          const token = response.data.token;
-          const newRefreshToken = response.data.refreshToken;
-
-          // Update tokens in storage and auth headers
-          tokenService.setToken(token);
-          if (newRefreshToken) {
-            tokenService.setRefreshToken(newRefreshToken);
-          }
-          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
-          // Execute all queued requests with the new token
-          onTokenRefreshed(token);
-        }
-      } catch (error) {
-        // If refresh fails, continue with the current token
-        console.error('Failed to proactively refresh token:', error);
-        // Don't show toast for proactive refresh failures as it's not user-facing
-      } finally {
-        isRefreshing = false;
-      }
+      // Return a promise that resolves when the token refresh is complete
+      return new Promise((resolve) => {
+        subscribeTokenRefresh((token) => {
+          // Update the Authorization header with the new token
+          config.headers['Authorization'] = `Bearer ${token}`;
+          resolve(config);
+        });
+      });
     }
 
+    // Otherwise, proceed with the request as normal
     const token = tokenService.getToken();
     if (token) {
       // Add token to all requests
@@ -104,24 +88,26 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Check if we have a refresh token
-        const refreshToken = tokenService.getRefreshToken();
-        if (!refreshToken) {
+        // Check if we should have a refresh token
+        const hasRefreshToken = tokenService.getRefreshToken();
+        if (!hasRefreshToken) {
           throw new Error('No refresh token available');
         }
 
-        // Try to refresh the token
-        const response = await api.post(API_ENDPOINTS.AUTH.REFRESH, {
-          refreshToken: refreshToken
-        });
+        // Try to refresh the token using authService
+        console.log('[Axios] Refreshing token after 401');
+        const response = await authService.refreshToken();
+        console.log('[Axios] Refresh response after 401 received');
 
         // Extract token and refreshToken from response data
-        const token = response.data.token;
-        const newRefreshToken = response.data.refreshToken;
+        const token = response.token;
+        const newRefreshToken = response.refreshToken;
 
         // Update tokens in storage and auth headers
         tokenService.setToken(token);
         if (newRefreshToken) {
+          // This now just sets a flag indicating we have a refresh token
+          // The actual token is stored as an HttpOnly cookie by the server
           tokenService.setRefreshToken(newRefreshToken);
         }
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -137,7 +123,7 @@ api.interceptors.response.use(
         refreshSubscribers = []; // Clear the queue
 
         // Show error toast for authentication failure
-        toast.error('Your session has expired. Please log in again.');
+        showToast('error', 'Your session has expired. Please log in again.');
 
         // Redirect to login page
         window.location.href = '/login';

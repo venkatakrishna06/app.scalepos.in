@@ -100,17 +100,6 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
     return status === 'placed';
   };
 
-  if (loading) {
-    return (
-        <Dialog open={open}>
-          <DialogContent onClose={onClose}>
-            <div className="flex h-32 items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          </DialogContent>
-        </Dialog>
-    );
-  }
 
   return (
       <Dialog open={open}>

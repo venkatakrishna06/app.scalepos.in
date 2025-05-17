@@ -1,4 +1,5 @@
-import {Calendar, CreditCard, Loader2, Search} from 'lucide-react';
+import {Calendar, CreditCard, Search} from 'lucide-react';
+import {PaymentsSkeleton} from '@/components/skeletons/payments-skeleton';
 import {Button} from '@/components/ui/button';
 import {useOrderStore, usePaymentStore} from '@/lib/store';
 import {useCallback, useEffect, useState} from 'react';
@@ -34,19 +35,13 @@ export default function Payments() {
     return (
         order?.id.toString().includes(searchQuery) ||
         payment.payment_method.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order?.customer?.toLowerCase().includes(searchQuery.toLowerCase())
+        order?.customer?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        order?.table?.table_number?.toString().includes(searchQuery)
     );
   });
 
   if (loading) {
-    return (
-        <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Loader2 className="h-5 w-5 animate-spin" />
-            <span>Loading payments...</span>
-          </div>
-        </div>
-    );
+    return <PaymentsSkeleton />;
   }
 
   if (error) {
@@ -75,7 +70,7 @@ export default function Payments() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                   type="text"
-                  placeholder="Search payments..."
+                  placeholder="Search by order, table, method..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="h-10 rounded-md border border-input bg-background pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
@@ -94,6 +89,7 @@ export default function Payments() {
               <thead>
               <tr className="border-b bg-muted/50">
                 <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Order ID</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Table</th>
                 {/*<th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Customer</th>*/}
                 <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Items</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Amount</th>
@@ -108,6 +104,9 @@ export default function Payments() {
                 return (
                     <tr key={payment.id} className="border-b">
                       <td className="px-6 py-4 font-medium">Order #{payment.order_id}</td>
+                      <td className="px-6 py-4 font-medium">
+                        {order?.table?.table_number ? `Table #${order.table.table_number}` : 'Takeaway'}
+                      </td>
                       {/*<td className="px-6 py-4">{order?.customer || 'N/A'}</td>*/}
                       <td className="px-6 py-4">
                         <div className="max-w-xs truncate text-sm text-muted-foreground">
