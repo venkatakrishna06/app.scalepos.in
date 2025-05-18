@@ -2,6 +2,7 @@ import * as React from "react";
 import {format} from "date-fns";
 import {Calendar as CalendarIcon} from "lucide-react";
 import {DateRange} from "react-day-picker";
+import {useEffect, useState} from "react";
 
 import {cn} from "@/lib/utils";
 import {Button} from "@/components/ui/button";
@@ -19,6 +20,24 @@ export function DatePickerWithRange({
   setDate,
   className,
 }: DatePickerWithRangeProps) {
+  const [monthsToShow, setMonthsToShow] = useState(2);
+
+  // Handle responsive calendar display
+  useEffect(() => {
+    const handleResize = () => {
+      setMonthsToShow(window.innerWidth < 768 ? 1 : 2);
+    };
+
+    // Set initial value
+    handleResize();
+
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+
+    // Clean up
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover>
@@ -46,15 +65,18 @@ export function DatePickerWithRange({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            initialFocus
-            mode="range"
-            defaultMonth={date?.from}
-            selected={date}
-            onSelect={setDate}
-            numberOfMonths={2}
-          />
+        <PopoverContent className="w-auto p-0 max-w-[calc(100vw-2rem)] overflow-x-auto" align="start">
+          <div className="max-w-full overflow-hidden">
+            <Calendar
+              initialFocus
+              mode="range"
+              defaultMonth={date?.from}
+              selected={date}
+              onSelect={setDate}
+              numberOfMonths={monthsToShow}
+              className="max-w-full"
+            />
+          </div>
         </PopoverContent>
       </Popover>
     </div>

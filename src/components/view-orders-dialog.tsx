@@ -16,12 +16,11 @@ interface ViewOrdersDialogProps {
 }
 
 export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrdersDialogProps) {
-  const { updateOrderItem, removeOrderItem, loading } = useOrderStore();
+  const { updateOrderItem, removeOrderItem } = useOrderStore();
   const { restaurant, fetchRestaurant } = useRestaurantStore();
   const { isServer } = usePermissions();
   const [processingItemId, setProcessingItemId] = useState<number | null>(null);
   const activeOrders = orders.filter(order => order.status !== 'paid' && order.status !== 'cancelled');
-
   // Fetch restaurant data when dialog opens
   useEffect(() => {
     if (open && !restaurant) {

@@ -14,6 +14,7 @@ import {toast} from '@/lib/toast';
 import {TableCard} from '@/components/tableCard';
 import {Input} from '@/components/ui/input';
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select";
+import {FilterDropdownContainer} from '@/components/FilterDropdownContainer';
 
 export default function Tables() {
   const { tables, loading, error, fetchTables, deleteTable, updateTableStatus } = useTableStore();
@@ -200,10 +201,10 @@ export default function Tables() {
         </div>
 
         {/* Enhanced filtering and search */}
-        <div className="flex flex-col md:flex-row items-center gap-4 mb-4">
-          <div className="w-full md:w-auto">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center mb-4">
+          <FilterDropdownContainer>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[130px] sm:w-[180px]">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
@@ -214,11 +215,9 @@ export default function Tables() {
                 <SelectItem value="cleaning">Cleaning</SelectItem>
               </SelectContent>
             </Select>
-          </div>
 
-          <div className="w-full md:w-auto">
             <Select value={filterCapacity} onValueChange={setFilterCapacity}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[130px] sm:w-[180px]">
                 <SelectValue placeholder="Filter by capacity" />
               </SelectTrigger>
               <SelectContent>
@@ -228,7 +227,7 @@ export default function Tables() {
                 <SelectItem value="large">Large (8+)</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FilterDropdownContainer>
 
           <div className="relative w-full md:w-auto flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

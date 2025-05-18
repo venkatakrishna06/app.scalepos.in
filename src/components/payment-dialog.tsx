@@ -454,12 +454,12 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
       default:
         return (
             <div className="flex flex-col gap-3">
-              {/* Two column layout */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {/* Left column */}
+              {/* Responsive layout - single column on mobile, two columns on larger screens */}
+              <div className="flex flex-col md:grid md:grid-cols-2 gap-3">
+                {/* Order Items section */}
                 <div className="rounded-lg p-3">
                   <h3 className="text-sm font-semibold mb-2">Order Items ({currentOrder?.items?.filter(item => item.status !== 'cancelled').length || draftOrder?.items?.filter(item => item.status !== 'cancelled').length || 0})</h3>
-                  <div className="space-y-0 max-h-[40vh] overflow-y-auto pr-1 custom-scrollbar">
+                  <div className="space-y-0 max-h-[25vh] md:max-h-[35vh] overflow-y-auto pr-1 custom-scrollbar">
                     {/* Get items from either current order or draft order */}
                     {(() => {
                       const items = currentOrder?.items || draftOrder?.items || [];
@@ -482,7 +482,6 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
                   </div>
 
                   <div className="mt-3 pt-2 border-t">
-
                     <div className="">
                       <div className="flex justify-between py-1">
                         <span className="text-xs text-muted-foreground">Sub Total</span>
@@ -512,7 +511,7 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
                   </div>
                 </div>
 
-                {/* Right column */}
+                {/* Payment Method section */}
                 <div className="rounded-lg p-3">
                   <h3 className="text-sm font-semibold mb-2">Payment Method</h3>
                   <div className="space-y-2">
@@ -529,7 +528,6 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
                       <label htmlFor="card-payment" className="flex-1 text-sm">Card (Pay with Credit/Debit Card)</label>
                     </div>
 
-
                     {/* UPI Option */}
                     <div className="flex items-center p-2 rounded-lg">
                       <input
@@ -542,6 +540,7 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
                       />
                       <label htmlFor="upi-payment" className="flex-1 text-sm">UPI (Pay with UPI)</label>
                     </div>
+
                     {/* Cash Option */}
                     <div className="flex items-center p-2 rounded-lg">
                       <input
@@ -591,15 +590,13 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
                           )}
                         </div>
                     )}
-
-
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="mt-4 grid grid-cols-1 gap-2">
+                  {/* Action Buttons - fixed at bottom on mobile */}
+                  <div className="mt-4 grid grid-cols-1 gap-2 sticky bottom-0 bg-background pt-2">
                     <Button
                         onClick={handlePrintBill}
-                        className="w-full h-8 text-xs"
+                        className="w-full h-9 text-xs"
                         disabled={isSubmitting}
                         variant="outline"
                     >
@@ -608,7 +605,7 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
 
                     <Button
                         onClick={handlePrintBillAndPayment}
-                        className="w-full h-8 text-xs"
+                        className="w-full h-9 text-xs"
                         disabled={isSubmitting}
                         variant="secondary"
                     >
@@ -624,7 +621,7 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
 
                     <Button
                         onClick={handlePayment}
-                        className="w-full h-8 text-xs font-medium"
+                        className="w-full h-9 text-xs font-medium"
                         disabled={isSubmitting}
                     >
                       {isSubmitting ? (
@@ -648,7 +645,7 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
       <Dialog open={open}>
         <DialogContent
             onClose={onClose}
-            className="max-w-[95vw] sm:max-w-[90vw] md:max-w-[800px] max-h-[90vh] overflow-hidden p-3 sm:p-4">
+            className="max-w-[95vw] sm:max-w-[90vw] md:max-w-[800px] max-h-[85vh] md:max-h-[90vh] overflow-y-auto p-2 sm:p-3 md:p-4">
           <DialogHeader className="pb-1 text-center">
             <DialogTitle className="text-lg font-bold text-center">Process Payment</DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground text-center">

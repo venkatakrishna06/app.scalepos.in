@@ -67,9 +67,9 @@ export default function Layout({ children }: LayoutProps) {
         <main className={cn(
           "flex-1 overflow-y-auto transition-all duration-300 ease-in-out",
           isSidebarOpen ? "md:ml-0" : "ml-0",
-          "pb-16 md:pb-0" // Add padding at the bottom for mobile nav
+          "pb-20 md:pb-0" // Increased padding at the bottom for mobile nav to prevent overlap
         )}>
-          <div className="mx-auto max-w-7xl p-4">
+          <div className="mx-auto max-w-7xl p-4 pb-2 md:pb-4">
             {children}
           </div>
         </main>

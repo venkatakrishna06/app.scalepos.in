@@ -141,7 +141,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       }
 
       const newOrder = await orderService.createOrder(order);
-      set(state => ({ orders: [...state.orders, newOrder] }));
+      //set(state => ({ orders: [...state.orders, newOrder] }));
       toast.success('Order created successfully');
       return newOrder; // Explicitly return the created order
     } catch (err) {
@@ -231,14 +231,6 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     } finally {
       set({ loading: false });
     }
-  },
-
-  getOrdersByTable: (tableId) => {
-    return get().orders.filter(order =>
-        order.table_id === tableId &&
-        order.status !== 'paid' &&
-        order.status !== 'cancelled'
-    );
   },
 
   addItemsToOrder: async (orderId, newItems) => {

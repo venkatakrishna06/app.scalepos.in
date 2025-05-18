@@ -19,6 +19,7 @@ import {Button} from '@/components/ui/button';
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from '@/components/ui/dialog';
 import {Input} from '@/components/ui/input';
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select";
+import {FilterDropdownContainer} from '@/components/FilterDropdownContainer';
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,} from '@/components/ui/tooltip';
 import {Badge} from '@/components/ui/badge';
@@ -84,20 +85,7 @@ export default function Menu() {
                              (availabilityFilter === 'available' && item.available) ||
                              (availabilityFilter === 'unavailable' && !item.available);
     return matchesCategory && matchesSearch && matchesAvailability;
-  }).sort((a, b) => {
-    const multiplier = sortOrder === 'asc' ? 1 : -1;
-
-    switch (sortField) {
-      case 'name':
-        return multiplier * a.name.localeCompare(b.name);
-      case 'price':
-        return multiplier * (a.price - b.price);
-      case 'category':
-        return multiplier * a.category.name.localeCompare(b.category.name);
-      default:
-        return 0;
-    }
-  });
+  })
 
   const handleSubmit = async (data: Omit<MenuItem, 'id' | 'available'>) => {
     try {
@@ -215,61 +203,36 @@ export default function Menu() {
             />
           </div>
 
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {categories.map((category) => (
-                category.parent_category_id && (
-                  <SelectItem key={category.id} value={category.name}>
-                    {category.name}
-                  </SelectItem>
-                )
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterDropdownContainer>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-[130px] sm:w-[180px]">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map((category) => (
+                  category.parent_category_id && (
+                    <SelectItem key={category.id} value={category.name}>
+                      {category.name}
+                    </SelectItem>
+                  )
+                ))}
+              </SelectContent>
+            </Select>
 
-          <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Availability" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Items</SelectItem>
-              <SelectItem value="available">Available</SelectItem>
-              <SelectItem value="unavailable">Unavailable</SelectItem>
-            </SelectContent>
-          </Select>
+            <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
+              <SelectTrigger className="w-[130px] sm:w-[180px]">
+                <SelectValue placeholder="Availability" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Items</SelectItem>
+                <SelectItem value="available">Available</SelectItem>
+                <SelectItem value="unavailable">Unavailable</SelectItem>
+              </SelectContent>
+            </Select>
+          </FilterDropdownContainer>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Select value={sortField} onValueChange={(value) => {
-            setSortField(value as SortField);
-            setSortOrder('asc');
-          }}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="name">Name</SelectItem>
-              <SelectItem value="price">Price</SelectItem>
-              <SelectItem value="category">Category</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Button 
-            variant="outline" 
-            size="icon"
-            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-          >
-            {sortOrder === 'asc' ? (
-              <SortAsc className="h-4 w-4" />
-            ) : (
-              <SortDesc className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
       </div>
 
       <div className="mt-6">

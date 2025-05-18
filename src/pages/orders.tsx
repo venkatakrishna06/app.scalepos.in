@@ -8,6 +8,7 @@ import {format, isToday, isYesterday, subDays} from 'date-fns';
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
 import {Input} from '@/components/ui/input';
 import {Tabs, TabsContent} from '@/components/ui/tabs';
+import {FilterDropdownContainer} from '@/components/FilterDropdownContainer';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -300,9 +301,9 @@ export default function Orders() {
                 />
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <FilterDropdownContainer>
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger className="w-[140px]">
+                  <SelectTrigger className="w-[130px] sm:w-[140px]">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -316,7 +317,7 @@ export default function Orders() {
                 </Select>
 
                 <Select value={filterTimeframe} onValueChange={setFilterTimeframe}>
-                  <SelectTrigger className="w-[140px]">
+                  <SelectTrigger className="w-[130px] sm:w-[140px]">
                     <SelectValue placeholder="Timeframe" />
                   </SelectTrigger>
                   <SelectContent>
@@ -329,7 +330,7 @@ export default function Orders() {
                 </Select>
 
                 <Select value={filterPaymentMethod} onValueChange={setFilterPaymentMethod}>
-                  <SelectTrigger className="w-[140px]">
+                  <SelectTrigger className="w-[130px] sm:w-[140px]">
                     <SelectValue placeholder="Payment" />
                   </SelectTrigger>
                   <SelectContent>
@@ -339,20 +340,20 @@ export default function Orders() {
                     <SelectItem value="upi">UPI</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-            </div>
 
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="oldest">Oldest First</SelectItem>
-                <SelectItem value="highest">Highest Amount</SelectItem>
-                <SelectItem value="lowest">Lowest Amount</SelectItem>
-              </SelectContent>
-            </Select>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                    <SelectItem value="highest">Highest Amount</SelectItem>
+                    <SelectItem value="lowest">Lowest Amount</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FilterDropdownContainer>
+            </div>
           </div>
         </div>
 

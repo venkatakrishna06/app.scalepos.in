@@ -4,6 +4,7 @@ import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} fr
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form';
 import {Input} from '@/components/ui/input';
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from '@/components/ui/select';
+import {FilterDropdownContainer} from '@/components/FilterDropdownContainer';
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {z} from 'zod';
@@ -110,26 +111,28 @@ export default function Reservations() {
               className="h-10 rounded-md border border-input bg-background pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
-          <Select value={dateFilter} onValueChange={setDateFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by date" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All dates</SelectItem>
-              <SelectItem value="2024-03-20">Today</SelectItem>
-              <SelectItem value="2024-03-21">Tomorrow</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="confirmed">Confirmed</SelectItem>
-            </SelectContent>
-          </Select>
+          <FilterDropdownContainer>
+            <Select value={dateFilter} onValueChange={setDateFilter}>
+              <SelectTrigger className="w-[130px] sm:w-[180px]">
+                <SelectValue placeholder="Filter by date" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All dates</SelectItem>
+                <SelectItem value="2024-03-20">Today</SelectItem>
+                <SelectItem value="2024-03-21">Tomorrow</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[130px] sm:w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="confirmed">Confirmed</SelectItem>
+              </SelectContent>
+            </Select>
+          </FilterDropdownContainer>
           <Button onClick={() => setShowDialog(true)}>
             <Plus className="mr-2 h-4 w-4" />
             New Reservation

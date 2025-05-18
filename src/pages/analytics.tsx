@@ -4,6 +4,7 @@ import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/compo
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import {DatePickerWithRange} from '@/components/ui/date-range-picker';
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
+import {FilterDropdownContainer} from '@/components/FilterDropdownContainer';
 import {Button} from '@/components/ui/button';
 import {Loader2, RefreshCw} from 'lucide-react';
 import {format} from 'date-fns';
@@ -163,44 +164,42 @@ export default function Analytics() {
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col gap-4">
+        <FilterDropdownContainer>
+          <DatePickerWithRange date={dateRange} setDate={setDateRange} />
 
-            <DatePickerWithRange date={dateRange} setDate={setDateRange} />
-
-
-        {activeTab === 'sales' && (
-
-            <CardContent>
-              <Select value={groupBy} onValueChange={(value) => setGroupBy(value as 'day' | 'week' | 'month')}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select grouping" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="day">Day</SelectItem>
-                  <SelectItem value="week">Week</SelectItem>
-                  <SelectItem value="month">Month</SelectItem>
-                </SelectContent>
-              </Select>
-            </CardContent>
-
-        )}
+          {activeTab === 'sales' && (
+            <Select value={groupBy} onValueChange={(value) => setGroupBy(value as 'day' | 'week' | 'month')}>
+              <SelectTrigger className="w-full sm:w-[140px]">
+                <SelectValue placeholder="Select grouping" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="day">Day</SelectItem>
+                <SelectItem value="week">Week</SelectItem>
+                <SelectItem value="month">Month</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        </FilterDropdownContainer>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-2 md:grid-cols-7 w-full">
-          <TabsTrigger value="sales">Sales</TabsTrigger>
-          <TabsTrigger value="menu-items">Menu Items</TabsTrigger>
-          <TabsTrigger value="staff">Staff</TabsTrigger>
-          <TabsTrigger value="tables">Tables</TabsTrigger>
-          <TabsTrigger value="payment-methods">Payment Methods</TabsTrigger>
-          <TabsTrigger value="hourly-sales">Hourly Sales</TabsTrigger>
-          <TabsTrigger value="customers">Customers</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto pb-2">
+          <TabsList className="inline-flex min-w-full md:grid md:grid-cols-7 md:w-full">
+            <TabsTrigger value="sales">Sales</TabsTrigger>
+            <TabsTrigger value="menu-items">Menu Items</TabsTrigger>
+            <TabsTrigger value="staff">Staff</TabsTrigger>
+            <TabsTrigger value="tables">Tables</TabsTrigger>
+            <TabsTrigger value="payment-methods">Payment Methods</TabsTrigger>
+            <TabsTrigger value="hourly-sales">Hourly Sales</TabsTrigger>
+            <TabsTrigger value="customers">Customers</TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Sales Analytics Tab */}
         <TabsContent value="sales" className="space-y-6">
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-4 gap-4">
             {/* Total Sales Card */}
             <Card>
               <CardHeader className="pb-2">
@@ -314,7 +313,7 @@ export default function Analytics() {
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
             {/* Orders by Type Card */}
             <Card>
               <CardHeader>
