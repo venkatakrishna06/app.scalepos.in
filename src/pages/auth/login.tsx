@@ -56,10 +56,12 @@ export default function Login() {
   const handleSubmit = async (data: LoginFormData) => {
     try {
       await login(data.email, data.password);
-      toast.success('Welcome back!');
 
       // Get the user from auth store to determine role-based redirect
       const user = useAuthStore.getState().user;
+      if (user) {
+        toast.success('Welcome back!');
+      }
       const from = location.state?.from?.pathname;
 
       // If there's a specific 'from' path, use it, otherwise use role-based default
