@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import {Skeleton} from "@/components/ui/skeleton";
+import {Card, CardContent, CardFooter, CardHeader} from "@/components/ui/card";
 
 /**
  * Skeleton loader for the Menu page

@@ -2,7 +2,7 @@ import {create} from 'zustand';
 import {Payment} from '@/types';
 import {paymentService} from '@/lib/api/services/payment.service';
 import {toast} from '@/lib/toast';
-import {cacheService, CACHE_KEYS} from '@/lib/services/cache.service';
+import {CACHE_KEYS, cacheService} from '@/lib/services/cache.service';
 
 interface PaymentState {
   payments: Payment[];

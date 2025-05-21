@@ -60,6 +60,14 @@ export default function GstSettings() {
       <CategoryGstSettings 
         categories={categories} 
         onUpdate={(updatedCategories) => setCategories(updatedCategories)} 
+        onMenuItemsRefresh={async () => {
+          try {
+            const refreshedMenuItems = await menuService.getItems();
+            setMenuItems(refreshedMenuItems);
+          } catch (err) {
+            console.error('Error refreshing menu items:', err);
+          }
+        }}
       />
 
       <MenuItemGstSettings 

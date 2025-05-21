@@ -1,5 +1,17 @@
 import {memo, useCallback, useEffect, useMemo, useState} from 'react';
-import {ChevronDown, ChevronRight, Loader2, Menu as MenuIcon, Minus, Pencil, Plus, Search, ShoppingCart, Star, X} from 'lucide-react';
+import {
+    ChevronDown,
+    ChevronRight,
+    Loader2,
+    Menu as MenuIcon,
+    Minus,
+    Pencil,
+    Plus,
+    Search,
+    ShoppingCart,
+    Star,
+    X
+} from 'lucide-react';
 import {Dialog, DialogContent,} from './ui/dialog';
 import {Button} from './ui/button';
 import {useMenuStore, useOrderStore} from '@/lib/store';

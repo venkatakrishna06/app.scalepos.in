@@ -16,7 +16,7 @@ interface ViewOrdersDialogProps {
 }
 
 export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrdersDialogProps) {
-  const { updateOrderItem, removeOrderItem } = useOrderStore();
+  const { updateOrderItem } = useOrderStore();
   const { restaurant, fetchRestaurant } = useRestaurantStore();
   const { isServer } = usePermissions();
   const [processingItemId, setProcessingItemId] = useState<number | null>(null);
@@ -53,29 +53,29 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
   };
 
 
-  const handleQuantityChange = async (orderId: number, itemId: number, delta: number, currentQuantity: number) => {
-    if (processingItemId) return;
-
-    const order = orders.find(o => o.id === orderId);
-    if (!order || order.status === 'preparing') return;
-
-    try {
-      setProcessingItemId(itemId);
-      const newQuantity = currentQuantity + delta;
-
-      if (newQuantity <= 0) {
-        await removeOrderItem(orderId, itemId);
-        toast.success('Item removed from order');
-      } else {
-        await updateOrderItem(orderId, itemId, { quantity: newQuantity });
-        toast.success('Order quantity updated');
-      }
-    } catch {
-      toast.error('Failed to update order quantity');
-    } finally {
-      setProcessingItemId(null);
-    }
-  };
+  // const handleQuantityChange = async (orderId: number, itemId: number, delta: number, currentQuantity: number) => {
+  //   if (processingItemId) return;
+  //
+  //   const order = orders.find(o => o.id === orderId);
+  //   if (!order || order.status === 'preparing') return;
+  //
+  //   try {
+  //     setProcessingItemId(itemId);
+  //     const newQuantity = currentQuantity + delta;
+  //
+  //     if (newQuantity <= 0) {
+  //       await removeOrderItem(orderId, itemId);
+  //       toast.success('Item removed from order');
+  //     } else {
+  //       await updateOrderItem(orderId, itemId, { quantity: newQuantity });
+  //       toast.success('Order quantity updated');
+  //     }
+  //   } catch {
+  //     toast.error('Failed to update order quantity');
+  //   } finally {
+  //     setProcessingItemId(null);
+  //   }
+  // };
 
   const handleItemStatusChange = async (orderId: number, itemId: number, newStatus: Order['items'][0]['status']) => {
     if (processingItemId) return;

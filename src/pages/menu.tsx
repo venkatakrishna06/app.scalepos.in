@@ -1,18 +1,16 @@
 import {useEffect, useRef, useState} from 'react';
 import {
-  AlertCircle,
-  CheckCircle,
-  Edit2,
-  FileText,
-  LayoutGrid,
-  LayoutList,
-  Plus,
-  Search,
-  SortAsc,
-  SortDesc,
-  Tag,
-  Trash2,
-  XCircle
+    AlertCircle,
+    CheckCircle,
+    Edit2,
+    FileText,
+    LayoutGrid,
+    LayoutList,
+    Plus,
+    Search,
+    Tag,
+    Trash2,
+    XCircle
 } from 'lucide-react';
 import {MenuSkeleton} from '@/components/skeletons/menu-skeleton';
 import {Button} from '@/components/ui/button';

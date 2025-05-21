@@ -3,9 +3,10 @@ import {useAuthStore} from '@/lib/store/auth.store';
 import {Button} from '@/components/ui/button';
 import {Dialog} from '@/components/ui/dialog';
 import {Camera, Key, Loader2} from 'lucide-react';
+import {toast} from "sonner";
 
 export default function Profile() {
-  const { user, loading, error, updateProfile, changePassword, clearError, initAuth } = useAuthStore();
+  const { user, loading, error, updateProfile, changePassword, clearError, initAuth, logout } = useAuthStore();
 
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -23,9 +24,9 @@ export default function Profile() {
       initAuth();
     } else {
       setFormData({
-        name: user.name || '',
-        email: user.email || '',
-        phone: user.phone || '',
+        name: user.staff.name || '',
+        email: user.username || '',
+        phone: user.staff.phone || '',
       });
     }
   }, [user, initAuth]);
@@ -43,6 +44,8 @@ export default function Profile() {
       setShowPasswordDialog(false);
       setCurrentPassword('');
       setNewPassword('');
+      toast.success('Password changed successfully');
+
     }
   };
 
@@ -95,7 +98,7 @@ export default function Profile() {
               {user?.avatar_url && (
                 <img
                   src={user.avatar_url}
-                  alt={user.name}
+                  alt={user.staff.name}
                   className="h-full w-full rounded-full object-cover"
                 />
               )}
@@ -105,7 +108,7 @@ export default function Profile() {
             </button>
           </div>
           <div>
-            <h2 className="text-xl font-semibold">{user?.name}</h2>
+            <h2 className="text-xl font-semibold">{user?.staff.name}</h2>
             <p className="text-sm text-muted-foreground">{user?.role}</p>
           </div>
         </div>

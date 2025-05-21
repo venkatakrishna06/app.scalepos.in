@@ -1,16 +1,16 @@
-import { useState } from 'react';
-import { Bell } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { useNotificationStore, Notification } from '@/lib/store/notification.store';
+import {useState} from 'react';
+import {Bell} from 'lucide-react';
+import {formatDistanceToNow} from 'date-fns';
+import {Notification, useNotificationStore} from '@/lib/store/notification.store';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import {Button} from '@/components/ui/button';
+import {useNavigate} from 'react-router-dom';
 
 export function NotificationDropdown() {
   const navigate = useNavigate();

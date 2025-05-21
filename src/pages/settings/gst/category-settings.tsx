@@ -10,9 +10,10 @@ import {Category} from '@/types';
 interface CategoryGstSettingsProps {
   categories: Category[];
   onUpdate: (categories: Category[]) => void;
+  onMenuItemsRefresh?: () => void;
 }
 
-export function CategoryGstSettings({ categories, onUpdate }: CategoryGstSettingsProps) {
+export function CategoryGstSettings({ categories, onUpdate, onMenuItemsRefresh }: CategoryGstSettingsProps) {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [localCategories, setLocalCategories] = useState<Category[]>(categories);
@@ -128,6 +129,11 @@ export function CategoryGstSettings({ categories, onUpdate }: CategoryGstSetting
 
       // Update original categories after successful save
       setOriginalCategories(localCategories);
+
+      // Refresh menu items if callback is provided
+      if (onMenuItemsRefresh) {
+        onMenuItemsRefresh();
+      }
 
       toast({
         title: 'Success',

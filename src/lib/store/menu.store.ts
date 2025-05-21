@@ -2,7 +2,7 @@ import {create} from 'zustand';
 import {Category, MenuItem} from '@/types';
 import {menuService} from '@/lib/api/services/menu.service';
 import {toast} from '@/lib/toast';
-import {cacheService, CACHE_KEYS} from '@/lib/services/cache.service';
+import {CACHE_KEYS, cacheService} from '@/lib/services/cache.service';
 
 interface MenuState {
   // State

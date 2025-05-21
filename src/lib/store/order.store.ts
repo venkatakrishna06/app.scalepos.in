@@ -2,7 +2,7 @@ import {create} from 'zustand';
 import {MenuItem, Order, OrderItem} from '@/types';
 import {orderService} from '@/lib/api/services/order.service';
 import {toast} from '@/lib/toast';
-import {cacheService, CACHE_KEYS} from '@/lib/services/cache.service';
+import {CACHE_KEYS, cacheService} from '@/lib/services/cache.service';
 
 // Default tax rates
 const DEFAULT_SGST_RATE = 2.5;

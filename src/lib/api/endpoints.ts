@@ -5,7 +5,7 @@ export const API_ENDPOINTS = {
     LOGOUT: '/auth/logout',
     REFRESH: '/refresh-token',
     PROFILE: '/auth/profile',
-    PASSWORD: '/auth/password',
+    CHANGE_PASSWORD: '/change-password',
   },
   ANALYTICS: {
     SALES: '/api/v1/analytics/sales',

@@ -1,7 +1,17 @@
-
 import {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {ArrowRight, ClipboardList, Clock, DollarSign, Loader2, RefreshCw, ShoppingBag, Table2, TrendingUp, Users} from 'lucide-react';
+import {
+    ArrowRight,
+    ClipboardList,
+    Clock,
+    DollarSign,
+    Loader2,
+    RefreshCw,
+    ShoppingBag,
+    Table2,
+    TrendingUp,
+    Users
+} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {useMenuStore, useOrderStore} from '@/lib/store';
 import {toast} from '@/lib/toast';

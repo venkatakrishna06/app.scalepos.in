@@ -38,6 +38,6 @@ export const authService = {
   },
 
   changePassword: async (currentPassword: string, newPassword: string) => {
-    await api.put(API_ENDPOINTS.AUTH.PASSWORD, { currentPassword, newPassword });
+    await api.post(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, { currentPassword, newPassword });
   },
 };

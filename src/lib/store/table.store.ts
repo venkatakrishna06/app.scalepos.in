@@ -2,7 +2,7 @@ import {create} from 'zustand';
 import {Table} from '@/types';
 import {tableService} from '@/lib/api/services/table.service';
 import {toast} from '@/lib/toast';
-import {cacheService, CACHE_KEYS} from '@/lib/services/cache.service';
+import {CACHE_KEYS, cacheService} from '@/lib/services/cache.service';
 
 interface TableState {
   tables: Table[];
