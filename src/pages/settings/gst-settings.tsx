@@ -7,7 +7,7 @@ import {Category, MenuItem, Restaurant} from '@/types';
 import {Loader2} from 'lucide-react';
 
 export default function GstSettings() {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);

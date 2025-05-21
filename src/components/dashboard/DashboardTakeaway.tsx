@@ -1,5 +1,5 @@
 import {memo, useCallback, useEffect, useMemo, useState} from 'react';
-import {AlertCircle, ChevronRight, Menu as MenuIcon, Minus, Plus, Search, ShoppingCart, X} from 'lucide-react';
+import {AlertCircle, ChevronRight, Menu as MenuIcon, Minus, Pencil, Plus, Search, ShoppingCart, X} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {useMenuStore, useOrderStore} from '@/lib/store';
 import {Category, MenuItem, Order, OrderItem} from '@/types';
@@ -41,6 +41,10 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
   const [draftOrder, setDraftOrder] = useState<Omit<Order, 'id'> | null>(null);
+
+  // Note editing state
+  const [editingItemId, setEditingItemId] = useState<number | null>(null);
+  const [itemNote, setItemNote] = useState<string>('');
 
   // Store state
   const { menuItems, getMenuItemsByCategory, getMainCategories, getSubcategories } = useMenuStore();
@@ -133,6 +137,27 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
     return orderItems.find(item => item.menu_item_id === itemId)?.quantity || 0;
   }, [orderItems]);
 
+  // Handle note editing for an item
+  const handleEditNote = useCallback((itemId: number, currentNote: string) => {
+    setEditingItemId(itemId);
+    setItemNote(currentNote);
+  }, []);
+
+  // Save note for an item
+  const handleSaveNote = useCallback(() => {
+    if (editingItemId !== null) {
+      setOrderItems(current => 
+        current.map(item => 
+          item.id === editingItemId 
+            ? { ...item, notes: itemNote } 
+            : item
+        )
+      );
+      setEditingItemId(null);
+      setItemNote('');
+    }
+  }, [editingItemId, itemNote]);
+
   // Calculate total amount
   const totalAmount = useMemo(() => 
     orderItems.reduce(
@@ -145,6 +170,193 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
   const totalItems = useMemo(() => 
     orderItems.reduce((sum, item) => sum + item.quantity, 0),
   [orderItems]);
+
+  // Function to print KOT (Kitchen Order Ticket)
+  const handlePrintKOT = useCallback(() => {
+    // Check if we have items to print
+    if (orderItems.length === 0) {
+      toast.error('No items to print');
+      return;
+    }
+
+    // Create a new window for the KOT
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast.error('Please allow pop-ups to print the KOT');
+      return;
+    }
+
+    // Get current date and time
+    const now = new Date();
+    const dateFormatted = now.toLocaleDateString();
+    const timeFormatted = now.toLocaleTimeString();
+
+    // Generate KOT HTML content
+    const kotContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Kitchen Order Ticket</title>
+        <style>
+          body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            max-width: 80mm; /* Standard receipt width */
+            margin: 0 auto;
+          }
+          .receipt {
+            border: 1px solid #ddd;
+            padding: 10px;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #ccc;
+            padding-bottom: 8px;
+          }
+          .restaurant-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 4px;
+          }
+          .restaurant-details {
+            font-size: 11px;
+            margin-bottom: 3px;
+            line-height: 1.2;
+          }
+          .bill-info {
+            margin-bottom: 12px;
+            font-size: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: repeat(3, auto);
+            gap: 4px 8px;
+          }
+          .bill-info div {
+            margin-bottom: 2px;
+          }
+          .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            font-size: 11px;
+          }
+          .items-table th {
+            text-align: left;
+            padding: 3px 0;
+            border-bottom: 1px solid #ddd;
+          }
+          .items-table td {
+            padding: 3px 0;
+            border-bottom: 1px dashed #eee;
+          }
+          .amount-details {
+            margin-top: 8px;
+            font-size: 11px;
+          }
+          .amount-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+          }
+          .total-amount {
+            font-weight: bold;
+            font-size: 13px;
+            margin-top: 4px;
+            border-top: 1px solid #ddd;
+            padding-top: 4px;
+          }
+          .footer {
+            margin-top: 12px;
+            text-align: center;
+            font-size: 11px;
+            border-top: 1px dashed #ccc;
+            padding-top: 8px;
+          }
+          .footer p {
+            margin: 2px 0;
+          }
+          @media print {
+            body {
+              width: 80mm;
+              margin: 0;
+              padding: 0;
+            }
+            .receipt {
+              border: none;
+            }
+            .no-print {
+              display: none;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="receipt">
+          <div class="header">
+            <div class="restaurant-name">KITCHEN ORDER TICKET</div>
+            <div class="restaurant-details">Date: ${dateFormatted} Time: ${timeFormatted}</div>
+          </div>
+
+          <div class="bill-info">
+            <div><strong>KOT No:</strong> ${Date.now().toString().slice(-6)}</div>
+            <div><strong>Table:</strong> Takeaway</div>
+            <div><strong>Server:</strong> ${user?.name || 'N/A'}</div>
+            <div><strong>Type:</strong> Takeaway</div>
+          </div>
+
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${orderItems.map(item => {
+                return `
+                  <tr>
+                    <td>${item.name || 'Unknown Item'}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.notes || '-'}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+
+          <div class="footer">
+            <p>*** Kitchen Copy ***</p>
+          </div>
+        </div>
+
+        <div class="no-print" style="text-align: center; margin-top: 20px;">
+          <button onclick="window.print();" style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            Print KOT
+          </button>
+          <button onclick="window.close();" style="padding: 10px 20px; background: #f44336; color: white; border: none; border-radius: 4px; margin-left: 10px; cursor: pointer;">
+            Close
+          </button>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Write the content to the new window
+    printWindow.document.open();
+    printWindow.document.write(kotContent);
+    printWindow.document.close();
+
+    // Trigger print when content is loaded
+    printWindow.onload = function() {
+      // Automatically print on load (optional)
+      // printWindow.print();
+    };
+
+    toast.success('KOT generated successfully');
+  }, [orderItems, user]);
 
   // Handle order submission
   const handlePlaceOrder = useCallback(async () => {
@@ -374,6 +586,11 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
                       key={item.id}
                       item={item}
                       onChangeQuantity={(delta) => handleQuantityChange({ id: item.menu_item_id } as MenuItem, delta)}
+                      onEditNote={() => handleEditNote(item.id, item.notes)}
+                      isEditing={editingItemId === item.id}
+                      currentNote={editingItemId === item.id ? itemNote : item.notes}
+                      onNoteChange={setItemNote}
+                      onSaveNote={handleSaveNote}
                     />
                   ))}
                 </div>
@@ -386,6 +603,15 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
                   <span className="font-semibold">Total Amount</span>
                   <span className="text-lg font-semibold text-primary">₹{totalAmount.toFixed(2)}</span>
                 </div>
+                <Button
+                  className="w-full justify-between py-4 text-base"
+                  onClick={handlePrintKOT}
+                  disabled={orderItems.length === 0 || isSubmitting}
+                  variant="outline"
+                >
+                  <span>Kitchen Order Ticket (KOT)</span>
+                  <ChevronRight className="h-5 w-5" />
+                </Button>
                 <Button
                   className="w-full justify-between py-4 text-base"
                   onClick={handlePlaceOrder}
@@ -587,34 +813,84 @@ MenuItemCard.displayName = 'MenuItemCard';
 // Memoized OrderItemRow component
 const OrderItemRow = memo(({ 
   item, 
-  onChangeQuantity 
+  onChangeQuantity,
+  onEditNote,
+  isEditing,
+  currentNote,
+  onNoteChange,
+  onSaveNote
 }: { 
   item: OrderItem; 
   onChangeQuantity: (delta: number) => void;
+  onEditNote: () => void;
+  isEditing: boolean;
+  currentNote: string;
+  onNoteChange: (note: string) => void;
+  onSaveNote: () => void;
 }) => {
   return (
-    <div className="flex items-start justify-between gap-2">
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate">{item.name}</p>
-        <p className="text-xs text-muted-foreground">
-          ₹{(item.price * item.quantity).toFixed(2)} ({item.quantity} × ₹{item.price.toFixed(2)})
-        </p>
+    <div className="flex flex-col gap-2">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium truncate">{item.name}</p>
+          <p className="text-xs text-muted-foreground">
+            ₹{(item.price * item.quantity).toFixed(2)} ({item.quantity} × ₹{item.price.toFixed(2)})
+          </p>
+          {item.notes && !isEditing && (
+            <p className="text-xs italic text-muted-foreground mt-1">
+              Note: {item.notes}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            className="border rounded-md h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent"
+            onClick={() => onChangeQuantity(-1)}
+          >
+            <Minus className="h-3 w-3" />
+          </button>
+          <span className="w-5 text-center text-sm">{item.quantity}</span>
+          <button
+            className="border rounded-md h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent"
+            onClick={() => onChangeQuantity(1)}
+          >
+            <Plus className="h-3 w-3" />
+          </button>
+          <button
+            className="border rounded-md h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent ml-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditNote();
+            }}
+          >
+            <Pencil className="h-3 w-3" />
+          </button>
+        </div>
       </div>
-      <div className="flex items-center gap-1">
-        <button
-          className="border rounded-md h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent"
-          onClick={() => onChangeQuantity(-1)}
-        >
-          <Minus className="h-3 w-3" />
-        </button>
-        <span className="w-5 text-center text-sm">{item.quantity}</span>
-        <button
-          className="border rounded-md h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent"
-          onClick={() => onChangeQuantity(1)}
-        >
-          <Plus className="h-3 w-3" />
-        </button>
-      </div>
+
+      {isEditing && (
+        <div className="mt-1 flex gap-2">
+          <input
+            type="text"
+            value={currentNote}
+            onChange={(e) => onNoteChange(e.target.value)}
+            placeholder="Add note for this item..."
+            className="flex-1 h-8 px-2 text-sm border rounded-md"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                onSaveNote();
+              }
+            }}
+          />
+          <Button
+            size="sm"
+            onClick={onSaveNote}
+            className="h-8 px-2"
+          >
+            Save
+          </Button>
+        </div>
+      )}
     </div>
   );
 });

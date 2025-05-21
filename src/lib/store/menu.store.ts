@@ -131,8 +131,11 @@ export const useMenuStore = create<MenuState>((set, get) => ({
     try {
       set({ loading: true, error: null });
       const newItem = await menuService.createItem(item);
-      set(state => ({ menuItems: [...state.menuItems, newItem] }));
-      toast.success('Menu item added successfully');
+     // set(state => ({ menuItems: [...state.menuItems, newItem] }));
+      if(newItem){
+        toast.success('Menu item added successfully');
+      }
+
     } catch (err) {
       console.error('Error adding menu item:', err);
       const errorMessage = 'Failed to add menu item';

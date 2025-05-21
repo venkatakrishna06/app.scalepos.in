@@ -235,7 +235,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                                               </Button>
                                             </div>
                                         )}
-                                        { canEditOrder(order.status)&&item.status === 'preparing' && !isServer && (
+                                        { item.status === 'preparing' && !isServer && (
                                             <Button
                                                 size="sm"
                                                 onClick={() => handleItemStatusChange(order.id, item.id, 'served')}

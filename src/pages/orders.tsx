@@ -438,19 +438,19 @@ export default function Orders() {
 
               <CardFooter className="flex items-center justify-between border-t bg-muted/10 pt-3">
                 <div>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-                          <FileText className="h-4 w-4" />
-                          <span className="sr-only">View Details</span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>View Order Details</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  {/*<TooltipProvider>*/}
+                  {/*  <Tooltip>*/}
+                  {/*    <TooltipTrigger asChild>*/}
+                  {/*      <Button variant="outline" size="sm" className="h-8 w-8 p-0">*/}
+                  {/*        <FileText className="h-4 w-4" />*/}
+                  {/*        <span className="sr-only">View Details</span>*/}
+                  {/*      </Button>*/}
+                  {/*    </TooltipTrigger>*/}
+                  {/*    /!*<TooltipContent>*!/*/}
+                  {/*    /!*  <p>View Order Details</p>*!/*/}
+                  {/*    /!*</TooltipContent>*!/*/}
+                  {/*  </Tooltip>*/}
+                  {/*</TooltipProvider>*/}
                 </div>
 
                 <div className="text-right">
