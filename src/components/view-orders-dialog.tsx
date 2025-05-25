@@ -1,6 +1,6 @@
 import {Dialog, DialogContent, DialogHeader, DialogTitle,} from './ui/dialog';
 import {Button} from './ui/button';
-import {CheckCircle2, Clock, CreditCard, Loader2, XCircle} from 'lucide-react';
+import {CheckCircle2, Clock, CreditCard, Loader2, Minus, Plus, XCircle} from 'lucide-react';
 import {Order} from '@/types';
 import {format} from 'date-fns';
 import {useOrderStore, useRestaurantStore} from '@/lib/store';
@@ -53,29 +53,28 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
   };
 
 
-  // const handleQuantityChange = async (orderId: number, itemId: number, delta: number, currentQuantity: number) => {
-  //   if (processingItemId) return;
-  //
-  //   const order = orders.find(o => o.id === orderId);
-  //   if (!order || order.status === 'preparing') return;
-  //
-  //   try {
-  //     setProcessingItemId(itemId);
-  //     const newQuantity = currentQuantity + delta;
-  //
-  //     if (newQuantity <= 0) {
-  //       await removeOrderItem(orderId, itemId);
-  //       toast.success('Item removed from order');
-  //     } else {
-  //       await updateOrderItem(orderId, itemId, { quantity: newQuantity });
-  //       toast.success('Order quantity updated');
-  //     }
-  //   } catch {
-  //     toast.error('Failed to update order quantity');
-  //   } finally {
-  //     setProcessingItemId(null);
-  //   }
-  // };
+  const handleQuantityChange = async (orderId: number, itemId: number, delta: number, currentQuantity: number) => {
+    if (processingItemId) return;
+    if( currentQuantity + delta < 1) {
+        toast.error('Quantity cannot be less than 1');
+        return;
+    }
+
+    const order = orders.find(o => o.id === orderId);
+    if (!order || order.status === 'preparing') return;
+
+    try {
+      setProcessingItemId(itemId);
+      const newQuantity = currentQuantity + delta;
+      await updateOrderItem(orderId, itemId, {quantity: newQuantity});
+      toast.success('Order quantity updated');
+
+    } catch {
+      toast.error('Failed to update order quantity');
+    } finally {
+      setProcessingItemId(null);
+    }
+  };
 
   const handleItemStatusChange = async (orderId: number, itemId: number, newStatus: Order['items'][0]['status']) => {
     if (processingItemId) return;
@@ -91,13 +90,13 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
     }
   };
 
-  const canEditOrder = (status: Order['status']) => {
-    // Server role should not see action buttons
-    if (isServer) {
-      return false;
-    }
-    return status === 'placed';
-  };
+  // const canEditOrder = (status: Order['status']) => {
+  //   // Server role should not see action buttons
+  //   if (isServer) {
+  //     return false;
+  //   }
+  //   return status === 'placed';
+  // };
 
 
   return (
@@ -144,7 +143,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                                   <th className="pb-2">Price</th>
                                   <th className="pb-2">Total</th>
                                   <th className="pb-2">Status</th>
-                                  {canEditOrder(order.status) && (
+                                  {!isServer && (
                                       <th className="pb-2">Actions</th>
                                   )}
                                 </tr>
@@ -179,34 +178,34 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                                         )}
                                       </td>
                                       <td className="py-1">
-                                        {/*{canEditOrder(order.status) && item.status === 'placed' && (*/}
-                                        {/*    <div className="flex items-center gap-2">*/}
-                                        {/*      <Button*/}
-                                        {/*          variant="outline"*/}
-                                        {/*          size="sm"*/}
-                                        {/*          onClick={() => handleQuantityChange(order.id, item.id, -1, item.quantity)}*/}
-                                        {/*          disabled={processingItemId === item.id}*/}
-                                        {/*      >*/}
-                                        {/*        {processingItemId === item.id ? (*/}
-                                        {/*            <Loader2 className="h-3 w-3 animate-spin" />*/}
-                                        {/*        ) : (*/}
-                                        {/*            <Minus className="h-3 w-3" />*/}
-                                        {/*        )}*/}
-                                        {/*      </Button>*/}
-                                        {/*      <Button*/}
-                                        {/*          variant="outline"*/}
-                                        {/*          size="sm"*/}
-                                        {/*          onClick={() => handleQuantityChange(order.id, item.id, 1, item.quantity)}*/}
-                                        {/*          disabled={processingItemId === item.id}*/}
-                                        {/*      >*/}
-                                        {/*        {processingItemId === item.id ? (*/}
-                                        {/*            <Loader2 className="h-3 w-3 animate-spin" />*/}
-                                        {/*        ) : (*/}
-                                        {/*            <Plus className="h-3 w-3" />*/}
-                                        {/*        )}*/}
-                                        {/*      </Button>*/}
-                                        {/*    </div>*/}
-                                        {/*)}*/}
+                                        { item.status === 'placed' && (
+                                            <div className="flex items-center gap-2">
+                                              <Button
+                                                  variant="outline"
+                                                  size="sm"
+                                                  onClick={() => handleQuantityChange(order.id, item.id, -1, item.quantity)}
+                                                  disabled={processingItemId === item.id}
+                                              >
+                                                {processingItemId === item.id ? (
+                                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                                ) : (
+                                                    <Minus className="h-3 w-3" />
+                                                )}
+                                              </Button>
+                                              <Button
+                                                  variant="outline"
+                                                  size="sm"
+                                                  onClick={() => handleQuantityChange(order.id, item.id, 1, item.quantity)}
+                                                  disabled={processingItemId === item.id}
+                                              >
+                                                {processingItemId === item.id ? (
+                                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                                ) : (
+                                                    <Plus className="h-3 w-3" />
+                                                )}
+                                              </Button>
+                                            </div>
+                                        )}
                                         { !isServer && item.status === 'placed' && (
                                             <div className="flex items-center gap-2 mt-2">
                                               <Button

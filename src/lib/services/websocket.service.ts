@@ -5,7 +5,6 @@ import {useOrderStore} from '../store/order.store';
 import {useMenuStore} from '../store/menu.store';
 import {useNotificationStore} from '../store/notification.store';
 import {MenuItem, Order, Table} from '@/types';
-import {CACHE_KEYS, cacheService} from './cache.service';
 
 // Define types for WebSocket messages
 type WebSocketMessageType = 'table_update' | 'order_update' | 'menu_item_update' | 'order_item_status_update';
@@ -223,8 +222,6 @@ class WebSocketService {
       useRootStore.setState({tableStore: {...tableStore, tables}});
       useTableStore.setState({tables});
 
-      // Update cache
-      cacheService.setCache(CACHE_KEYS.TABLES, tables);
 
       // Add notification
       useNotificationStore.getState().addNotification({
@@ -247,8 +244,6 @@ class WebSocketService {
         useRootStore.setState({tableStore: {...tableStore, tables: updatedTables}});
         useTableStore.setState({tables: updatedTables});
 
-        // Update cache
-        cacheService.setCache(CACHE_KEYS.TABLES, updatedTables);
 
         // Add notification
         useNotificationStore.getState().addNotification({
@@ -271,8 +266,6 @@ class WebSocketService {
         });
         useTableStore.setState({tables: newTables});
 
-        // Update cache
-        cacheService.setCache(CACHE_KEYS.TABLES, newTables);
 
         // Add notification
         useNotificationStore.getState().addNotification({
@@ -303,8 +296,6 @@ class WebSocketService {
       useRootStore.setState({orderStore: {...orderStore, orders}});
       useOrderStore.setState({orders});
 
-      // Update cache
-      cacheService.setCache(CACHE_KEYS.ORDERS, orders);
 
       // Add notification
       useNotificationStore.getState().addNotification({
@@ -327,8 +318,6 @@ class WebSocketService {
         useRootStore.setState({orderStore: {...orderStore, orders: updatedOrders}});
         useOrderStore.setState({orders: updatedOrders});
 
-        // Update cache
-        cacheService.setCache(CACHE_KEYS.ORDERS, updatedOrders);
 
         // Add notification
         useNotificationStore.getState().addNotification({

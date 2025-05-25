@@ -2,7 +2,6 @@ import {create} from 'zustand';
 import {MenuItem, Order, OrderItem} from '@/types';
 import {orderService} from '@/lib/api/services/order.service';
 import {toast} from '@/lib/toast';
-import {CACHE_KEYS, cacheService} from '@/lib/services/cache.service';
 
 // Default tax rates
 const DEFAULT_SGST_RATE = 2.5;
@@ -32,7 +31,7 @@ interface OrderState {
     start_date?: string;
     end_date?: string;
     table_number?: number;
-  }, skipCache?: boolean) => Promise<void>;
+  }) => Promise<void>;
   addOrder: (order: Omit<Order, 'id'>) => Promise<Order>;
   updateOrder: (id: number, updates: Partial<Order>) => Promise<void>;
   updateOrderStatus: (id: number, status: Order['status']) => Promise<void>;
@@ -74,36 +73,12 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   loading: false,
   error: null,
 
-  fetchOrders: async (params, skipCache = false) => {
+  fetchOrders: async (params) => {
     try {
       set({ loading: true, error: null });
 
-      // Try to get data from cache first if skipCache is false
-      if (!skipCache) {
-        const cachedOrders = cacheService.getCache<Order[]>(CACHE_KEYS.ORDERS);
-        if (cachedOrders) {
-          console.log('Using cached orders data');
-          set({ orders: cachedOrders });
-          set({ loading: false });
-
-          // Fetch in background to update cache silently
-          orderService.getOrders(params).then(freshOrders => {
-            cacheService.setCache(CACHE_KEYS.ORDERS, freshOrders);
-            set({ orders: freshOrders });
-          }).catch(err => {
-            console.error('Background fetch for orders failed:', err);
-          });
-
-          return;
-        }
-      }
-
-      // If skipCache is true or no valid cache, fetch from API
+      // Fetch from API directly (no caching)
       const orders = await orderService.getOrders(params);
-
-      // Update cache
-      cacheService.setCache(CACHE_KEYS.ORDERS, orders);
-
       set({ orders });
     } catch (err) {
       console.error('Failed to fetch orders:', err);
@@ -321,10 +296,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
         cgst_amount: cgstAmount,
         total_amount: totalAmount
       });
-
-      toast.success('Order item updated');
     } catch (err) {
-      console.error('Failed to update order item:', err);
       const errorMessage = 'Failed to update order item';
       set({ error: errorMessage });
       toast.error(errorMessage);

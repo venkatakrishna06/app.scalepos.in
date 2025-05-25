@@ -45,7 +45,7 @@ export const useUserStore = create<UserState>((set) => ({
       set({ loading: true, error: null });
       await userService.createUser(user);
       // Refresh the user list after adding a new user
-      await set.getState().fetchUsers();
+      // await set.getState().fetchUsers();
       toast.success('User added successfully');
     } catch (err) {
       console.error('Failed to add user:', err);

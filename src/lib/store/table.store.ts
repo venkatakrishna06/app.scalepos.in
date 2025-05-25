@@ -2,13 +2,12 @@ import {create} from 'zustand';
 import {Table} from '@/types';
 import {tableService} from '@/lib/api/services/table.service';
 import {toast} from '@/lib/toast';
-import {CACHE_KEYS, cacheService} from '@/lib/services/cache.service';
 
 interface TableState {
   tables: Table[];
   loading: boolean;
   error: string | null;
-  fetchTables: (skipCache?: boolean) => Promise<void>;
+  fetchTables: () => Promise<void>;
   addTable: (table: Omit<Table, 'id'>) => Promise<void>;
   deleteTable: (id: number) => Promise<void>;
   updateTableStatus: (id: number, status: Table['status']) => Promise<void>;
@@ -34,36 +33,12 @@ export const useTableStore = create<TableState>((set, get) => ({
   loading: false,
   error: null,
 
-  fetchTables: async (skipCache = false) => {
+  fetchTables: async () => {
     try {
       set({ loading: true, error: null });
 
-      // Try to get data from cache first if skipCache is false
-      if (!skipCache) {
-        const cachedTables = cacheService.getCache<Table[]>(CACHE_KEYS.TABLES);
-        if (cachedTables) {
-          console.log('Using cached tables data');
-          set({ tables: cachedTables });
-          set({ loading: false });
-
-          // Fetch in background to update cache silently
-          tableService.getTables().then(freshTables => {
-            cacheService.setCache(CACHE_KEYS.TABLES, freshTables);
-            set({ tables: freshTables });
-          }).catch(err => {
-            console.error('Background fetch for tables failed:', err);
-          });
-
-          return;
-        }
-      }
-
-      // If skipCache is true or no valid cache, fetch from API
+      // Fetch from API directly (no caching)
       const tables = await tableService.getTables();
-
-      // Update cache
-      cacheService.setCache(CACHE_KEYS.TABLES, tables);
-
       set({ tables });
     } catch (err) {
       console.error('Error fetching tables:', err);
@@ -134,7 +109,7 @@ export const useTableStore = create<TableState>((set, get) => ({
         ),
       }));
 
-      toast.success(`Table status updated to ${status}`);
+      // toast.success(`Table status updated to ${status}`);
     } catch (err) {
       console.error('Error updating table status:', err);
 

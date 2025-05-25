@@ -1,5 +1,7 @@
 import {BrowserRouter as Router, Route, Routes} from 'react-router-dom';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
+import {persistQueryClient} from '@tanstack/react-query-persist-client';
+import {createSyncStoragePersister} from '@tanstack/query-sync-storage-persister';
 import Layout from './components/layout';
 import AppRoutes from './routes';
 import Login from './pages/auth/login';
@@ -17,6 +19,19 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
     },
   },
+});
+
+// Set up localStorage persistence for React Query
+const localStoragePersister = createSyncStoragePersister({
+  storage: window.localStorage,
+  key: 'quickquick-cache',
+});
+
+// Persist the React Query cache to localStorage
+persistQueryClient({
+  queryClient,
+  persister: localStoragePersister,
+  maxAge: 24 * 60 * 60 * 1000, // 24 hours
 });
 
 function App() {

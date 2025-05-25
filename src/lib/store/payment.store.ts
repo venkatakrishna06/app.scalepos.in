@@ -2,13 +2,12 @@ import {create} from 'zustand';
 import {Payment} from '@/types';
 import {paymentService} from '@/lib/api/services/payment.service';
 import {toast} from '@/lib/toast';
-import {CACHE_KEYS, cacheService} from '@/lib/services/cache.service';
 
 interface PaymentState {
   payments: Payment[];
   loading: boolean;
   error: string | null;
-  fetchPayments: (skipCache?: boolean) => Promise<void>;
+  fetchPayments: () => Promise<void>;
   addPayment: (payment: Omit<Payment, 'id'>) => Promise<Payment>;
   updatePaymentStatus: (id: number, status: Payment['status']) => Promise<Payment>;
   getPaymentsByOrder: (orderId: number) => Payment[];
@@ -28,36 +27,12 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
   loading: false,
   error: null,
 
-  fetchPayments: async (skipCache = false) => {
+  fetchPayments: async () => {
     try {
       set({ loading: true, error: null });
 
-      // Try to get data from cache first if skipCache is false
-      if (!skipCache) {
-        const cachedPayments = cacheService.getCache<Payment[]>(CACHE_KEYS.PAYMENTS);
-        if (cachedPayments) {
-          console.log('Using cached payments data');
-          set({ payments: cachedPayments });
-          set({ loading: false });
-
-          // Fetch in background to update cache silently
-          paymentService.getPayments().then(freshPayments => {
-            cacheService.setCache(CACHE_KEYS.PAYMENTS, freshPayments);
-            set({ payments: freshPayments });
-          }).catch(err => {
-            console.error('Background fetch for payments failed:', err);
-          });
-
-          return;
-        }
-      }
-
-      // If skipCache is true or no valid cache, fetch from API
+      // Fetch from API directly (no caching)
       const payments = await paymentService.getPayments();
-
-      // Update cache
-      cacheService.setCache(CACHE_KEYS.PAYMENTS, payments);
-
       set({ payments });
     } catch (err) {
       console.error('Failed to fetch payments:', err);

@@ -2,7 +2,6 @@ import {create} from 'zustand';
 import {Category, MenuItem} from '@/types';
 import {menuService} from '@/lib/api/services/menu.service';
 import {toast} from '@/lib/toast';
-import {CACHE_KEYS, cacheService} from '@/lib/services/cache.service';
 
 interface MenuState {
   // State
@@ -12,7 +11,7 @@ interface MenuState {
   error: string | null;
 
   // API Actions
-  fetchMenuItems: (skipCache?: boolean) => Promise<void>;
+  fetchMenuItems: () => Promise<void>;
   fetchCategories: () => Promise<void>;
   addMenuItem: (item: Omit<MenuItem, 'id'>) => Promise<void>;
   updateMenuItem: (id: number, updates: Partial<MenuItem>) => Promise<void>;
@@ -47,36 +46,12 @@ export const useMenuStore = create<MenuState>((set, get) => ({
   loading: false,
   error: null,
 
-  fetchMenuItems: async (skipCache = false) => {
+  fetchMenuItems: async () => {
     try {
       set({ loading: true, error: null });
 
-      // Try to get data from cache first if skipCache is false
-      if (!skipCache) {
-        const cachedMenuItems = cacheService.getCache<MenuItem[]>(CACHE_KEYS.MENU_ITEMS);
-        if (cachedMenuItems) {
-          console.log('Using cached menu items data');
-          set({ menuItems: cachedMenuItems });
-          set({ loading: false });
-
-          // Fetch in background to update cache silently
-          menuService.getItems().then(freshItems => {
-            cacheService.setCache(CACHE_KEYS.MENU_ITEMS, freshItems);
-            set({ menuItems: freshItems });
-          }).catch(err => {
-            console.error('Background fetch for menu items failed:', err);
-          });
-
-          return;
-        }
-      }
-
-      // If skipCache is true or no valid cache, fetch from API
+      // Fetch from API directly (no caching)
       const items = await menuService.getItems();
-
-      // Update cache
-      cacheService.setCache(CACHE_KEYS.MENU_ITEMS, items);
-
       set({ menuItems: items });
     } catch (err) {
       console.error('Error fetching menu items:', err);
@@ -92,30 +67,8 @@ export const useMenuStore = create<MenuState>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      // Try to get data from cache first
-      const cachedCategories = cacheService.getCache<Category[]>(CACHE_KEYS.CATEGORIES);
-      if (cachedCategories) {
-        console.log('Using cached categories data');
-        set({ categories: cachedCategories });
-        set({ loading: false });
-
-        // Fetch in background to update cache silently
-        menuService.getCategories().then(freshCategories => {
-          cacheService.setCache(CACHE_KEYS.CATEGORIES, freshCategories);
-          set({ categories: freshCategories });
-        }).catch(err => {
-          console.error('Background fetch for categories failed:', err);
-        });
-
-        return;
-      }
-
-      // If no valid cache, fetch from API
+      // Fetch from API directly (no caching)
       const categories = await menuService.getCategories();
-
-      // Update cache
-      cacheService.setCache(CACHE_KEYS.CATEGORIES, categories);
-
       set({ categories });
     } catch (err) {
       console.error('Error fetching categories:', err);

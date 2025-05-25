@@ -19,7 +19,7 @@ QuickQuick is a comprehensive restaurant management system designed to streamlin
 ## Technologies Used
 
 - **Frontend**: React 18, TypeScript
-- **State Management**: Zustand, React Context API
+- **State Management**: React Query (with localStorage persistence), Zustand, React Context API
 - **UI Components**: Radix UI, Tailwind CSS
 - **API Communication**: Axios, React Query
 - **Form Handling**: React Hook Form, Zod
@@ -61,7 +61,21 @@ QuickQuick is a comprehensive restaurant management system designed to streamlin
 
 ## Documentation
 
-For detailed documentation, please see [DOCUMENTATION.md](./DOCUMENTATION.md).
+### React Query Hooks
+
+The application uses React Query for data fetching and state management. The React Query cache is persisted to localStorage to survive page refreshes. This provides a seamless user experience even when the page is refreshed.
+
+Custom hooks have been created for each service:
+
+- `useAuth` - Authentication operations (login, signup, logout, etc.)
+- `useOrder` - Order management operations
+- `useMenu` - Menu management operations
+- `useTable` - Table management operations
+- `usePayment` - Payment processing operations
+
+For detailed documentation on these hooks, see [src/lib/hooks/README.md](./src/lib/hooks/README.md).
+
+For detailed application documentation, please see [DOCUMENTATION.md](./DOCUMENTATION.md).
 
 ## License
 
