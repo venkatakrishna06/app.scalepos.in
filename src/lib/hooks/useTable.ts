@@ -1,7 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { tableService } from '@/lib/api/services/table.service';
-import { Table } from '@/types';
-import { toast } from '@/lib/toast';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {tableService} from '@/lib/api/services/table.service';
+import {Table} from '@/types';
+import {toast} from '@/lib/toast';
 
 export const useTable = () => {
   const queryClient = useQueryClient();

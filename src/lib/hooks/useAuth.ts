@@ -1,8 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { authService } from '@/lib/api/services/auth.service';
-import { tokenService } from '@/lib/services/token.service';
-import { api } from '@/lib/api/axios';
-import { User } from '@/types/auth';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {authService} from '@/lib/api/services/auth.service';
+import {tokenService} from '@/lib/services/token.service';
+import {api} from '@/lib/api/axios';
+import {User} from '@/types/auth';
 
 // Key for storing user data in storage
 const USER_STORAGE_KEY = 'user_data';

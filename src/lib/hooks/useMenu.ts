@@ -1,7 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { menuService } from '@/lib/api/services/menu.service';
-import { Category, MenuItem } from '@/types';
-import { toast } from '@/lib/toast';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {menuService} from '@/lib/api/services/menu.service';
+import {Category, MenuItem} from '@/types';
+import {toast} from '@/lib/toast';
 
 export const useMenu = () => {
   const queryClient = useQueryClient();

@@ -67,7 +67,7 @@ class TokenService {
   // Set refresh token - for HttpOnly cookies, this is handled by the server
   // We just store a flag to indicate that we have a valid refresh token
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  setRefreshToken(refreshToken?: string): void {
+  setRefreshToken(): void {
     // Store a flag indicating we have a refresh token
     // The actual token is stored as an HttpOnly cookie by the server
     // refreshToken parameter is ignored as we don't store the actual token

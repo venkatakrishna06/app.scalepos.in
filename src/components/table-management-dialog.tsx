@@ -76,7 +76,7 @@ export function TableManagementDialog({
 
       switch (action) {
         case 'add':
-          const data = await addTableForm.handleSubmit(async (values) => {
+          await addTableForm.handleSubmit(async (values) => {
             const maxTableNumber = Math.max(...tables.map((t) => t.table_number), 0);
             await addTable({
               table_number: maxTableNumber + 1,
@@ -130,17 +130,17 @@ export function TableManagementDialog({
 
   const availableTables = tables.filter((t) => t.status === 'available');
 
-  if (loading) {
-    return (
-      <Dialog open={open}>
-        <DialogContent>
-          <div className="flex h-32 items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <Dialog open={open}>
+  //       <DialogContent>
+  //         <div className="flex h-32 items-center justify-center">
+  //           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  //         </div>
+  //       </DialogContent>
+  //     </Dialog>
+  //   );
+  // }
 
   return (
     <Dialog open={open}>

@@ -15,12 +15,39 @@ import {TableCard} from '@/components/tableCard';
 import {Input} from '@/components/ui/input';
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select";
 import {FilterDropdownContainer} from '@/components/FilterDropdownContainer';
+import {useTable} from '@/lib/hooks/useTable';
+import {useMenu} from '@/lib/hooks/useMenu';
+import {useOrder} from '@/lib/hooks/useOrder';
 
 export default function Tables() {
+  // Use both Zustand store and React Query hook
   const { tables, loading, error, fetchTables, deleteTable, updateTableStatus } = useTableStore();
   const { error: ordersError, getOrdersByTable, fetchOrders } = useOrderStore();
   const { fetchMenuItems, fetchCategories } = useMenuStore();
   const { handleError } = useErrorHandler();
+
+  // Add React Query hooks to populate DevTools
+  // Tables
+  const { useTablesQuery } = useTable();
+  const { data: reactQueryTables, isLoading: isLoadingTables } = useTablesQuery();
+
+  // Menu Items
+  const { useMenuItemsQuery } = useMenu();
+  const { data: menuItems, isLoading: isLoadingMenuItems } = useMenuItemsQuery();
+
+  // Orders
+  const { useOrdersQuery } = useOrder();
+  const { data: orders, isLoading: isLoadingOrders } = useOrdersQuery();
+
+  // Log React Query data to console (this ensures the queries are active for DevTools)
+  useEffect(() => {
+    console.log('React Query Tables:', reactQueryTables);
+    console.log('React Query Tables Loading:', isLoadingTables);
+    console.log('React Query Menu Items:', menuItems);
+    console.log('React Query Menu Items Loading:', isLoadingMenuItems);
+    console.log('React Query Orders:', orders);
+    console.log('React Query Orders Loading:', isLoadingOrders);
+  }, [reactQueryTables, isLoadingTables, menuItems, isLoadingMenuItems, orders, isLoadingOrders]);
 
   const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);

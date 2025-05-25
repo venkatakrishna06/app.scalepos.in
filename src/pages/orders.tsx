@@ -1,9 +1,9 @@
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import {ArrowUpDown, Coffee, CreditCard, Download, FileText, Printer, Search, User} from 'lucide-react';
 import {OrdersSkeleton} from '@/components/skeletons/orders-skeleton';
 import {Button} from '@/components/ui/button';
-import {useOrderStore} from '@/lib/store';
 import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
+import {useOrder} from '@/lib/hooks/useOrder';
 import {format, isToday, isYesterday, subDays} from 'date-fns';
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
 import {Input} from '@/components/ui/input';
@@ -22,14 +22,26 @@ import {cn} from '@/lib/utils';
 import {toast} from '@/lib/toast';
 
 export default function Orders() {
-  const {
-    orders,
-    loading: ordersLoading,
-    error: ordersError,
-    fetchOrders: fetchOrdersFromStore
-  } = useOrderStore();
-
   const { handleError } = useErrorHandler();
+
+  // Use React Query hooks instead of Zustand store
+  const { useOrdersQuery } = useOrder();
+
+  // State for filter parameters
+  const [queryParams, setQueryParams] = useState<{
+    period?: 'day' | 'week' | 'month';
+    start_date?: string;
+    end_date?: string;
+    table_number?: number;
+  }>({});
+
+  // Use React Query to fetch orders
+  const { 
+    data: orders = [], 
+    isLoading: ordersLoading, 
+    error: ordersError,
+    refetch: refetchOrders
+  } = useOrdersQuery(queryParams);
 
   // Filtering and sorting state
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -39,48 +51,46 @@ export default function Orders() {
   const [sortBy, setSortBy] = useState<string>('newest');
   const [activeTab, setActiveTab] = useState<string>('all');
 
-  // Memoize the fetchOrders function to prevent it from changing on each render
-  const fetchOrders = useCallback(async () => {
-    try {
-      const params: {
-        period?: 'day' | 'week' | 'month';
-        start_date?: string;
-        end_date?: string;
-        table_number?: number;
-      } = {};
-
-      // Map the UI filter timeframe to API parameters
-      switch (filterTimeframe) {
-        case 'today':
-          params.period = 'day';
-          break;
-        case 'week':
-          params.period = 'week';
-          break;
-        case 'month':
-          params.period = 'month';
-          break;
-        case 'yesterday': {
-          // For yesterday, set explicit start_date and end_date
-          const yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd');
-          params.start_date = yesterday;
-          params.end_date = yesterday;
-          break;
-        }
-        case 'all':
-          // For "all time", don't set any time-related parameters
-          break;
-      }
-
-      await fetchOrdersFromStore(params);
-    } catch (err) {
-      handleError(err);
-    }
-  }, [fetchOrdersFromStore, handleError, filterTimeframe]);
-
+  // Update query parameters when filter timeframe changes
   useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+    const params: {
+      period?: 'day' | 'week' | 'month';
+      start_date?: string;
+      end_date?: string;
+      table_number?: number;
+    } = {};
+
+    // Map the UI filter timeframe to API parameters
+    switch (filterTimeframe) {
+      case 'today':
+        params.period = 'day';
+        break;
+      case 'week':
+        params.period = 'week';
+        break;
+      case 'month':
+        params.period = 'month';
+        break;
+      case 'yesterday': {
+        // For yesterday, set explicit start_date and end_date
+        const yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd');
+        params.start_date = yesterday;
+        params.end_date = yesterday;
+        break;
+      }
+      case 'all':
+        // For "all time", don't set any time-related parameters
+        break;
+    }
+
+    setQueryParams(params);
+  }, [filterTimeframe]);
+
+  // Log React Query data to console (this ensures the queries are active for DevTools)
+  useEffect(() => {
+    console.log('React Query Orders:', orders);
+    console.log('React Query Orders Loading:', ordersLoading);
+  }, [orders, ordersLoading]);
 
   // const getTableNumber = (tableId: number | undefined) => {
   //   if (tableId === undefined || tableId === null) {
@@ -92,7 +102,7 @@ export default function Orders() {
 
   const refreshOrders = async () => {
     try {
-      await fetchOrders();
+      await refetchOrders();
       toast.success('Orders refreshed successfully');
     } catch (err) {
       handleError(err);
@@ -224,14 +234,14 @@ export default function Orders() {
           <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
           <h3 className="mt-4 text-lg font-semibold">Error Loading Orders</h3>
           <p className="mt-2 text-sm text-muted-foreground">
-            {ordersError}
+            {ordersError instanceof Error ? ordersError.message : 'An error occurred while loading orders'}
           </p>
           <Button
             variant="outline"
             size="sm"
             className="mt-4"
             onClick={() => {
-              fetchOrders();
+              refetchOrders();
             }}
           >
             Try Again

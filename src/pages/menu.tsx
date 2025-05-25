@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from 'react';
+import {useEffect, useState} from 'react';
 import {
     AlertCircle,
     CheckCircle,
@@ -22,29 +22,39 @@ import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} f
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,} from '@/components/ui/tooltip';
 import {Badge} from '@/components/ui/badge';
 import {MenuItemForm} from '@/components/forms/menu-item-form';
-import {useMenuStore} from '@/lib/store';
 import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
 import {MenuItem} from '@/types';
 import {toast} from '@/lib/toast';
 import {cn} from '@/lib/utils';
+import {useMenu} from '@/lib/hooks/useMenu';
 
 type SortField = 'name' | 'price' | 'category';
 type ViewMode = 'grid' | 'list';
 
 export default function Menu() {
-  const {
-    menuItems,
-    categories,
-    loading,
-    error,
-    fetchMenuItems,
-    fetchCategories,
-    addMenuItem,
-    updateMenuItem,
-    deleteMenuItem,
-    toggleItemAvailability
-  } = useMenuStore();
   const { handleError } = useErrorHandler();
+
+  // Use React Query hooks instead of Zustand store
+  const { 
+    useMenuItemsQuery, 
+    useCategoriesQuery,
+    createItem,
+    updateItem,
+    deleteItem,
+    updateItem: toggleAvailability
+  } = useMenu();
+
+  const { 
+    data: menuItems = [], 
+    isLoading: menuItemsLoading, 
+    error: menuItemsError 
+  } = useMenuItemsQuery();
+
+  const { 
+    data: categories = [], 
+    isLoading: categoriesLoading,
+    error: categoriesError
+  } = useCategoriesQuery();
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -56,23 +66,13 @@ export default function Menu() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [availabilityFilter, setAvailabilityFilter] = useState<string>('all');
 
-  // Using a ref to prevent duplicate API calls in StrictMode
-  const isDataFetchedRef = useRef(false);
-
+  // Log React Query data to console (this ensures the queries are active for DevTools)
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        await Promise.all([fetchMenuItems(), fetchCategories()]);
-      } catch (err) {
-        handleError(err);
-      }
-    };
-
-    if (!isDataFetchedRef.current) {
-      loadData();
-      isDataFetchedRef.current = true;
-    }
-  }, [fetchMenuItems, fetchCategories, handleError]);
+    console.log('React Query Menu Items:', menuItems);
+    console.log('React Query Menu Items Loading:', menuItemsLoading);
+    console.log('React Query Categories:', categories);
+    console.log('React Query Categories Loading:', categoriesLoading);
+  }, [menuItems, menuItemsLoading, categories, categoriesLoading]);
 
   const filteredItems = menuItems.filter((item) => {
     const matchesCategory = selectedCategory === 'all' || item.category.name === selectedCategory;
@@ -89,11 +89,11 @@ export default function Menu() {
     try {
       setIsSubmitting(true);
       if (editingItem) {
-        await updateMenuItem(editingItem.id, data);
+        updateItem({ id: editingItem.id, item: data });
         toast.success('Menu item updated successfully');
         setEditingItem(null);
       } else {
-        await addMenuItem({ ...data, available: true });
+        createItem({ ...data, available: true });
       }
       setShowAddDialog(false);
     } catch (err) {
@@ -107,7 +107,7 @@ export default function Menu() {
   const handleDelete = async (id: number) => {
     try {
       setIsSubmitting(true);
-      await deleteMenuItem(id);
+      deleteItem(id);
       toast.success('Menu item deleted successfully');
     } catch (err) {
       handleError(err);
@@ -120,8 +120,14 @@ export default function Menu() {
   const handleToggleAvailability = async (id: number) => {
     try {
       setIsSubmitting(true);
-      await toggleItemAvailability(id);
-      toast.success('Item availability updated');
+      const item = menuItems.find(item => item.id === id);
+      if (item) {
+        toggleAvailability({ 
+          id, 
+          item: { available: !item.available } 
+        });
+        toast.success('Item availability updated');
+      }
     } catch (err) {
       handleError(err);
       toast.error('Failed to update item availability');
@@ -131,23 +137,25 @@ export default function Menu() {
   };
 
 
-  if (loading) {
+  if (menuItemsLoading || categoriesLoading) {
     return <MenuSkeleton />;
   }
 
+  const error = menuItemsError || categoriesError;
   if (error) {
     return (
       <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
         <div className="text-center">
           <AlertCircle className="mx-auto h-10 w-10 text-destructive" />
-          <p className="mt-4 text-lg font-semibold text-destructive">{error}</p>
+          <p className="mt-4 text-lg font-semibold text-destructive">
+            {error instanceof Error ? error.message : 'An error occurred while loading data'}
+          </p>
           <Button
             variant="outline"
             size="lg"
             className="mt-4"
             onClick={() => {
-              fetchMenuItems();
-              fetchCategories();
+              window.location.reload();
             }}
           >
             Try Again

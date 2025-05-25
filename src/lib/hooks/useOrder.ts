@@ -1,7 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { orderService } from '@/lib/api/services/order.service';
-import { Order, OrderItem } from '@/types';
-import { toast } from '@/lib/toast';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {orderService} from '@/lib/api/services/order.service';
+import {Order, OrderItem} from '@/types';
+import {toast} from '@/lib/toast';
 
 export const useOrder = () => {
   const queryClient = useQueryClient();

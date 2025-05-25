@@ -4,6 +4,8 @@ import {useTableStore} from '../store/table.store';
 import {useOrderStore} from '../store/order.store';
 import {useMenuStore} from '../store/menu.store';
 import {useNotificationStore} from '../store/notification.store';
+import {CACHE_KEYS, cacheService} from './cache.service';
+import {queryClient} from '../queryClient';
 import {MenuItem, Order, Table} from '@/types';
 
 // Define types for WebSocket messages
@@ -296,6 +298,13 @@ class WebSocketService {
       useRootStore.setState({orderStore: {...orderStore, orders}});
       useOrderStore.setState({orders});
 
+      // Update cache
+      cacheService.setCache(CACHE_KEYS.ORDERS, orders);
+
+      // Invalidate React Query cache
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      // Specifically invalidate the query used in the orders page
+      queryClient.invalidateQueries({ queryKey: ['orders', { period: 'day' }] });
 
       // Add notification
       useNotificationStore.getState().addNotification({
@@ -318,6 +327,13 @@ class WebSocketService {
         useRootStore.setState({orderStore: {...orderStore, orders: updatedOrders}});
         useOrderStore.setState({orders: updatedOrders});
 
+        // Update cache
+        cacheService.setCache(CACHE_KEYS.ORDERS, updatedOrders);
+
+        // Invalidate React Query cache
+        queryClient.invalidateQueries({ queryKey: ['orders'] });
+        // Specifically invalidate the query used in the orders page
+        queryClient.invalidateQueries({ queryKey: ['orders', { period: 'day' }] });
 
         // Add notification
         useNotificationStore.getState().addNotification({
@@ -342,6 +358,11 @@ class WebSocketService {
 
         // Update cache
         cacheService.setCache(CACHE_KEYS.ORDERS, newOrders);
+
+        // Invalidate React Query cache
+        queryClient.invalidateQueries({ queryKey: ['orders'] });
+        // Specifically invalidate the query used in the orders page
+        queryClient.invalidateQueries({ queryKey: ['orders', { period: 'day' }] });
 
         // Add notification
         useNotificationStore.getState().addNotification({
@@ -461,6 +482,11 @@ class WebSocketService {
 
                 // Update cache
                 cacheService.setCache(CACHE_KEYS.ORDERS, updatedOrders);
+
+                // Invalidate React Query cache
+                queryClient.invalidateQueries({ queryKey: ['orders'] });
+                // Specifically invalidate the query used in the orders page
+                queryClient.invalidateQueries({ queryKey: ['orders', { period: 'day' }] });
 
                 // Add notification
                 useNotificationStore.getState().addNotification({

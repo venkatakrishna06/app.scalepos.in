@@ -53,8 +53,11 @@ export const useTableStore = create<TableState>((set, get) => ({
   addTable: async (table) => {
     try {
       set({ loading: true, error: null });
-      const newTable = await tableService.createTable(table);
-      set(state => ({ tables: [...state.tables, newTable] }));
+
+      // Call API but don't update state - let WebSocket handle it
+      await tableService.createTable(table);
+
+      // Just show success message
       toast.success('Table added successfully');
     } catch (err) {
       console.error('Error adding table:', err);
