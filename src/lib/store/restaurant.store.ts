@@ -31,7 +31,7 @@ export const useRestaurantStore = create<RestaurantState>((set, get) => ({
       const restaurant = await restaurantService.getRestaurant();
       set({ restaurant });
     } catch (err) {
-      console.error('Failed to fetch restaurant:', err);
+
       const errorMessage = 'Failed to fetch restaurant information';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -51,7 +51,7 @@ export const useRestaurantStore = create<RestaurantState>((set, get) => ({
       set({ restaurant: updatedRestaurant });
       toast.success('Restaurant information updated successfully');
     } catch (err) {
-      console.error('Failed to update restaurant:', err);
+
       const errorMessage = 'Failed to update restaurant information';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -71,7 +71,7 @@ export const useRestaurantStore = create<RestaurantState>((set, get) => ({
       set({ restaurant: updatedRestaurant });
       toast.success('GST settings updated successfully');
     } catch (err) {
-      console.error('Failed to update GST settings:', err);
+
       const errorMessage = 'Failed to update GST settings';
       set({ error: errorMessage });
       toast.error(errorMessage);

@@ -34,7 +34,6 @@ const UserManagement: React.FC = () => {
       toast.success('User deleted successfully');
     } catch (err) {
       handleError(err);
-      toast.error('Failed to delete user');
     } finally {
       setIsSubmitting(false);
     }

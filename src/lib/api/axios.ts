@@ -35,7 +35,6 @@ api.interceptors.request.use(
 
     // If a token refresh is in progress, queue this request
     if (isRefreshing && tokenService.isTokenValid()) {
-      console.log('[Axios] Token refresh in progress, queuing request');
 
       // Return a promise that resolves when the token refresh is complete
       return new Promise((resolve) => {
@@ -95,9 +94,8 @@ api.interceptors.response.use(
         }
 
         // Try to refresh the token using authService
-        console.log('[Axios] Refreshing token after 401');
+
         const response = await authService.refreshToken();
-        console.log('[Axios] Refresh response after 401 received');
 
         // Extract token and refreshToken from response data
         const token = response.token;

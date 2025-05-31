@@ -11,8 +11,6 @@ import Orders from '@/pages/orders';
 import Takeaway from '@/pages/takeaway';
 import Menu from '@/pages/menu';
 import Categories from '@/pages/categories';
-import Reservations from '@/pages/reservations';
-import Customers from '@/pages/customers';
 import Staff from '@/pages/staff';
 import Payments from '@/pages/payments';
 import Profile from '@/pages/profile';
@@ -116,23 +114,6 @@ const AppRoutes = () => {
         } 
       />
 
-      <Route 
-        path="/reservations" 
-        element={
-          <ProtectedRoute requiredRoles={['admin', 'manager']}>
-            <Reservations />
-          </ProtectedRoute>
-        } 
-      />
-
-      <Route 
-        path="/customers" 
-        element={
-          <ProtectedRoute requiredRoles={['admin', 'manager']}>
-            <Customers />
-          </ProtectedRoute>
-        } 
-      />
 
       <Route 
         path="/staff" 

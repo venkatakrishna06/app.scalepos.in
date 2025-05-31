@@ -22,7 +22,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
       try {
         // Only attempt to refresh if we have a valid token and refresh token
         if (tokenService.isTokenValid() && tokenService.getRefreshToken()) {
-          console.log('[Auth] Refreshing token...');
+
           const response = await authService.refreshToken();
 
           // Update tokens in storage and state
@@ -30,19 +30,17 @@ export function AuthGuard({ children }: AuthGuardProps) {
           if (response.refreshToken) {
             // This now just sets a flag indicating we have a refresh token
             // The actual token is stored as an HttpOnly cookie by the server
-            tokenService.setRefreshToken(response.refreshToken);
+            tokenService.setRefreshToken();
           }
 
           // Update token in auth store
           setToken(response.token);
 
-          console.log('[Auth] Token refreshed successfully');
-
           // Schedule next refresh
           scheduleTokenRefresh();
         }
       } catch (error) {
-        console.error('[Auth] Failed to refresh token:', error);
+
         // If refresh fails, log the user out
         await logout();
         navigate('/login', { state: { from: location }, replace: true });
@@ -60,7 +58,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
       // Get token expiry time
       const expiryTime = tokenService.getTokenExpiryTime();
       if (!expiryTime) {
-        console.log('[Auth] No token expiry time found, skipping refresh scheduling');
+
         return;
       }
 
@@ -72,8 +70,6 @@ export function AuthGuard({ children }: AuthGuardProps) {
       const minutesUntilExpiry = Math.floor(timeUntilExpiry / 60000);
       const secondsUntilExpiry = Math.floor((timeUntilExpiry % 60000) / 1000);
 
-      console.log(`[Auth] Token expires in ${minutesUntilExpiry}m ${secondsUntilExpiry}s`);
-
       // Refresh 5 minutes (300,000 ms) before expiry, or halfway to expiry if less than 10 minutes remain
       const refreshBuffer = Math.min(300000, timeUntilExpiry / 2);
       const refreshDelay = Math.max(0, timeUntilExpiry - refreshBuffer);
@@ -82,24 +78,22 @@ export function AuthGuard({ children }: AuthGuardProps) {
       const minutesUntilRefresh = Math.floor(refreshDelay / 60000);
       const secondsUntilRefresh = Math.floor((refreshDelay % 60000) / 1000);
 
-      console.log(`[Auth] Scheduling token refresh in ${minutesUntilRefresh}m ${secondsUntilRefresh}s`);
-
       // Schedule refresh
       refreshTimerRef.current = window.setTimeout(refreshToken, refreshDelay);
     };
 
     // Initialize token refresh schedule if authenticated
     if (isAuthenticated && token) {
-      console.log('[Auth] Initializing token refresh mechanism');
+
       scheduleTokenRefresh();
     } else {
-      console.log('[Auth] Not initializing token refresh - User not authenticated or no token');
+
     }
 
     // Cleanup function
     return () => {
       if (refreshTimerRef.current) {
-        console.log('[Auth] Cleaning up token refresh timer');
+
         window.clearTimeout(refreshTimerRef.current);
       }
     };

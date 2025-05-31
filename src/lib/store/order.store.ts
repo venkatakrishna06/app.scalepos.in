@@ -81,7 +81,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       const orders = await orderService.getOrders(params);
       set({ orders });
     } catch (err) {
-      console.error('Failed to fetch orders:', err);
+
       const errorMessage = 'Failed to fetch orders';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -120,7 +120,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       toast.success('Order created successfully');
       return newOrder; // Explicitly return the created order
     } catch (err) {
-      console.error('Failed to add order:', err);
+
       const errorMessage = 'Failed to add order';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -166,7 +166,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       }));
       toast.success('Order updated successfully');
     } catch (err) {
-      console.error('Failed to update order:', err);
+
       const errorMessage = 'Failed to update order';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -181,7 +181,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       await get().updateOrder(id, { status });
       toast.success(`Order status updated to ${status}`);
     } catch (err) {
-      console.error('Failed to update order status:', err);
+
       const errorMessage = `Failed to update order status to ${status}`;
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -199,7 +199,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       }));
       toast.success('Order deleted successfully');
     } catch (err) {
-      console.error('Failed to delete order:', err);
+
       const errorMessage = 'Failed to delete order';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -251,7 +251,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
       toast.success('Items added to order');
     } catch (err) {
-      console.error('Failed to add items to order:', err);
+
       const errorMessage = 'Failed to add items to order';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -343,7 +343,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
       toast.success('Item removed from order');
     } catch (err) {
-      console.error('Failed to remove order item:', err);
+
       const errorMessage = 'Failed to remove order item';
       set({ error: errorMessage });
       toast.error(errorMessage);

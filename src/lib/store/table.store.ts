@@ -41,7 +41,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       const tables = await tableService.getTables();
       set({ tables });
     } catch (err) {
-      console.error('Error fetching tables:', err);
+
       const errorMessage = 'Failed to fetch tables';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -60,7 +60,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       // Just show success message
       toast.success('Table added successfully');
     } catch (err) {
-      console.error('Error adding table:', err);
+
       const errorMessage = 'Failed to add table';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -78,7 +78,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       }));
       toast.success('Table deleted successfully');
     } catch (err) {
-      console.error('Error deleting table:', err);
+
       const errorMessage = 'Failed to delete table';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -114,7 +114,6 @@ export const useTableStore = create<TableState>((set, get) => ({
 
       // toast.success(`Table status updated to ${status}`);
     } catch (err) {
-      console.error('Error updating table status:', err);
 
       // Revert on error
       const originalTable = get().tables.find(t => t.id === id);
@@ -191,7 +190,6 @@ export const useTableStore = create<TableState>((set, get) => ({
 
         toast.success('Tables merged successfully');
       } catch (apiError) {
-        console.error('Error in API calls during merge:', apiError);
 
         // Revert optimistic update on API error
         set(state => ({
@@ -207,7 +205,7 @@ export const useTableStore = create<TableState>((set, get) => ({
         });
       }
     } catch (err) {
-      console.error('Error merging tables:', err);
+
       const errorMessage = 'Failed to merge tables';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -248,7 +246,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       toast.success('Table split successfully');
       return newTable;
     } catch (err) {
-      console.error('Error splitting table:', err);
+
       const errorMessage = 'Failed to split table';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -272,7 +270,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       }));
       toast.success('Order assigned to table');
     } catch (err) {
-      console.error('Error assigning order to table:', err);
+
       const errorMessage = 'Failed to assign order to table';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -297,7 +295,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       }));
       toast.success('Table cleared successfully');
     } catch (err) {
-      console.error('Error clearing table:', err);
+
       const errorMessage = 'Failed to clear table';
       set({ error: errorMessage });
       toast.error(errorMessage);

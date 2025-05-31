@@ -24,7 +24,7 @@ export const useTable = () => {
       toast.success('Table created successfully');
     },
     onError: (error) => {
-      console.error('Failed to create table:', error);
+
       toast.error('Failed to create table');
     },
   });
@@ -39,7 +39,7 @@ export const useTable = () => {
       toast.success('Table updated successfully');
     },
     onError: (error) => {
-      console.error('Failed to update table:', error);
+
       toast.error('Failed to update table');
     },
   });
@@ -53,7 +53,7 @@ export const useTable = () => {
       toast.success('Table deleted successfully');
     },
     onError: (error) => {
-      console.error('Failed to delete table:', error);
+
       toast.error('Failed to delete table');
     },
   });

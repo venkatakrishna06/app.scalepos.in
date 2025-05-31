@@ -35,7 +35,7 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
       const payments = await paymentService.getPayments();
       set({ payments });
     } catch (err) {
-      console.error('Failed to fetch payments:', err);
+
       const errorMessage = 'Failed to fetch payments';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -52,7 +52,7 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
       // If payment is successful, log a message
       // Note: Order status update is handled by the component to avoid circular dependencies
       if (newPayment.payment_status === 'completed') {
-        console.log('Payment completed for order:', newPayment.order_id);
+
         // The order status should be updated by the component using useOrderStore directly
       }
 
@@ -60,7 +60,7 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
       toast.success('Payment processed successfully');
       return newPayment;
     } catch (err) {
-      console.error('Failed to add payment:', err);
+
       const errorMessage = 'Failed to process payment';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -78,7 +78,7 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
       // If payment is now completed, log a message
       // Note: Order status update is handled by the component to avoid circular dependencies
       if (status === 'completed') {
-        console.log('Payment status updated to completed for order:', updatedPayment.order_id);
+
         // The order status should be updated by the component using useOrderStore directly
       }
 
@@ -91,7 +91,7 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
       toast.success(`Payment status updated to ${status}`);
       return updatedPayment;
     } catch (err) {
-      console.error('Failed to update payment status:', err);
+
       const errorMessage = 'Failed to update payment status';
       set({ error: errorMessage });
       toast.error(errorMessage);

@@ -35,7 +35,7 @@ export const useStaffStore = create<StaffState>((set) => ({
       const staff = await staffService.getStaff();
       set({ staff: staff });
     } catch (err) {
-      console.error('Error fetching staff:', err);
+
       const errorMessage = 'Failed to fetch staff';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -55,7 +55,7 @@ export const useStaffStore = create<StaffState>((set) => ({
       set(state => ({ staff: [...state.staff, newStaff] }));
       toast.success('Staff member added successfully');
     } catch (err) {
-      console.error('Error adding staff:', err);
+
       const errorMessage = 'Failed to add staff member';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -74,7 +74,7 @@ export const useStaffStore = create<StaffState>((set) => ({
       }));
       toast.success('Staff member updated successfully');
     } catch (err) {
-      console.error('Error updating staff:', err);
+
       const errorMessage = 'Failed to update staff member';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -93,7 +93,7 @@ export const useStaffStore = create<StaffState>((set) => ({
       }));
       toast.success('Staff member deleted successfully');
     } catch (err) {
-      console.error('Error deleting staff:', err);
+
       const errorMessage = 'Failed to delete staff member';
       set({ error: errorMessage });
       toast.error(errorMessage);

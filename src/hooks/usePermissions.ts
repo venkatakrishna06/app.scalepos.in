@@ -2,14 +2,14 @@ import {useAuthStore} from '@/lib/store/auth.store';
 
 export function usePermissions() {
   const { user } = useAuthStore();
-  
+
   return {
     // Role-based permissions
     isAdmin: user?.role === 'admin',
     isManager: user?.role === 'manager',
     isKitchen: user?.role === 'kitchen',
     isServer: user?.role === 'server',
-    
+
     // Feature-based permissions
     canManageUsers: user?.role === 'admin',
     canManageStaff: user?.role === 'admin',
@@ -24,8 +24,6 @@ export function usePermissions() {
     canCancelOrderItems: ['admin', 'manager'].includes(user?.role || ''),
     canManagePayments: ['admin', 'manager'].includes(user?.role || ''),
     canManageCategories: ['admin', 'manager'].includes(user?.role || ''),
-    canManageReservations: ['admin', 'manager'].includes(user?.role || ''),
-    canManageCustomers: ['admin', 'manager'].includes(user?.role || ''),
     canAccessSettings: ['admin', 'manager'].includes(user?.role || ''),
   };
 }

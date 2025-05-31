@@ -1,7 +1,6 @@
 import {Link, useLocation} from 'react-router-dom';
 import {
     BarChart2,
-    Calendar,
     ChevronRight,
     ClipboardList,
     Coffee,
@@ -22,8 +21,6 @@ const navigationWithRoles = [
   { name: 'Orders', href: '/orders', icon: ClipboardList, roles: ['admin', 'manager', 'kitchen', 'server'] },
   { name: 'Menu', href: '/menu', icon: Coffee, roles: ['admin', 'manager', 'kitchen'] },
   { name: 'Categories', href: '/categories', icon: Tags, roles: ['admin', 'manager'] },
-  { name: 'Reservations', href: '/reservations', icon: Calendar, roles: ['admin', 'manager'] },
-  { name: 'Customers', href: '/customers', icon: Users, roles: ['admin', 'manager'] },
   { name: 'Staff', href: '/staff', icon: UserCircle, roles: ['admin'] },
   { name: 'Payments', href: '/payments', icon: Receipt, roles: ['admin', 'manager'] },
   { name: 'Analytics', href: '/analytics', icon: BarChart2, roles: ['admin'] },

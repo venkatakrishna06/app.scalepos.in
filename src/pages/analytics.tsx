@@ -125,7 +125,7 @@ export default function Analytics() {
           break;
       }
     } catch (err) {
-      console.error('Failed to fetch analytics data:', err);
+
       toast.error('Failed to fetch analytics data');
     }
   };

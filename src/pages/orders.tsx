@@ -88,8 +88,8 @@ export default function Orders() {
 
   // Log React Query data to console (this ensures the queries are active for DevTools)
   useEffect(() => {
-    console.log('React Query Orders:', orders);
-    console.log('React Query Orders Loading:', ordersLoading);
+
+
   }, [orders, ordersLoading]);
 
   // const getTableNumber = (tableId: number | undefined) => {

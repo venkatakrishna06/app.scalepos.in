@@ -33,7 +33,7 @@ export const usePayment = () => {
       toast.success('Payment created successfully');
     },
     onError: (error) => {
-      console.error('Failed to create payment:', error);
+
       toast.error('Failed to create payment');
     },
   });
@@ -48,7 +48,7 @@ export const usePayment = () => {
       toast.success('Payment updated successfully');
     },
     onError: (error) => {
-      console.error('Failed to update payment:', error);
+
       toast.error('Failed to update payment');
     },
   });

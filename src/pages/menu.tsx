@@ -68,10 +68,10 @@ export default function Menu() {
 
   // Log React Query data to console (this ensures the queries are active for DevTools)
   useEffect(() => {
-    console.log('React Query Menu Items:', menuItems);
-    console.log('React Query Menu Items Loading:', menuItemsLoading);
-    console.log('React Query Categories:', categories);
-    console.log('React Query Categories Loading:', categoriesLoading);
+
+
+
+
   }, [menuItems, menuItemsLoading, categories, categoriesLoading]);
 
   const filteredItems = menuItems.filter((item) => {

@@ -38,7 +38,7 @@ export const useOrder = () => {
       toast.success('Order created successfully');
     },
     onError: (error) => {
-      console.error('Failed to create order:', error);
+
       toast.error('Failed to create order');
     },
   });
@@ -59,7 +59,7 @@ export const useOrder = () => {
       toast.success('Order updated successfully');
     },
     onError: (error) => {
-      console.error('Failed to update order:', error);
+
       toast.error('Failed to update order');
     },
   });
@@ -76,7 +76,7 @@ export const useOrder = () => {
       toast.success('Order deleted successfully');
     },
     onError: (error) => {
-      console.error('Failed to delete order:', error);
+
       toast.error('Failed to delete order');
     },
   });
@@ -101,7 +101,7 @@ export const useOrder = () => {
       toast.success('Order item updated successfully');
     },
     onError: (error) => {
-      console.error('Failed to update order item:', error);
+
       toast.error('Failed to update order item');
     },
   });
@@ -119,7 +119,7 @@ export const useOrder = () => {
       toast.success('Item removed from order');
     },
     onError: (error) => {
-      console.error('Failed to remove order item:', error);
+
       toast.error('Failed to remove order item');
     },
   });

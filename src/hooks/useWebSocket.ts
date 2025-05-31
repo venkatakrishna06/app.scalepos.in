@@ -28,7 +28,7 @@ export const useWebSocket = () => {
         websocketService.connect();
         setIsConnected(true);
       } catch (error) {
-        console.error('Error connecting to WebSocket:', error);
+
         setIsConnected(false);
       }
     };

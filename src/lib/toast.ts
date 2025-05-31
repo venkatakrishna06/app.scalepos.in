@@ -158,7 +158,6 @@ export const showToast = (
  * @param fallbackMessage A fallback message to display if the error doesn't have a message
  */
 export const handleApiError = (error: ApiError, fallbackMessage: string = 'An error occurred') => {
-  console.error('API Error:', error);
 
   // Extract error message from the new error structure
   const errorData = error?.response?.data?.error;
@@ -179,7 +178,7 @@ export const handleApiError = (error: ApiError, fallbackMessage: string = 'An er
 
     // Include the error code in the console log for debugging
     if (errorData.code) {
-      console.error(`Error code: ${errorData.code}`);
+
     }
   } else if (error?.message) {
     errorMessage = error.message;

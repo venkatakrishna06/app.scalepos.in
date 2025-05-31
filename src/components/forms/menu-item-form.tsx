@@ -44,7 +44,7 @@ export function MenuItemForm({ onSubmit, initialData }: MenuItemFormProps) {
         onSubmit(data);
       toast.success('Menu item saved successfully');
     } catch (error) {
-      console.error('Error saving menu item:', error);
+
       toast.error('Failed to save menu item');
     } finally {
       setIsSubmitting(false);

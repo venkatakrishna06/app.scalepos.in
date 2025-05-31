@@ -1,8 +1,9 @@
 import {BarChart2, ClipboardList, LogOut, Menu, PlusCircle, Settings, ShoppingBag} from 'lucide-react';
 import {Button} from './ui/button';
-import {PropsWithChildren} from 'react';
+import {PropsWithChildren, useEffect} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {useAuthStore} from '@/lib/store/auth.store';
+import {useRestaurantStore} from '@/lib/store/restaurant.store';
 import {usePermissions} from '@/hooks/usePermissions';
 import {ThemeToggle} from './theme/theme-toggle';
 import {NotificationDropdown} from './notification-dropdown';
@@ -23,6 +24,12 @@ export default function Navbar({ toggleSidebar }: NavbarProps) {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { isAdmin } = usePermissions();
+  const { restaurant, fetchRestaurant } = useRestaurantStore();
+
+  // Fetch restaurant information when component mounts
+  useEffect(() => {
+    fetchRestaurant();
+  }, [fetchRestaurant]);
 
 
 
@@ -46,15 +53,15 @@ export default function Navbar({ toggleSidebar }: NavbarProps) {
                 <Menu className="h-5 w-5" />
               </Button>
 
-              {/* Logo with increased left margin */}
-              <div className="ml-4 flex items-center">
-                <img
-                    src="/logo.png"
-                    alt="Logo"
-                    className="h-8 w-auto"
-                    onClick={() => navigate(isAdmin ? '/dashboard' : '/tables')}
-                    style={{ cursor: 'pointer' }}
-                />
+              {/* Restaurant name with increased left margin */}
+              <div 
+                className="ml-4 flex items-center"
+                onClick={() => navigate(isAdmin ? '/dashboard' : '/tables')}
+                style={{ cursor: 'pointer' }}
+              >
+                <h1 className="text-lg font-semibold">
+                  {restaurant?.name || 'Restaurant'}
+                </h1>
               </div>
 
               {/* Order type buttons - hidden on small screens, visible on medium and larger screens */}

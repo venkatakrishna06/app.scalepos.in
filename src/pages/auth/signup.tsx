@@ -66,7 +66,7 @@ export default function Signup() {
 
   const handleSubmit = async (data: SignupFormData) => {
     try {
-      console.log('Form data:', data);
+
       await signup(
         data.email,
         data.password,

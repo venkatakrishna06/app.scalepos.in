@@ -31,7 +31,7 @@ export const useUserStore = create<UserState>((set) => ({
       const users = await userService.getUsers();
       set({ users });
     } catch (err) {
-      console.error('Failed to fetch users:', err);
+
       const errorMessage = 'Failed to fetch users';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -48,7 +48,7 @@ export const useUserStore = create<UserState>((set) => ({
       // await set.getState().fetchUsers();
       toast.success('User added successfully');
     } catch (err) {
-      console.error('Failed to add user:', err);
+
       const errorMessage = 'Failed to add user';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -67,7 +67,7 @@ export const useUserStore = create<UserState>((set) => ({
       }));
       toast.success('User updated successfully');
     } catch (err) {
-      console.error('Failed to update user:', err);
+
       const errorMessage = 'Failed to update user';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -86,7 +86,7 @@ export const useUserStore = create<UserState>((set) => ({
       }));
       toast.success('User deleted successfully');
     } catch (err) {
-      console.error('Failed to delete user:', err);
+
       const errorMessage = 'Failed to delete user';
       set({ error: errorMessage });
       toast.error(errorMessage);

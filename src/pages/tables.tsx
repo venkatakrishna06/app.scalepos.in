@@ -41,12 +41,12 @@ export default function Tables() {
 
   // Log React Query data to console (this ensures the queries are active for DevTools)
   useEffect(() => {
-    console.log('React Query Tables:', reactQueryTables);
-    console.log('React Query Tables Loading:', isLoadingTables);
-    console.log('React Query Menu Items:', menuItems);
-    console.log('React Query Menu Items Loading:', isLoadingMenuItems);
-    console.log('React Query Orders:', orders);
-    console.log('React Query Orders Loading:', isLoadingOrders);
+
+
+
+
+
+
   }, [reactQueryTables, isLoadingTables, menuItems, isLoadingMenuItems, orders, isLoadingOrders]);
 
   const [selectedTableId, setSelectedTableId] = useState<number | null>(null);

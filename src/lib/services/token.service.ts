@@ -14,7 +14,6 @@ class TokenService {
 
   // Check if user has chosen to be remembered
   isPersistentSession(): boolean {
-    console.log(localStorage.getItem(this.REMEMBER_ME_KEY) === "true");
 
     return localStorage.getItem(this.REMEMBER_ME_KEY) === "true";
   }

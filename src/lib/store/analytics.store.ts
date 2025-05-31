@@ -51,7 +51,7 @@ export const useAnalyticsStore = create<AnalyticsState>((set) => ({
       const data = await analyticsService.getSalesAnalytics(params);
       set({ salesAnalytics: data });
     } catch (err) {
-      console.error('Failed to fetch sales analytics:', err);
+
       const errorMessage = 'Failed to fetch sales analytics';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -66,7 +66,7 @@ export const useAnalyticsStore = create<AnalyticsState>((set) => ({
       const data = await analyticsService.getMenuItemAnalytics(params);
       set({ menuItemAnalytics: data });
     } catch (err) {
-      console.error('Failed to fetch menu item analytics:', err);
+
       const errorMessage = 'Failed to fetch menu item analytics';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -81,7 +81,7 @@ export const useAnalyticsStore = create<AnalyticsState>((set) => ({
       const data = await analyticsService.getStaffAnalytics(params);
       set({ staffAnalytics: data });
     } catch (err) {
-      console.error('Failed to fetch staff analytics:', err);
+
       const errorMessage = 'Failed to fetch staff analytics';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -96,7 +96,7 @@ export const useAnalyticsStore = create<AnalyticsState>((set) => ({
       const data = await analyticsService.getTableAnalytics(params);
       set({ tableAnalytics: data });
     } catch (err) {
-      console.error('Failed to fetch table analytics:', err);
+
       const errorMessage = 'Failed to fetch table analytics';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -111,7 +111,7 @@ export const useAnalyticsStore = create<AnalyticsState>((set) => ({
       const data = await analyticsService.getPaymentMethodAnalytics(params);
       set({ paymentMethodAnalytics: data });
     } catch (err) {
-      console.error('Failed to fetch payment method analytics:', err);
+
       const errorMessage = 'Failed to fetch payment method analytics';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -126,7 +126,7 @@ export const useAnalyticsStore = create<AnalyticsState>((set) => ({
       const data = await analyticsService.getHourlySalesAnalytics(params);
       set({ hourlySalesAnalytics: data });
     } catch (err) {
-      console.error('Failed to fetch hourly sales analytics:', err);
+
       const errorMessage = 'Failed to fetch hourly sales analytics';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -141,7 +141,7 @@ export const useAnalyticsStore = create<AnalyticsState>((set) => ({
       const data = await analyticsService.getCustomerAnalytics(params);
       set({ customerAnalytics: data });
     } catch (err) {
-      console.error('Failed to fetch customer analytics:', err);
+
       const errorMessage = 'Failed to fetch customer analytics';
       set({ error: errorMessage });
       toast.error(errorMessage);

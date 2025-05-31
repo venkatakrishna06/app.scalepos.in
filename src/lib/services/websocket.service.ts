@@ -74,7 +74,7 @@ class WebSocketService {
     const token = tokenService.getToken();
 
     if (!token) {
-      console.error('Cannot connect to WebSocket: No authentication token available');
+
       this.isConnecting = false;
       return;
     }
@@ -92,7 +92,7 @@ class WebSocketService {
       this.socket.onclose = this.handleClose.bind(this);
       this.socket.onerror = this.handleError.bind(this);
     } catch (error) {
-      console.error('Error creating WebSocket connection:', error);
+
       this.isConnecting = false;
       this.scheduleReconnect();
     }
@@ -125,7 +125,7 @@ class WebSocketService {
    * Handle WebSocket open event
    */
   private handleOpen(): void {
-    console.log('WebSocket connected');
+
     this.isConnecting = false;
     this.reconnectAttempts = 0;
   }
@@ -138,7 +138,6 @@ class WebSocketService {
       const message = JSON.parse(event.data) as WebSocketMessage;
 
       // Log the received WebSocket message
-      console.log('WebSocket message received:', message);
 
       // Get the root store to access individual stores
       const rootStore = useRootStore.getState() as RootStoreState;
@@ -157,10 +156,10 @@ class WebSocketService {
           this.handleOrderItemStatusUpdate(message.data, rootStore);
           break;
         default:
-          console.log('Unknown message type:', message.type);
+
       }
     } catch (error) {
-      console.error('Error handling WebSocket message:', error);
+
     }
   }
 
@@ -168,7 +167,7 @@ class WebSocketService {
    * Handle WebSocket close event
    */
   private handleClose(event: CloseEvent): void {
-    console.log('WebSocket disconnected', event.code, event.reason);
+
     this.socket = null;
     this.isConnecting = false;
 
@@ -182,7 +181,7 @@ class WebSocketService {
    * Handle WebSocket error event
    */
   private handleError(event: Event): void {
-    console.error('WebSocket error:', event);
+
     this.isConnecting = false;
   }
 
@@ -191,7 +190,7 @@ class WebSocketService {
    */
   private scheduleReconnect(): void {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.log('Maximum reconnection attempts reached');
+
       return;
     }
 
@@ -200,7 +199,7 @@ class WebSocketService {
     }
 
     this.reconnectTimeout = setTimeout(() => {
-      console.log(`Attempting to reconnect (${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
+
       this.reconnectAttempts++;
       this.connect();
     }, this.reconnectDelay);
@@ -213,11 +212,10 @@ class WebSocketService {
     const tableStore = rootStore.tableStore;
 
     // Log the table update data
-    console.log('Processing table update:', data);
 
     if ('deleted' in data && data.deleted) {
       // Handle table deletion
-      console.log('Table deleted:', data.id);
+
       const tables = tableStore.tables.filter((table: Table) => table.id !== data.id);
 
       // Update both the root store and the table store directly
@@ -238,7 +236,7 @@ class WebSocketService {
 
       if (existingTableIndex >= 0) {
         // Update existing table
-        console.log('Updating existing table:', tableData);
+
         const updatedTables = [...tableStore.tables];
         updatedTables[existingTableIndex] = tableData;
 
@@ -256,7 +254,7 @@ class WebSocketService {
         });
       } else {
         // Add new table
-        console.log('Adding new table:', tableData);
+
         const newTables = [...tableStore.tables, tableData];
 
         // Update both the root store and the table store directly
@@ -287,11 +285,10 @@ class WebSocketService {
     const orderStore = rootStore.orderStore;
 
     // Log the order update data
-    console.log('Processing order update:', data);
 
     if ('deleted' in data && data.deleted) {
       // Handle order deletion
-      console.log('Order deleted:', data.id);
+
       const orders = orderStore.orders.filter((order: Order) => order.id !== data.id);
 
       // Update both the root store and the order store directly
@@ -319,7 +316,7 @@ class WebSocketService {
 
       if (existingOrderIndex >= 0) {
         // Update existing order
-        console.log('Updating existing order:', orderData);
+
         const updatedOrders = [...orderStore.orders];
         updatedOrders[existingOrderIndex] = orderData;
 
@@ -344,7 +341,7 @@ class WebSocketService {
         });
       } else {
         // Add new order
-        console.log('Adding new order:', orderData);
+
         const newOrders = [...orderStore.orders, orderData];
 
         // Update both the root store and the order store directly
@@ -382,11 +379,10 @@ class WebSocketService {
     const menuStore = rootStore.menuStore;
 
     // Log the menu item update data
-    console.log('Processing menu item update:', data);
 
     if ('deleted' in data && data.deleted) {
       // Handle menu item deletion
-      console.log('Menu item deleted:', data.id);
+
       const menuItems = menuStore.menuItems.filter((item: MenuItem) => item.id !== data.id);
 
       // Update both the root store and the menu store directly
@@ -409,7 +405,7 @@ class WebSocketService {
 
       if (existingItemIndex >= 0) {
         // Update existing menu item
-        console.log('Updating existing menu item:', menuItemData);
+
         const updatedMenuItems = [...menuStore.menuItems];
         updatedMenuItems[existingItemIndex] = menuItemData;
 
@@ -429,7 +425,7 @@ class WebSocketService {
         });
       } else {
         // Add new menu item
-        console.log('Adding new menu item:', menuItemData);
+
         const newMenuItems = [...menuStore.menuItems, menuItemData];
 
         // Update both the root store and the menu store directly
@@ -461,7 +457,6 @@ class WebSocketService {
       const orderStore = rootStore.orderStore;
 
         // Log the order item status update data
-        console.log('Processing order item status update:', data);
 
         // Find the order and update the status of the specific item
         const orderIndex = orderStore.orders.findIndex((order: Order) => order.id === data.order_id);

@@ -33,7 +33,7 @@ export const useMenu = () => {
       toast.success('Menu item created successfully');
     },
     onError: (error) => {
-      console.error('Failed to create menu item:', error);
+
       toast.error('Failed to create menu item');
     },
   });
@@ -48,7 +48,7 @@ export const useMenu = () => {
       toast.success('Menu item updated successfully');
     },
     onError: (error) => {
-      console.error('Failed to update menu item:', error);
+
       toast.error('Failed to update menu item');
     },
   });
@@ -62,7 +62,7 @@ export const useMenu = () => {
       toast.success('Menu item deleted successfully');
     },
     onError: (error) => {
-      console.error('Failed to delete menu item:', error);
+
       toast.error('Failed to delete menu item');
     },
   });
@@ -76,7 +76,7 @@ export const useMenu = () => {
       toast.success('Category created successfully');
     },
     onError: (error) => {
-      console.error('Failed to create category:', error);
+
       toast.error('Failed to create category');
     },
   });
@@ -91,7 +91,7 @@ export const useMenu = () => {
       toast.success('Category updated successfully');
     },
     onError: (error) => {
-      console.error('Failed to update category:', error);
+
       toast.error('Failed to update category');
     },
   });
@@ -105,7 +105,7 @@ export const useMenu = () => {
       toast.success('Category deleted successfully');
     },
     onError: (error) => {
-      console.error('Failed to delete category:', error);
+
       toast.error('Failed to delete category');
     },
   });

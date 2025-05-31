@@ -54,7 +54,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       const items = await menuService.getItems();
       set({ menuItems: items });
     } catch (err) {
-      console.error('Error fetching menu items:', err);
+
       const errorMessage = 'Failed to fetch menu items';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -71,7 +71,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       const categories = await menuService.getCategories();
       set({ categories });
     } catch (err) {
-      console.error('Error fetching categories:', err);
+
       const errorMessage = 'Failed to fetch categories';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -90,7 +90,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       }
 
     } catch (err) {
-      console.error('Error adding menu item:', err);
+
       const errorMessage = 'Failed to add menu item';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -110,7 +110,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       }));
       toast.success('Menu item updated successfully');
     } catch (err) {
-      console.error('Error updating menu item:', err);
+
       const errorMessage = 'Failed to update menu item';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -128,7 +128,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       }));
       toast.success('Menu item deleted successfully');
     } catch (err) {
-      console.error('Error deleting menu item:', err);
+
       const errorMessage = 'Failed to delete menu item';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -144,7 +144,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
         await get().updateMenuItem(id, { available: !item.available });
         toast.success(`${item.name} is now ${!item.available ? 'available' : 'unavailable'}`);
       } catch (err) {
-        console.error('Error toggling item availability:', err);
+
         // Error is already handled in updateMenuItem
       }
     }
@@ -157,7 +157,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       set(state => ({ categories: [...state.categories, newCategory] }));
       toast.success('Category added successfully');
     } catch (err) {
-      console.error('Error adding category:', err);
+
       const errorMessage = 'Failed to add category';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -177,7 +177,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       }));
       toast.success('Category updated successfully');
     } catch (err) {
-      console.error('Error updating category:', err);
+
       const errorMessage = 'Failed to update category';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -199,7 +199,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       }));
       toast.success('Category deleted successfully');
     } catch (err) {
-      console.error('Error deleting category:', err);
+
       const errorMessage = 'Failed to delete category';
       set({ error: errorMessage });
       toast.error(errorMessage);

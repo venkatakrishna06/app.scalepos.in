@@ -86,7 +86,7 @@ function CreateOrderDialogComponent({
           const menuItemAnalytics = await analyticsService.getMenuItemAnalytics(params);
           setFavouriteItems(menuItemAnalytics);
         } catch (error) {
-          console.error('Failed to fetch favourite items:', error);
+
           toast.error('Failed to load favourite items');
         } finally {
           setIsLoadingFavourites(false);
@@ -430,7 +430,6 @@ function CreateOrderDialogComponent({
           }))
         };
         await addOrder(newOrder);
-        toast.success('Order created successfully');
       }
 
       setOrderItems([]);
@@ -444,7 +443,7 @@ function CreateOrderDialogComponent({
       onClose();
     } catch (error) {
       toast.error('Failed to process order');
-      console.error('Order processing error:', error);
+
     } finally {
       setIsSubmitting(false);
     }

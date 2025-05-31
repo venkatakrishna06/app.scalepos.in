@@ -44,7 +44,7 @@ export const cacheService = {
       };
       localStorage.setItem(key, JSON.stringify(cachedData));
     } catch (error) {
-      console.error(`Error setting cache for ${key}:`, error);
+
     }
   },
 
@@ -71,7 +71,7 @@ export const cacheService = {
       
       return cachedData.data;
     } catch (error) {
-      console.error(`Error getting cache for ${key}:`, error);
+
       return null;
     }
   },
@@ -92,7 +92,7 @@ export const cacheService = {
       
       return now - cachedData.timestamp <= ttl;
     } catch (error) {
-      console.error(`Error checking cache validity for ${key}:`, error);
+
       return false;
     }
   },
@@ -105,7 +105,7 @@ export const cacheService = {
     try {
       localStorage.removeItem(key);
     } catch (error) {
-      console.error(`Error clearing cache for ${key}:`, error);
+
     }
   },
 
@@ -118,7 +118,7 @@ export const cacheService = {
         localStorage.removeItem(key);
       });
     } catch (error) {
-      console.error('Error clearing all caches:', error);
+
     }
   },
 };

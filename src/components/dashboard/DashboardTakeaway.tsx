@@ -678,7 +678,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
             onOrderCreated();
           }
 
-          toast.success('Takeaway order created and paid successfully');
+          toast.success('Takeaway order successfully');
         }}
       />
     </div>

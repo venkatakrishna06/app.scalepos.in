@@ -20,7 +20,7 @@ export const fetchStaffList = async (): Promise<Staff[]> => {
     const response = await axios.get(`${API_BASE_URL}/staff`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching staff list:', error);
+
     throw error;
   }
 };
@@ -33,7 +33,7 @@ export const createUserAccount = async (userData: CreateUserPayload): Promise<an
     const response = await axios.post(`${API_BASE_URL}/users`, userData);
     return response.data;
   } catch (error) {
-    console.error('Error creating user account:', error);
+
     throw error;
   }
 };

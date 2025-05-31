@@ -29,7 +29,7 @@ export default function GstSettings() {
         setCategories(categoriesData);
       } catch (err) {
         setError('Failed to load GST settings. Please try again.');
-        console.error('Error fetching GST settings:', err);
+
       } finally {
         setLoading(false);
       }
@@ -65,7 +65,7 @@ export default function GstSettings() {
             const refreshedMenuItems = await menuService.getItems();
             setMenuItems(refreshedMenuItems);
           } catch (err) {
-            console.error('Error refreshing menu items:', err);
+
           }
         }}
       />

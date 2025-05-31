@@ -9,8 +9,7 @@ import {
     RefreshCw,
     ShoppingBag,
     Table2,
-    TrendingUp,
-    Users
+    TrendingUp
 } from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {useMenuStore, useOrderStore} from '@/lib/store';
@@ -37,8 +36,8 @@ export function DashboardHome() {
         fetchMenuItems(skipCache)
       ]);
       setLoading(false);
-    } catch (error) {
-      console.error('Failed to fetch dashboard data:', error);
+    } catch {
+      // Handle error without using the error object
       toast.error('Failed to fetch dashboard data');
       setLoading(false);
     }
@@ -208,10 +207,6 @@ export function DashboardHome() {
             <Button variant="outline" className="flex h-24 flex-col items-center justify-center gap-1" onClick={() => navigate('/menu')}>
               <ClipboardList className="h-8 w-8" />
               <span>Menu Items</span>
-            </Button>
-            <Button variant="outline" className="flex h-24 flex-col items-center justify-center gap-1" onClick={() => navigate('/customers')}>
-              <Users className="h-8 w-8" />
-              <span>Customers</span>
             </Button>
           </div>
         </CardContent>
