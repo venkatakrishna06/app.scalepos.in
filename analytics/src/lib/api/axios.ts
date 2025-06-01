@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { tokenService } from '@/lib/token.service';
 
 // Use the same base URL as the main app
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
@@ -15,7 +16,7 @@ export const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     // Get token from storage
-    const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+    const token = tokenService.getToken();
     
     if (token) {
       // Add token to all requests
@@ -33,8 +34,7 @@ api.interceptors.response.use(
     // Handle 401 Unauthorized responses
     if (error.response?.status === 401) {
       // Clear tokens and redirect to login
-      localStorage.removeItem('auth_token');
-      sessionStorage.removeItem('auth_token');
+      tokenService.clearTokens();
       
       // Redirect to login page
       window.location.href = '/login';
