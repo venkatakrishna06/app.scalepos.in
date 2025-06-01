@@ -9,7 +9,7 @@ export default function Dashboard() {
       <div className="flex flex-col space-y-2">
         <h1 className="text-3xl font-bold">Welcome to Analytics Dashboard</h1>
         <p className="text-muted-foreground">
-          Hello, {user?.name}! This is a standalone analytics application that shares the same login UI as the main restaurant management system.
+          Hello, {user?.name}! This is a standalone analytics application that shares the same login mechanism as the main restaurant management system.
         </p>
       </div>
 
@@ -49,7 +49,7 @@ export default function Dashboard() {
         <h2 className="text-xl font-semibold mb-4">About This Application</h2>
         <p className="text-muted-foreground mb-4">
           This is a standalone analytics application that is completely independent from the main restaurant management system.
-          It shares the same login UI for a consistent user experience but is deployed separately.
+          It shares the same login mechanism for a consistent user experience but is deployed separately.
         </p>
         <p className="text-muted-foreground">
           In a real-world scenario, this application would connect to the same database as the main application

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Loader2, Lock, Mail } from 'lucide-react';
 import { toast } from 'sonner';
@@ -16,6 +16,10 @@ const loginSchema = z.object({
     .min(1, 'Email is required'),
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number')
+    .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -23,8 +27,9 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, loading } = useAuth();
+  const { login, loading, error, clearError } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -34,15 +39,22 @@ export default function Login() {
     },
   });
 
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+      clearError();
+    }
+  }, [error, clearError]);
+
   const handleSubmit = async (data: LoginFormData) => {
     try {
-      await login(data.email, data.password);
+      await login(data.email, data.password, rememberMe);
       
       // Get the redirect path from location state or default to '/'
       const from = (location.state as any)?.from?.pathname || '/';
       navigate(from, { replace: true });
     } catch (error) {
-      toast.error('Login failed. Please check your credentials and try again.');
+      // Error is already handled in the auth context
     }
   };
 
@@ -52,10 +64,10 @@ export default function Login() {
         <div className="w-full max-w-md space-y-8 rounded-2xl bg-white/80 p-8 shadow-xl backdrop-blur-sm dark:bg-gray-800/80">
           <div className="text-center">
             <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-              Analytics Dashboard
+              Welcome back
             </h1>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Sign in to your account to continue
+              Sign in to your analytics dashboard
             </p>
           </div>
 
@@ -127,10 +139,21 @@ export default function Login() {
                   name="remember-me"
                   type="checkbox"
                   className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                   Remember me
                 </label>
+              </div>
+
+              <div className="text-sm">
+                <a
+                  href="#"
+                  className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                >
+                  Forgot your password?
+                </a>
               </div>
             </div>
 
