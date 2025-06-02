@@ -41,7 +41,8 @@ QuickQuick is a comprehensive restaurant management system designed to streamlin
 
 3. Create a `.env` file in the root directory:
    ```
-   VITE_API_URL=your_backend_api_url
+   API_URL=your_backend_api_url
+   ANALYTICS_URL=your_analytics_url
    ```
 
 4. Start the development server:

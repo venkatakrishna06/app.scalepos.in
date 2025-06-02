@@ -1,12 +1,12 @@
 import {useEffect, useState} from 'react';
 import {useAuthStore} from '@/lib/store/auth.store';
 import {Button} from '@/components/ui/button';
-import {Dialog} from '@/components/ui/dialog';
+import {Dialog, DialogContent} from '@/components/ui/dialog';
 import {Camera, Key, Loader2} from 'lucide-react';
 import {toast} from "sonner";
 
 export default function Profile() {
-  const { user, loading, error, updateProfile, changePassword, clearError, initAuth, logout } = useAuthStore();
+  const { user, loading, error, updateProfile, changePassword, clearError, initAuth } = useAuthStore();
 
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -55,7 +55,7 @@ export default function Profile() {
       <div className="mx-auto max-w-3xl px-4 py-8">
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2 text-lg">Loading profile...</span>
+          <span className="ml-2 text-lg text-foreground">Loading profile...</span>
         </div>
       </div>
     );
@@ -87,14 +87,14 @@ export default function Profile() {
         </div>
 
         {error && (
-          <div className="mb-4 rounded-md bg-red-50 p-4">
-            <p className="text-sm text-red-800">{error}</p>
+          <div className="mb-4 rounded-md bg-destructive/10 p-4">
+            <p className="text-sm text-destructive">{error}</p>
           </div>
         )}
 
         <div className="mb-6 flex items-center gap-4">
           <div className="relative">
-            <div className="h-20 w-20 rounded-full bg-gray-200">
+            <div className="h-20 w-20 rounded-full bg-muted">
               {user?.avatar_url && (
                 <img
                   src={user.avatar_url}
@@ -103,19 +103,19 @@ export default function Profile() {
                 />
               )}
             </div>
-            <button className="absolute bottom-0 right-0 rounded-full bg-primary p-2 text-white">
+            <button className="absolute bottom-0 right-0 rounded-full bg-primary p-2 text-primary-foreground">
               <Camera className="h-4 w-4" />
             </button>
           </div>
           <div>
-            <h2 className="text-xl font-semibold">{user?.staff.name}</h2>
+            <h2 className="text-xl font-semibold text-foreground">{user?.staff.name}</h2>
             <p className="text-sm text-muted-foreground">{user?.role}</p>
           </div>
         </div>
 
         <form onSubmit={handleProfileUpdate} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-foreground">
               Full Name
             </label>
             <input
@@ -123,12 +123,12 @@ export default function Profile() {
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               disabled={!isEditing}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-gray-100"
+              className="mt-1 block w-full rounded-md border border-input px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-muted"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-foreground">
               Email
             </label>
             <input
@@ -136,12 +136,12 @@ export default function Profile() {
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               disabled={!isEditing}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-gray-100"
+              className="mt-1 block w-full rounded-md border border-input px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-muted"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-foreground">
               Phone
             </label>
             <input
@@ -149,7 +149,7 @@ export default function Profile() {
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               disabled={!isEditing}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-gray-100"
+              className="mt-1 block w-full rounded-md border border-input px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-muted"
             />
           </div>
 
@@ -190,62 +190,66 @@ export default function Profile() {
         </div>
       </div>
 
-      <Dialog
-        open={showPasswordDialog}
-        onClose={() => {
-          setShowPasswordDialog(false);
-          setCurrentPassword('');
-          setNewPassword('');
-          clearError();
-        }}
-        title="Change Password"
-      >
-        <form onSubmit={handlePasswordChange} className="space-y-4 p-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Current Password
-            </label>
-            <input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              required
-            />
-          </div>
+      <Dialog open={showPasswordDialog}>
+        <DialogContent 
+          onClose={() => {
+            setShowPasswordDialog(false);
+            setCurrentPassword('');
+            setNewPassword('');
+            clearError();
+          }}
+          className="p-0"
+        >
+          <div className="p-6">
+            <h2 className="text-lg font-semibold mb-4 text-foreground">Change Password</h2>
+            <form onSubmit={handlePasswordChange} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground">
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="mt-1 block w-full rounded-md border border-input bg-background text-foreground px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  required
+                />
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              New Password
-            </label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              required
-            />
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="mt-1 block w-full rounded-md border border-input bg-background text-foreground px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  required
+                />
+              </div>
 
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setShowPasswordDialog(false);
-                setCurrentPassword('');
-                setNewPassword('');
-                clearError();
-              }}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Change Password
-            </Button>
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowPasswordDialog(false);
+                    setCurrentPassword('');
+                    setNewPassword('');
+                    clearError();
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={loading}>
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Change Password
+                </Button>
+              </div>
+            </form>
           </div>
-        </form>
+        </DialogContent>
       </Dialog>
     </div>
   );

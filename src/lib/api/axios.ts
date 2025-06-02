@@ -8,7 +8,7 @@ let isRefreshing = false;
 // Queue of requests to be executed after token refresh
 let refreshSubscribers: Array<(token: string) => void> = [];
 
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const baseURL = import.meta.env.API_URL || 'http://localhost:8080';
 
 export const api = axios.create({
   baseURL,

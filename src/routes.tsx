@@ -19,7 +19,6 @@ import Settings from '@/pages/settings';
 import ProfileSettings from '@/pages/settings/profile-settings';
 import GstSettings from '@/pages/settings/gst-settings';
 import Unauthorized from '@/pages/unauthorized';
-import Analytics from '@/pages/analytics';
 
 // Component to handle role-based redirection
 const RoleBasedRedirect = () => {
@@ -129,15 +128,6 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute requiredRoles={['admin', 'manager']}>
             <Payments />
-          </ProtectedRoute>
-        } 
-      />
-
-      <Route 
-        path="/analytics" 
-        element={
-          <ProtectedRoute requiredRole="admin">
-            <Analytics />
           </ProtectedRoute>
         } 
       />

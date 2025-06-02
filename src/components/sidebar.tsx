@@ -15,7 +15,15 @@ import {cn} from '@/lib/utils';
 import {useAuthStore} from '@/lib/store/auth.store';
 
 // Define navigation items with role-based access
-const navigationWithRoles = [
+interface NavigationItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  roles: string[];
+  onClick?: () => void;
+}
+
+const navigationWithRoles: NavigationItem[] = [
   { name: 'Tables', href: '/tables', icon: Table2, roles: ['admin', 'manager', 'server'] },
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin'] },
   { name: 'Orders', href: '/orders', icon: ClipboardList, roles: ['admin', 'manager', 'kitchen', 'server'] },
@@ -23,7 +31,9 @@ const navigationWithRoles = [
   { name: 'Categories', href: '/categories', icon: Tags, roles: ['admin', 'manager'] },
   { name: 'Staff', href: '/staff', icon: UserCircle, roles: ['admin'] },
   { name: 'Payments', href: '/payments', icon: Receipt, roles: ['admin', 'manager'] },
-  { name: 'Analytics', href: '/analytics', icon: BarChart2, roles: ['admin'] },
+  { name: 'Analytics', href: '#', icon: BarChart2, roles: ['admin'], onClick: () => {
+    window.open(import.meta.env.ANALYTICS_URL || 'http://localhost:5174/', '_blank');
+  }},
   { name: 'Access', href: '/user-management', icon: Users, roles: ['admin'] },
 ];
 
@@ -45,7 +55,33 @@ export default function Sidebar({ closeSidebar }: SidebarProps) {
         <nav className="space-y-3 px-1">
           {filteredNavigation.map((item) => {
             const isActive = location.pathname === item.href;
-            return (
+            return item.onClick ? (
+              <div
+                key={item.name}
+                onClick={() => {
+                  // Execute custom onClick handler
+                  item.onClick?.();
+                  // Close sidebar on mobile when a link is clicked
+                  if (window.innerWidth < 768 && closeSidebar) {
+                    closeSidebar();
+                  }
+                }}
+                className={cn(
+                  "group flex items-center justify-between rounded-lg px-2 py-2 text-sm font-medium transition-colors cursor-pointer",
+                  "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <div className="flex items-center">
+                  <item.icon
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      "text-muted-foreground group-hover:text-foreground"
+                    )}
+                  />
+                  {item.name}
+                </div>
+              </div>
+            ) : (
               <Link
                 key={item.name}
                 to={item.href}
