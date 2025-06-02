@@ -155,7 +155,7 @@ export default function Navbar({ toggleSidebar }: NavbarProps) {
                   {/* Show settings in dropdown on small screens */}
                   {isAdmin && (
                     <DropdownMenuItem onClick={() => {
-                      window.open(import.meta.env.ANALYTICS_URL || 'http://localhost:5174/', '_blank');
+                      window.open(import.meta.env.VITE_ANALYTICS_URL || 'http://localhost:5174/', '_blank');
                     }}>
                       <BarChart2 className="mr-2 h-4 w-4" />
                       Analytics

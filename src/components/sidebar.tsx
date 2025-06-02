@@ -32,7 +32,7 @@ const navigationWithRoles: NavigationItem[] = [
   { name: 'Staff', href: '/staff', icon: UserCircle, roles: ['admin'] },
   { name: 'Payments', href: '/payments', icon: Receipt, roles: ['admin', 'manager'] },
   { name: 'Analytics', href: '#', icon: BarChart2, roles: ['admin'], onClick: () => {
-    window.open(import.meta.env.ANALYTICS_URL || 'http://localhost:5174/', '_blank');
+    window.open(import.meta.env.VITE_ANALYTICS_URL || 'http://localhost:5174/', '_blank');
   }},
   { name: 'Access', href: '/user-management', icon: Users, roles: ['admin'] },
 ];
