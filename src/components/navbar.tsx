@@ -155,7 +155,12 @@ export default function Navbar({ toggleSidebar }: NavbarProps) {
                   {/* Show settings in dropdown on small screens */}
                   {isAdmin && (
                     <DropdownMenuItem onClick={() => {
-                      window.open(import.meta.env.VITE_ANALYTICS_URL || 'http://localhost:5174/', '_blank');
+                      const analyticsUrl = import.meta.env.VITE_ANALYTICS_URL || 'http://localhost:5174/';
+                      // Ensure the URL is absolute by checking if it starts with http:// or https://
+                      const absoluteUrl = analyticsUrl.startsWith('http://') || analyticsUrl.startsWith('https://') 
+                        ? analyticsUrl 
+                        : `https://${analyticsUrl}`;
+                      window.open(absoluteUrl, '_blank', 'noopener,noreferrer');
                     }}>
                       <BarChart2 className="mr-2 h-4 w-4" />
                       Analytics

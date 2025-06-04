@@ -32,7 +32,12 @@ const navigationWithRoles: NavigationItem[] = [
   { name: 'Staff', href: '/staff', icon: UserCircle, roles: ['admin'] },
   { name: 'Payments', href: '/payments', icon: Receipt, roles: ['admin', 'manager'] },
   { name: 'Analytics', href: '#', icon: BarChart2, roles: ['admin'], onClick: () => {
-    window.open(import.meta.env.VITE_ANALYTICS_URL || 'http://localhost:5174/', '_blank');
+    const analyticsUrl = import.meta.env.VITE_ANALYTICS_URL || 'http://localhost:5174/';
+    // Ensure the URL is absolute by checking if it starts with http:// or https://
+    const absoluteUrl = analyticsUrl.startsWith('http://') || analyticsUrl.startsWith('https://') 
+      ? analyticsUrl 
+      : `https://${analyticsUrl}`;
+    window.open(absoluteUrl, '_blank', 'noopener,noreferrer');
   }},
   { name: 'Access', href: '/user-management', icon: Users, roles: ['admin'] },
 ];
