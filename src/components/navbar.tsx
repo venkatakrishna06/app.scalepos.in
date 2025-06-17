@@ -95,6 +95,20 @@ export default function Navbar({ toggleSidebar }: NavbarProps) {
                 <Button
                     variant="ghost"
                     size="sm"
+                    onClick={() => navigate('/quick-bill')}
+                    className="rounded-full text-xs sm:text-sm px-2 sm:px-4 h-8 relative"
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  <span>Quick Bill</span>
+                  {/*{dineInCount > 0 && (*/}
+                  {/*  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">*/}
+                  {/*    {dineInCount}*/}
+                  {/*  </span>*/}
+                  {/*)}*/}
+                </Button>
+                <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => navigate('/orders')}
                     className="rounded-full text-xs sm:text-sm px-2 sm:px-4 h-8 relative"
                 >

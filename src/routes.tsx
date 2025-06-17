@@ -19,6 +19,7 @@ import Settings from '@/pages/settings';
 import ProfileSettings from '@/pages/settings/profile-settings';
 import GstSettings from '@/pages/settings/gst-settings';
 import Unauthorized from '@/pages/unauthorized';
+import QuickBill from "@/pages/quick-bill.tsx";
 
 // Component to handle role-based redirection
 const RoleBasedRedirect = () => {
@@ -76,6 +77,14 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } 
       />
+        <Route
+            path="/quick-bill"
+            element={
+                <ProtectedRoute requiredRoles={['admin', 'manager', 'server']}>
+                    <QuickBill />
+                </ProtectedRoute>
+            }
+        />
 
       <Route 
         path="/tables" 

@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useState} from 'react';
-import {ArrowUpDown, Coffee, CreditCard, Download, FileText, Printer, Search, User} from 'lucide-react';
+import {ArrowUpDown, Clock, Coffee, CreditCard, Download, Edit, FileText, Printer, Search, Trash2, User} from 'lucide-react';
 import {OrdersSkeleton} from '@/components/skeletons/orders-skeleton';
 import {Button} from '@/components/ui/button';
 import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
@@ -20,12 +20,31 @@ import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} f
 import {Badge} from '@/components/ui/badge';
 import {cn} from '@/lib/utils';
 import {toast} from '@/lib/toast';
+import {ViewOrdersDialog} from '@/components/view-orders-dialog';
+import {Order} from '@/types';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 
 export default function Orders() {
   const { handleError } = useErrorHandler();
 
   // Use React Query hooks instead of Zustand store
-  const { useOrdersQuery } = useOrder();
+  const { useOrdersQuery, updateOrder } = useOrder();
+
+  // State for view orders dialog
+  const [isViewOrdersDialogOpen, setIsViewOrdersDialogOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+
+  // State for cancel confirmation dialog
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
 
   // State for filter parameters
   const [queryParams, setQueryParams] = useState<{
@@ -33,6 +52,7 @@ export default function Orders() {
     start_date?: string;
     end_date?: string;
     table_number?: number;
+    order_type?: string;
   }>({});
 
   // Use React Query to fetch orders
@@ -43,21 +63,45 @@ export default function Orders() {
     refetch: refetchOrders
   } = useOrdersQuery(queryParams);
 
+  // Set up polling for orders when the dialog is open
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null;
+
+    if (isViewOrdersDialogOpen && selectedOrderId !== null) {
+      // Initial refetch
+      refetchOrders();
+
+      // Set up polling every 3 seconds
+      intervalId = setInterval(() => {
+        refetchOrders();
+      }, 3000);
+    }
+
+    // Cleanup interval on unmount or when dialog closes
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [isViewOrdersDialogOpen, selectedOrderId, refetchOrders]);
+
   // Filtering and sorting state
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterTimeframe, setFilterTimeframe] = useState<string>('today');
   const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>('all');
+  const [filterOrderType, setFilterOrderType] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<string>('newest');
   const [activeTab, setActiveTab] = useState<string>('all');
 
-  // Update query parameters when filter timeframe changes
+  // Update query parameters when filter timeframe or order type changes
   useEffect(() => {
     const params: {
       period?: 'day' | 'week' | 'month';
       start_date?: string;
       end_date?: string;
       table_number?: number;
+      order_type?: string;
     } = {};
 
     // Map the UI filter timeframe to API parameters
@@ -83,14 +127,29 @@ export default function Orders() {
         break;
     }
 
+    // Add order type filter if not 'all'
+    if (filterOrderType !== 'all') {
+      params.order_type = filterOrderType;
+    }
+
     setQueryParams(params);
-  }, [filterTimeframe]);
+  }, [filterTimeframe, filterOrderType]);
 
   // Log React Query data to console (this ensures the queries are active for DevTools)
   useEffect(() => {
 
 
   }, [orders, ordersLoading]);
+
+  // Update selectedOrder when orders data changes
+  useEffect(() => {
+    if (orders.length > 0 && selectedOrderId && isViewOrdersDialogOpen) {
+      const updatedOrder = orders.find(order => order.id === selectedOrderId);
+      if (updatedOrder) {
+        setSelectedOrder(updatedOrder);
+      }
+    }
+  }, [orders, selectedOrderId, isViewOrdersDialogOpen]);
 
   // const getTableNumber = (tableId: number | undefined) => {
   //   if (tableId === undefined || tableId === null) {
@@ -107,6 +166,57 @@ export default function Orders() {
     } catch (err) {
       handleError(err);
     }
+  }
+
+  // Show cancel confirmation dialog
+  const showCancelConfirmation = (order: Order) => {
+    setOrderToCancel(order);
+    setIsCancelDialogOpen(true);
+  };
+
+  // Handle canceling an order after confirmation
+  const handleCancelOrder = async () => {
+    if (!orderToCancel) return;
+
+    try {
+      // Update order status to cancelled
+      await updateOrder({ 
+        id: orderToCancel.id, 
+        order: { status: 'cancelled' } 
+      });
+
+      toast.success('Order cancelled successfully');
+      // Refresh orders to update the UI
+      await refetchOrders();
+      // Close the dialog
+      setIsCancelDialogOpen(false);
+      setOrderToCancel(null);
+    } catch (err) {
+      handleError(err);
+    }
+  }
+
+  // Handle editing an order
+  const handleEditOrder = (order: Order) => {
+    setSelectedOrder(order);
+    setSelectedOrderId(order.id);
+    setIsViewOrdersDialogOpen(true);
+  }
+
+  // Handle payment for an order (used by ViewOrdersDialog)
+  const handlePayment = (order: Order) => {
+    // This would typically open a payment dialog or redirect to payment page
+    toast.info(`Payment for order #${order.id} would be processed here`);
+    setIsViewOrdersDialogOpen(true);
+  }
+
+  // Handle closing the view orders dialog
+  const handleCloseViewOrdersDialog = () => {
+    setIsViewOrdersDialogOpen(false);
+    setSelectedOrder(null);
+    setSelectedOrderId(null);
+    // Refresh orders to update the UI with any changes made in the dialog
+    refetchOrders();
   }
   // Helper function to get status badge styling
   const getStatusBadgeStyles = (status: string) => {
@@ -178,6 +288,11 @@ export default function Orders() {
           ? true 
           : order.payment_method === filterPaymentMethod;
 
+        // Order type filter
+        const matchesOrderType = filterOrderType === 'all'
+          ? true
+          : order.order_type === filterOrderType;
+
         // Tab filter
         let matchesTab = true;
         if (activeTab !== 'all') {
@@ -193,17 +308,17 @@ export default function Orders() {
         // Search filter
         const customerName = order.customer || '';
         const serverName = order.server || '';
-        const tableText = `Table ${order.table.table_number || 'Unknown'}`;
-        const orderIdText = `#${order.id}`;
+        const tableText = `Table ${order.table?.table_number || 'Unknown'}`;
+        const tokenNumberText = order.token_number ? String(order.token_number) : '';
 
         const matchesSearch = searchQuery === '' || (
           customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
           serverName.toLowerCase().includes(searchQuery.toLowerCase()) ||
           tableText.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          orderIdText.includes(searchQuery)
+          tokenNumberText.toLowerCase().includes(searchQuery.toLowerCase())
         );
 
-        return matchesStatus && matchesTimeframe && matchesPaymentMethod && matchesTab && matchesSearch;
+        return matchesStatus && matchesTimeframe && matchesPaymentMethod && matchesOrderType && matchesTab && matchesSearch;
       })
       .sort((a, b) => {
         switch (sortBy) {
@@ -303,7 +418,7 @@ export default function Orders() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Search by order #, table, customer..."
+                  placeholder="Search by order #, token, table, customer..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-9"
@@ -350,6 +465,19 @@ export default function Orders() {
                   </SelectContent>
                 </Select>
 
+                <Select value={filterOrderType} onValueChange={setFilterOrderType}>
+                  <SelectTrigger className="w-[130px] sm:w-[140px]">
+                    <SelectValue placeholder="Order Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="dine-in">Dine-in</SelectItem>
+                    <SelectItem value="takeaway">Takeaway</SelectItem>
+                    <SelectItem value="delivery">Delivery</SelectItem>
+                    <SelectItem value="quick-bill">Quick Bill</SelectItem>
+                  </SelectContent>
+                </Select>
+
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger className="w-[140px]">
                     <SelectValue placeholder="Sort by" />
@@ -375,7 +503,11 @@ export default function Orders() {
                   <div>
                     <div className="flex items-center gap-2">
                       <CardTitle className="text-lg">
-                        {order.order_type === 'takeaway' ? 'Takeaway' : `Table ${order.table.table_number || 'Unknown'}`}
+                        {order.order_type === 'takeaway'
+                            ? 'Takeaway'
+                            : order.order_type === 'quick-bill'
+                                ? 'Quick Bill'
+                                : `Table ${order.table?.table_number || 'Unknown'}`}
                       </CardTitle>
                       <Badge variant="outline">#{order.id}</Badge>
                     </div>
@@ -405,6 +537,13 @@ export default function Orders() {
                     <div className="flex items-center gap-2 text-sm">
                       <CreditCard className="h-4 w-4 text-muted-foreground" />
                       <span>Payment: {order.payment_method.charAt(0).toUpperCase() + order.payment_method.slice(1)}</span>
+                    </div>
+                  )}
+
+                  {order.token_number && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <span>Token: {order.token_number}</span>
                     </div>
                   )}
                 </div>
@@ -446,20 +585,38 @@ export default function Orders() {
               </CardContent>
 
               <CardFooter className="flex items-center justify-between border-t bg-muted/10 pt-3">
-                <div>
-                  {/*<TooltipProvider>*/}
-                  {/*  <Tooltip>*/}
-                  {/*    <TooltipTrigger asChild>*/}
-                  {/*      <Button variant="outline" size="sm" className="h-8 w-8 p-0">*/}
-                  {/*        <FileText className="h-4 w-4" />*/}
-                  {/*        <span className="sr-only">View Details</span>*/}
-                  {/*      </Button>*/}
-                  {/*    </TooltipTrigger>*/}
-                  {/*    /!*<TooltipContent>*!/*/}
-                  {/*    /!*  <p>View Order Details</p>*!/*/}
-                  {/*    /!*</TooltipContent>*!/*/}
-                  {/*  </Tooltip>*/}
-                  {/*</TooltipProvider>*/}
+                <div className="flex gap-2">
+                  {/* Show buttons for all orders but disable based on order type and status:
+                    - For dine-in orders: Enable only when status is 'placed'
+                    - For takeaway and quick bill: Enable even after paid status
+                    - For all order types: Disable when status is 'cancelled' */}
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleEditOrder(order)}
+                    disabled={
+                      order.status === 'cancelled' || 
+                      (order.order_type === 'dine-in' && order.status !== 'placed') ||
+                      order.status === 'paid'
+                    }
+                  >
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="text-red-500 hover:text-red-700"
+                    onClick={() => showCancelConfirmation(order)}
+                    disabled={
+                      order.status === 'cancelled' || 
+                      (order.order_type === 'dine-in' && order.status !== 'placed') ||
+                      (order.status === 'paid' && order.order_type !== 'takeaway' && order.order_type !== 'quick-bill')
+                    }
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Cancel
+                  </Button>
                 </div>
 
                 <div className="text-right">
@@ -496,7 +653,7 @@ export default function Orders() {
                     <div>
                       <div className="flex items-center gap-2">
                         <CardTitle className="text-lg">
-                          {order.order_type === 'takeaway' ? 'Takeaway' : `Table ${order.table.table_number || 'Unknown'}`}
+                          {order.order_type === 'takeaway' ? 'Takeaway' : `Table ${order.table?.table_number || 'Unknown'}`}
                         </CardTitle>
                         <Badge variant="outline">#{order.id}</Badge>
                       </div>
@@ -577,6 +734,98 @@ export default function Orders() {
         </div>
       </TabsContent>
       </Tabs>
+
+      {/* View Orders Dialog for editing orders */}
+      {selectedOrder && (
+        <ViewOrdersDialog
+          open={isViewOrdersDialogOpen}
+          onClose={handleCloseViewOrdersDialog}
+          orders={[selectedOrder]}
+          onPayment={handlePayment}
+        />
+      )}
+
+      {/* Cancel Order Confirmation Dialog */}
+      <Dialog open={isCancelDialogOpen}>
+        <DialogContent 
+          onClose={() => {
+            setIsCancelDialogOpen(false);
+            setOrderToCancel(null);
+          }}
+          className="max-w-md"
+        >
+          <DialogHeader className="pb-2">
+            <DialogTitle>Cancel Order</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to cancel this order? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          {orderToCancel && (
+            <div className="my-2 rounded-lg border bg-muted/30 p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-medium">Order #{orderToCancel.id}</span>
+                <Badge className={cn(getStatusBadgeStyles(orderToCancel.status))}>
+                  {orderToCancel.status.charAt(0).toUpperCase() + orderToCancel.status.slice(1)}
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="flex items-center gap-1.5">
+                  {orderToCancel.order_type === 'takeaway' ? (
+                    <Coffee className="h-3.5 w-3.5 text-muted-foreground" />
+                  ) : (
+                    <User className="h-3.5 w-3.5 text-muted-foreground" />
+                  )}
+                  <span>
+                    {orderToCancel.order_type === 'takeaway'
+                      ? 'Takeaway'
+                      : orderToCancel.order_type === 'quick-bill'
+                        ? 'Quick Bill'
+                        : `Table ${orderToCancel.table?.table_number || 'Unknown'}`}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>{getOrderDateDisplay(orderToCancel.order_time)}</span>
+                </div>
+
+                <div className="flex items-center gap-1.5 col-span-2">
+                  <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>Total: {formatCurrency(orderToCancel.total_amount)}</span>
+                </div>
+              </div>
+
+              {orderToCancel.items && orderToCancel.items.length > 0 && (
+                <div className="mt-2 pt-2 border-t text-xs text-muted-foreground">
+                  <p>{orderToCancel.items.length} item(s) will be cancelled</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter className="mt-4 gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsCancelDialogOpen(false);
+                setOrderToCancel(null);
+              }}
+              className="flex-1 sm:flex-initial"
+            >
+              No, Keep Order
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCancelOrder}
+              className="flex-1 sm:flex-initial"
+            >
+              Yes, Cancel Order
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

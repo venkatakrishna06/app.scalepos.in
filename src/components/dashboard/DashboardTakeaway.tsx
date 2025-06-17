@@ -12,6 +12,7 @@ import {PaymentDialog} from '@/components/payment-dialog';
 interface DashboardTakeawayProps {
   /** Optional callback when an order is created */
   onOrderCreated?: () => void;
+  type:string
 }
 
 /**
@@ -24,7 +25,8 @@ interface DashboardTakeawayProps {
  * - Creating takeaway orders
  */
 const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({ 
-  onOrderCreated 
+  onOrderCreated ,
+    type
 }) => {
   // Category and search state
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -379,13 +381,17 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
       const sgstRate = 2.5;
       const cgstRate = 2.5;
 
+      // Generate a token number for the order
+      const tokenNumber = `${type.charAt(0).toUpperCase()}${Date.now().toString().slice(-6)}`;
+
       // Prepare the order data but don't create it yet
       const draftOrder = {
-        order_type: 'takeaway' as const,
+        order_type: type,
         customer_id: 1, // Default for walk-in customers
         staff_id: user?.staff_id,
         status: 'placed' as const,
         order_time: new Date().toISOString(),
+        token_number: tokenNumber, // Add token number to the order
         items: orderItems.map(item => ({
           menu_item_id: item.menu_item_id,
           quantity: item.quantity,
@@ -654,13 +660,8 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
           setShowPaymentDialog(false);
           setCreatedOrder(null);
           setDraftOrder(null);
-
-          // Only reset the order state if payment was cancelled, not completed
-          if (!createdOrder) {
-            setOrderItems([]);
-            setSearchQuery('');
-            setSelectedCategory('all');
-          }
+          // Don't reset order items when dialog is closed without payment
+          // This allows users to modify their order after closing the dialog
         }}
         order={createdOrder}
         draftOrder={draftOrder}
@@ -677,8 +678,6 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
           if (onOrderCreated) {
             onOrderCreated();
           }
-
-          toast.success('Takeaway order successfully');
         }}
       />
     </div>

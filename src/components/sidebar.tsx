@@ -55,7 +55,7 @@ export default function Sidebar({ closeSidebar }: SidebarProps) {
     item => item.roles.includes(user?.role || '')
   );
   return (
-    <div className="h-[calc(100vh-4rem)] w-full overflow-y-auto overflow-x-hidden pt-0 md:pt-0">
+    <div className="h-[calc(100vh-4rem)] w-full overflow-y-auto overflow-x-hidden pt-0 md:pt-0 custom-scrollbar">
       <div className="py-4 px-3 md:mt-0"> {/* Add top margin on mobile to account for navbar */}
         <nav className="space-y-3 px-1">
           {filteredNavigation.map((item) => {

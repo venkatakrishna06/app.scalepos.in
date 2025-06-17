@@ -126,7 +126,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       set(state => ({
         menuItems: state.menuItems.filter(item => item.id !== id),
       }));
-      toast.success('Menu item deleted successfully');
+      toast.success('Menu item deleted successfully'); ``
     } catch (err) {
 
       const errorMessage = 'Failed to delete menu item';

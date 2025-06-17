@@ -65,7 +65,7 @@ export default function Layout({ children }: LayoutProps) {
 
         {/* Main content - scrolls independently */}
         <main className={cn(
-          "flex-1 overflow-y-auto transition-all duration-300 ease-in-out",
+          "flex-1 overflow-y-auto transition-all duration-300 ease-in-out custom-scrollbar",
           isSidebarOpen ? "md:ml-0" : "ml-0",
           "pb-20 md:pb-0" // Increased padding at the bottom for mobile nav to prevent overlap
         )}>

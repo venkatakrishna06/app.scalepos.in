@@ -56,7 +56,6 @@ export const useOrder = () => {
 
       // Invalidate orders queries to trigger refetch
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-      toast.success('Order updated successfully');
     },
     onError: (error) => {
 

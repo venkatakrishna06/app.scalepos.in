@@ -97,7 +97,7 @@ export default function Menu() {
       }
       setShowAddDialog(false);
     } catch (err) {
-      handleError(err);
+
       toast.error('Failed to save menu item');
     } finally {
       setIsSubmitting(false);
@@ -108,9 +108,7 @@ export default function Menu() {
     try {
       setIsSubmitting(true);
       deleteItem(id);
-      toast.success('Menu item deleted successfully');
     } catch (err) {
-      handleError(err);
       toast.error('Failed to delete menu item');
     } finally {
       setIsSubmitting(false);

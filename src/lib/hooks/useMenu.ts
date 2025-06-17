@@ -59,11 +59,9 @@ export const useMenu = () => {
     onSuccess: () => {
       // Invalidate menu items query to trigger refetch
       queryClient.invalidateQueries({ queryKey: ['menu', 'items'] });
-      toast.success('Menu item deleted successfully');
     },
     onError: (error) => {
 
-      toast.error('Failed to delete menu item');
     },
   });
 

@@ -48,11 +48,30 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
     }
   }, [open, restaurant, fetchRestaurant]);
 
-  const handlePrintBill = () => {
+
+  const handlePrintBill = async () => {
     // Check if we have an order to print
     if (!currentOrder && !draftOrder) {
       showToast('error', 'No order data available for printing');
-      return;
+      return null;
+    }
+
+    // If we have a draft order but no actual order yet, create it first
+    // First check if we already have a created order
+    let orderForBill = currentOrder || createdOrder;
+    if (!orderForBill && draftOrder) {
+      try {
+        orderForBill = await createOrderFromDraft();
+        if (!orderForBill) {
+          showToast('error', 'Failed to create order');
+          return null;
+        }
+        // Note: createOrderFromDraft already sets the createdOrder state
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to create order';
+        showToast('error', errorMessage);
+        return null;
+      }
     }
 
     // Create a new window for the bill
@@ -67,10 +86,11 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
     const dateFormatted = now.toLocaleDateString();
     const timeFormatted = now.toLocaleTimeString();
 
-    // Use either the current order or draft order for bill generation
-    const orderForBill = currentOrder || draftOrder;
-    const orderId = currentOrder?.id || 'Draft';
-    const orderItems = currentOrder?.items || draftOrder?.items || [];
+    // Use the created order for bill generation
+    const orderId = orderForBill?.id || 'Draft';
+    const orderItems = orderForBill?.items || [];
+
+    const orderType = orderForBill?.order_type === 'takeaway' ? 'Takeaway' : orderForBill?.order_type === 'quick-bill'? 'Quick Bill': 'Dine-in';
 
     // Generate bill HTML content
     const billContent = `
@@ -158,6 +178,32 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
           .footer p {
             margin: 2px 0;
           }
+          .token-no {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            background: #fff;
+            padding: 2px 5px;
+            border: 1px dashed #222;
+            border-radius: 6px;
+          }
+          .token-no-center {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            background: #fff;
+            padding: 2px 10px;
+            border: 2px dashed #222;
+            border-radius: 6px;
+            letter-spacing: 2px;
+            display: block;
+            margin: 10px auto 8px auto;
+          }
+          .header-relative {
+            position: relative;
+          }
           @media print {
             body {
               width: 80mm;
@@ -186,10 +232,20 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
             <div><strong>Bill No:</strong> ${orderId}</div>
             <div><strong>Date:</strong> ${dateFormatted}</div>
             <div><strong>Time:</strong> ${timeFormatted}</div>
-            <div><strong>Table:</strong> ${orderForBill?.table_id || 'N/A'}</div>
-            <div><strong>Server:</strong> ${orderForBill?.server || 'N/A'}</div>
-            <div><strong>Type:</strong> ${orderForBill?.order_type || 'Takeaway'}</div>
+            ${
+              orderForBill?.order_type === 'dine-in'
+                ? `<div><strong>Table:</strong> ${orderForBill?.table_id || 'N/A'}</div>
+                   <div><strong>Server:</strong> ${orderForBill?.server || 'N/A'}</div>`
+                : ''
+            }
+            <div><strong>Type:</strong> ${orderType}</div>
           </div>
+
+          ${
+            orderForBill?.token_number
+              ? `<div class="token-no-center">Token No: ${orderForBill.token_number}</div>`
+              : ''
+          }
 
           <table class="items-table">
             <thead>
@@ -285,15 +341,30 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
       // };
     };
 
-    showToast('success', 'Bill generated successfully');
+    // Return the order that was used for the bill
+    return orderForBill;
   };
 
   const handlePrintBillAndPayment = async () => {
-    // First print the bill
-    handlePrintBill();
+    try {
+      // First print the bill (which now creates the order if it's a draft)
+      // Modify handlePrintBill to return the created order
+      const orderFromPrintBill = await handlePrintBill();
 
-    // Then process the payment after a short delay
-      await handlePayment();
+      // If we have an order from handlePrintBill, use it directly in handlePayment
+      // This avoids relying on React state updates which might not be immediate
+      if (orderFromPrintBill) {
+        // Use a direct reference to the order instead of relying on state
+        await handlePayment(orderFromPrintBill);
+      } else {
+        // If no order was created/returned, just call handlePayment normally
+        await handlePayment();
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to process order';
+      setError(errorMessage);
+      showToast('error', errorMessage);
+    }
   };
 
   // Function to create an order from a draft
@@ -312,14 +383,15 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
     }
   };
 
-  const handlePayment = async () => {
+  const handlePayment = async (passedOrder?: Order) => {
     setIsSubmitting(true);
     setError(null);
     //setCurrentStep('processing');
 
     try {
-      // If we have a draft order but no actual order yet, create it first
-      let orderToProcess = currentOrder;
+      // If an order is passed directly, use it instead of looking up state
+      // This prevents duplicate order creation when called from handlePrintBillAndPayment
+     let orderToProcess = currentOrder || passedOrder || createdOrder;
 
       if (!orderToProcess && draftOrder) {
         orderToProcess = await createOrderFromDraft();
@@ -334,35 +406,30 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
 
       // Create payment object according to the new API structure
       const payment = {
-        order_id: orderToProcess.id,
+        order_id: orderToProcess?.id,
         amount: roundedAmount, // Use rounded amount instead of original amount
         payment_method: paymentMethod,
         payment_status: 'completed',
         transaction_id: `txn_${Date.now()}`,
-        card_details: paymentMethod === 'card'
-            ? { last_four: '1234', card_type: 'card' }
-            : undefined
       };
 
       await addPayment(payment);
 
-      // Update table status if this is a dine-in order
-      if (orderToProcess.table_id) {
-        await updateTableStatus(orderToProcess.table_id, 'available');
-      }
-
-      await updateOrder(orderToProcess.id, {
-        status: 'paid'
-      });
+      // // Update table status if this is a dine-in order
+      // if (currentOrder?.table_id) {
+      //   await updateTableStatus(currentOrder.table_id, 'available');
+      // }
+      //
+      // await updateOrder(currentOrder?.id, {
+      //   status: 'paid'
+      // });
 
       setCurrentStep('complete');
-      showToast('success', 'Payment processed successfully');
 
       // Notify parent component if callback is provided
       if (onPaymentComplete) {
         onPaymentComplete(orderToProcess);
       }
-
       // Wait a moment before closing to show the success message
         onClose();
     } catch (err) {
@@ -650,9 +717,18 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
             <DialogTitle className="text-lg font-bold text-center">Process Payment</DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground text-center">
               {currentOrder ? `(Order #${currentOrder.id}` : '(New Order'}
-              {currentOrder?.table_id ? ` - Table ${currentOrder.table_id})` :
-                  draftOrder?.table_id ? ` - Table ${draftOrder.table_id})` :
-                      ' - Takeaway)'}
+              {currentOrder?.order_type === 'dine-in' || draftOrder?.order_type === 'dine-in' ? (
+                <>
+                  {currentOrder?.table_id ? ` - Table ${currentOrder.table_id}` : draftOrder?.table_id ? ` - Table ${draftOrder.table_id}` : ''}
+                  {currentOrder?.server ? ` - Server: ${currentOrder.server}` : draftOrder?.server ? ` - Server: ${draftOrder.server}` : ''}
+                  {currentOrder?.token_number ? ` - Token No: ${currentOrder.token_number}` : draftOrder?.token_number ? ` - Token No: ${draftOrder.token_number}` : ''}
+                </>
+              ) : (
+                currentOrder?.order_type === 'takeaway' || draftOrder?.order_type === 'takeaway'
+                  ? ' - Takeaway'
+                  : ' - Quick Bill'
+              )}
+              )
             </DialogDescription>
           </DialogHeader>
 

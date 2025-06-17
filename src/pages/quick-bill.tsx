@@ -4,10 +4,10 @@ import {DashboardTakeaway} from '@/components/dashboard/DashboardTakeaway';
 /**
  * Takeaway page component that renders the takeaway order view
  */
-const Takeaway = memo(() => {
-  return <DashboardTakeaway type={'takeaway'}/>;
+const QuickBill = memo(() => {
+    return <DashboardTakeaway type={'quick-bill'}/>;
 });
 
-Takeaway.displayName = 'Takeaway';
+QuickBill.displayName = 'Quick Bill';
 
-export default Takeaway;
+export default QuickBill;

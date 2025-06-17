@@ -52,7 +52,6 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
       // If payment is successful, log a message
       // Note: Order status update is handled by the component to avoid circular dependencies
       if (newPayment.payment_status === 'completed') {
-
         // The order status should be updated by the component using useOrderStore directly
       }
 
