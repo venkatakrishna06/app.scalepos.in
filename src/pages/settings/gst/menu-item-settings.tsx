@@ -1,11 +1,11 @@
 import {useEffect, useState} from 'react';
-import {useToast} from '@/components/ui/use-toast';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Button} from '@/components/ui/button';
 import {Checkbox} from '@/components/ui/checkbox';
 import {Loader2} from 'lucide-react';
 import {menuService} from '@/lib/api/services';
 import {MenuItem} from '@/types';
+import {toast} from '@/lib/toast';
 
 interface MenuItemGstSettingsProps {
   menuItems: MenuItem[];
@@ -13,7 +13,6 @@ interface MenuItemGstSettingsProps {
 }
 
 export function MenuItemGstSettings({ menuItems, onUpdate }: MenuItemGstSettingsProps) {
-  const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [localMenuItems, setLocalMenuItems] = useState<MenuItem[]>(menuItems);
   const [originalMenuItems, setOriginalMenuItems] = useState<MenuItem[]>(menuItems);
@@ -58,18 +57,11 @@ export function MenuItemGstSettings({ menuItems, onUpdate }: MenuItemGstSettings
       // Update original menu items after successful save
       setOriginalMenuItems(localMenuItems);
 
-      toast({
-        title: 'Success',
-        description: `Menu item GST settings updated successfully (${changedMenuItems.length} items changed)`,
-      });
+      toast.success(`Menu item GST settings updated successfully (${changedMenuItems.length} items changed)`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to save menu item GST settings';
       setError(errorMessage);
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        variant: 'destructive',
-      });
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }

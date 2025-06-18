@@ -1,11 +1,11 @@
 import {useEffect, useState} from 'react';
-import {useToast} from '@/components/ui/use-toast';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Button} from '@/components/ui/button';
 import {Checkbox} from '@/components/ui/checkbox';
 import {ChevronDown, Loader2} from 'lucide-react';
 import {menuService} from '@/lib/api/services';
 import {Category} from '@/types';
+import {toast} from '@/lib/toast';
 
 interface CategoryGstSettingsProps {
   categories: Category[];
@@ -14,7 +14,6 @@ interface CategoryGstSettingsProps {
 }
 
 export function CategoryGstSettings({ categories, onUpdate, onMenuItemsRefresh }: CategoryGstSettingsProps) {
-  const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [localCategories, setLocalCategories] = useState<Category[]>(categories);
   const [originalCategories, setOriginalCategories] = useState<Category[]>(categories);
@@ -135,18 +134,11 @@ export function CategoryGstSettings({ categories, onUpdate, onMenuItemsRefresh }
         onMenuItemsRefresh();
       }
 
-      toast({
-        title: 'Success',
-        description: `Category GST settings updated successfully (${changedCategories.length} items changed)`,
-      });
+      toast.success(`Category GST settings updated successfully (${changedCategories.length} items changed)`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to save category GST settings';
       setError(errorMessage);
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        variant: 'destructive',
-      });
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }

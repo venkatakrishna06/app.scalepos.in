@@ -416,13 +416,13 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
       await addPayment(payment);
 
       // // Update table status if this is a dine-in order
-      // if (currentOrder?.table_id) {
-      //   await updateTableStatus(currentOrder.table_id, 'available');
-      // }
-      //
-      // await updateOrder(currentOrder?.id, {
-      //   status: 'paid'
-      // });
+      if (currentOrder?.table_id) {
+        await updateTableStatus(orderToProcess.table_id, 'available');
+      }
+
+      await updateOrder(orderToProcess?.id, {
+        status: 'paid'
+      });
 
       setCurrentStep('complete');
 

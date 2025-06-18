@@ -1,11 +1,11 @@
 import {useEffect, useState} from 'react';
-import {useToast} from '@/components/ui/use-toast';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Loader2} from 'lucide-react';
 import {restaurantService} from '@/lib/api/services';
 import {Restaurant} from '@/types';
+import {toast} from '@/lib/toast';
 
 interface RestaurantGstRatesProps {
   restaurant: Restaurant;
@@ -13,7 +13,6 @@ interface RestaurantGstRatesProps {
 }
 
 export function RestaurantGstRates({ restaurant, onUpdate }: RestaurantGstRatesProps) {
-  const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [sgstRate, setSgstRate] = useState<string>(restaurant.default_sgst_rate?.toString() || '');
   const [cgstRate, setCgstRate] = useState<string>(restaurant.default_cgst_rate?.toString() || '');
@@ -47,10 +46,7 @@ export function RestaurantGstRates({ restaurant, onUpdate }: RestaurantGstRatesP
       const originalCgst = parseFloat(originalCgstRate);
 
       if (sgst === originalSgst && cgst === originalCgst) {
-        toast({
-          title: 'Info',
-          description: 'No changes detected in GST rates',
-        });
+        toast.info('No changes detected in GST rates');
         setSaving(false);
         return;
       }
@@ -63,18 +59,11 @@ export function RestaurantGstRates({ restaurant, onUpdate }: RestaurantGstRatesP
       setOriginalSgstRate(sgstRate);
       setOriginalCgstRate(cgstRate);
 
-      toast({
-        title: 'Success',
-        description: 'GST rates updated successfully',
-      });
+      toast.success('GST rates updated successfully');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to save GST rates';
       setError(errorMessage);
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        variant: 'destructive',
-      });
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }
