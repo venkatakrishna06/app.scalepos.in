@@ -1,15 +1,15 @@
 import {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {
-    ArrowRight,
-    ClipboardList,
-    Clock,
-    DollarSign,
-    Loader2,
-    RefreshCw,
-    ShoppingBag,
-    Table2,
-    TrendingUp
+  ArrowRight,
+  ClipboardList,
+  Clock,
+  IndianRupee,
+  Loader2,
+  RefreshCw,
+  ShoppingBag,
+  Table2,
+  TrendingUp
 } from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {useMenuStore, useOrderStore} from '@/lib/store';
@@ -25,15 +25,13 @@ export function DashboardHome() {
   const { menuItems, fetchMenuItems } = useMenuStore();
 
   // Function to fetch data directly from API
-  const fetchDashboardData = async (skipCache = true) => {
+  const fetchDashboardData = async () => {
     try {
       setLoading(true);
 
-      // Fetch data directly from API and update the stores
-      // Pass skipCache=true to bypass cache and fetch fresh data
       await Promise.all([
-        fetchOrders({period:"day"}, skipCache),
-        fetchMenuItems(skipCache)
+        fetchOrders({period:"day"}),
+        fetchMenuItems()
       ]);
       setLoading(false);
     } catch {
@@ -63,7 +61,7 @@ export function DashboardHome() {
     .filter(order => {
       const orderDate = new Date(order.order_time);
       const today = new Date();
-      return orderDate.toDateString() === today.toDateString();
+      return orderDate.toDateString() === today.toDateString() && order.status === 'paid';
     })
     .reduce((sum, order) => sum + (order.total_amount || 0), 0);
 
@@ -103,13 +101,10 @@ export function DashboardHome() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Today's Sales</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <IndianRupee className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">₹{todaySales.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
-              +20% from last week
-            </p>
           </CardContent>
         </Card>
         <Card>

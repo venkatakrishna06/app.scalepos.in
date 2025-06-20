@@ -1,5 +1,17 @@
 import {useEffect, useMemo, useState} from 'react';
-import {ArrowUpDown, Clock, Coffee, CreditCard, Download, Edit, FileText, Printer, Search, Trash2, User} from 'lucide-react';
+import {
+  ArrowUpDown,
+  Clock,
+  Coffee,
+  CreditCard,
+  Download,
+  Edit,
+  FileText,
+  Printer,
+  Search,
+  Trash2,
+  User
+} from 'lucide-react';
 import {OrdersSkeleton} from '@/components/skeletons/orders-skeleton';
 import {Button} from '@/components/ui/button';
 import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
@@ -10,11 +22,11 @@ import {Input} from '@/components/ui/input';
 import {Tabs, TabsContent} from '@/components/ui/tabs';
 import {FilterDropdownContainer} from '@/components/FilterDropdownContainer';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
 import {Badge} from '@/components/ui/badge';
@@ -23,12 +35,12 @@ import {toast} from '@/lib/toast';
 import {ViewOrdersDialog} from '@/components/view-orders-dialog';
 import {Order} from '@/types';
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog';
 
 export default function Orders() {
@@ -161,6 +173,16 @@ export default function Orders() {
 
   const refreshOrders = async () => {
     try {
+      // Reset all filters to initial state
+      setFilterStatus('all');
+      setFilterTimeframe('today');
+      setFilterPaymentMethod('all');
+      setFilterOrderType('all');
+      setSearchQuery('');
+      setSortBy('newest');
+      setActiveTab('all');
+      // Optionally reset queryParams as well
+      setQueryParams({});
       await refetchOrders();
       toast.success('Orders refreshed successfully');
     } catch (err) {
@@ -473,7 +495,6 @@ export default function Orders() {
                     <SelectItem value="all">All Types</SelectItem>
                     <SelectItem value="dine-in">Dine-in</SelectItem>
                     <SelectItem value="takeaway">Takeaway</SelectItem>
-                    <SelectItem value="delivery">Delivery</SelectItem>
                     <SelectItem value="quick-bill">Quick Bill</SelectItem>
                   </SelectContent>
                 </Select>

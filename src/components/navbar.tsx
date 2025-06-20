@@ -7,12 +7,7 @@ import {useRestaurantStore} from '@/lib/store/restaurant.store';
 import {usePermissions} from '@/hooks/usePermissions';
 import {ThemeToggle} from './theme/theme-toggle';
 import {NotificationDropdown} from './notification-dropdown';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,} from '@/components/ui/dropdown-menu';
 
 interface NavbarProps extends PropsWithChildren {
   toggleSidebar: () => void;

@@ -18,7 +18,7 @@ interface PaymentDialogProps {
 type PaymentStep = 'method' | 'processing' | 'complete';
 
 export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentComplete }: PaymentDialogProps) {
-  const [paymentMethod, setPaymentMethod] = useState<Payment['payment_method']>('card');
+  const [paymentMethod, setPaymentMethod] = useState<Payment['payment_method']>('upi');
   const [currentStep, setCurrentStep] = useState<PaymentStep>('method');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

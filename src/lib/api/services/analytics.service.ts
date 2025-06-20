@@ -1,9 +1,6 @@
 import {api} from '../axios';
 import {API_ENDPOINTS} from '../endpoints';
-import {
-    AnalyticsParams,
-    MenuItemAnalytics,
-} from '@/types/analytics';
+import {AnalyticsParams, MenuItemAnalytics,} from '@/types/analytics';
 
 // Define error type for better type safety
 interface ApiErrorResponse {

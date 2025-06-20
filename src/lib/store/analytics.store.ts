@@ -1,9 +1,6 @@
 import {create} from 'zustand';
 import {analyticsService} from '@/lib/api/services/analytics.service';
-import {
-    AnalyticsParams,
-    MenuItemAnalytics,
-} from '@/types/analytics';
+import {AnalyticsParams, MenuItemAnalytics,} from '@/types/analytics';
 import {toast} from '@/lib/toast';
 
 interface AnalyticsState {

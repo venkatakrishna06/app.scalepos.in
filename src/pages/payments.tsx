@@ -91,7 +91,7 @@ export default function Payments() {
                 <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Order ID</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Table</th>
                 {/*<th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Customer</th>*/}
-                <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Items</th>
+                {/*<th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Items</th>*/}
                 <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Amount</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Method</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Date</th>
@@ -105,14 +105,14 @@ export default function Payments() {
                     <tr key={payment.id} className="border-b">
                       <td className="px-6 py-4 font-medium">Order #{payment.order_id}</td>
                       <td className="px-6 py-4 font-medium">
-                        {order?.table?.table_number ? `Table #${order.table.table_number}` : 'Takeaway'}
+                        {order?.order_type === 'dine-in' ? `Table ${order.table?.table_number}` : order?.order_type === 'takeaway' ? 'Takeaway' : 'Quick Bill'}
                       </td>
                       {/*<td className="px-6 py-4">{order?.customer || 'N/A'}</td>*/}
-                      <td className="px-6 py-4">
-                        <div className="max-w-xs truncate text-sm text-muted-foreground">
-                          {order?.items.map(item => `${item.name} x${item.quantity}`).join(', ')}
-                        </div>
-                      </td>
+                      {/*<td className="px-6 py-4">*/}
+                      {/*  <div className="max-w-xs truncate text-sm text-muted-foreground">*/}
+                      {/*    {order?.items.map(item => `${item.name} x${item.quantity}`).join(', ')}*/}
+                      {/*  </div>*/}
+                      {/*</td>*/}
                       <td className="px-6 py-4 font-medium">₹{payment.amount_paid.toFixed(2)}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
