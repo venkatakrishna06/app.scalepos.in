@@ -6,6 +6,7 @@ import {
     FileText,
     LayoutGrid,
     LayoutList,
+    MoreVertical,
     Plus,
     Search,
     Tag,
@@ -17,10 +18,15 @@ import {Button} from '@/components/ui/button';
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from '@/components/ui/dialog';
 import {Input} from '@/components/ui/input';
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {FilterDropdownContainer} from '@/components/FilterDropdownContainer';
-import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
-import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,} from '@/components/ui/tooltip';
-import {Badge} from '@/components/ui/badge';
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card';
 import {MenuItemForm} from '@/components/forms/menu-item-form';
 import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
 import {MenuItem} from '@/types';
@@ -124,7 +130,6 @@ export default function Menu() {
           id, 
           item: { available: !item.available } 
         });
-        toast.success('Item availability updated');
       }
     } catch (err) {
       handleError(err);
@@ -245,88 +250,116 @@ export default function Menu() {
           viewMode === 'grid' ? "md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "grid-cols-1"
         )}>
           {filteredItems.map((item) => (
-            <Card key={item.id} className="overflow-hidden">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <CardTitle className="text-lg">{item.name}</CardTitle>
-                    <Badge variant={item.available ? "default" : "destructive"}>
-                      {item.available ? "Available" : "Unavailable"}
-                    </Badge>
+            <Card 
+              key={item.id} 
+              className="overflow-hidden group transition-all duration-200 hover:shadow-md hover:border-primary/20"
+            >
+              <div className="relative">
+                {/* Larger, more prominent image */}
+                <div className="relative w-full h-48 overflow-hidden">
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "https://via.placeholder.com/400?text=No+Image";
+                    }}
+                  />
+                  {/* Price tag overlay */}
+                  <div className="absolute bottom-3 left-3 bg-background/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm border">
+                    <p className="text-base font-bold">₹{item.price.toFixed(2)}</p>
                   </div>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8"
-                          onClick={() => handleToggleAvailability(item.id)}
-                          disabled={isSubmitting}
-                        >
-                          {item.available ? (
-                            <XCircle className="h-4 w-4 text-muted-foreground" />
-                          ) : (
-                            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                          )}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{item.available ? "Mark as Unavailable" : "Mark as Available"}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
                 </div>
-                <CardDescription className="line-clamp-2 mt-1">
+
+                {/* Availability badge and actions - positioned on top of image */}
+                <div className="absolute top-3 right-3 flex items-center gap-2">
+                  <div className={cn(
+                    "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium",
+                    item.available 
+                      ? "bg-green-100 text-green-700 dark:bg-green-900/60 dark:text-green-300" 
+                      : "bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-300"
+                  )}>
+                    {item.available ? (
+                      <>
+                        <CheckCircle className="h-3.5 w-3.5" />
+                        <span>Available</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="h-3.5 w-3.5" />
+                        <span>Unavailable</span>
+                      </>
+                    )}
+                  </div>
+
+                  {/* 3-dots action menu */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="secondary" 
+                        size="icon" 
+                        className="h-8 w-8 bg-background/90 backdrop-blur-sm hover:bg-background"
+                        disabled={isSubmitting}
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem 
+                        onClick={() => handleToggleAvailability(item.id)}
+                        disabled={isSubmitting}
+                      >
+                        {item.available ? (
+                          <>
+                            <XCircle className="mr-2 h-4 w-4" />
+                            <span>Unavailable</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            <span>Available</span>
+                          </>
+                        )}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          setEditingItem(item);
+                          setShowAddDialog(true);
+                        }}
+                        disabled={isSubmitting}
+                      >
+                        <Edit2 className="mr-2 h-4 w-4" />
+                        <span>Edit</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={() => handleDelete(item.id)}
+                        disabled={isSubmitting}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        <span>Delete</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+
+              <CardHeader className="pb-2 pt-3">
+                <div className="flex items-start justify-between">
+                  <CardTitle className="text-lg font-semibold line-clamp-1">{item.name}</CardTitle>
+                </div>
+                <CardDescription className="line-clamp-2 mt-1 text-sm">
                   {item.description}
                 </CardDescription>
               </CardHeader>
 
-              <CardContent className="pb-3">
-                <div className="flex items-center gap-4">
-                  <div className="relative h-20 w-20 overflow-hidden rounded-md">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="h-full w-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = "https://via.placeholder.com/200?text=No+Image";
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Tag className="h-4 w-4 text-muted-foreground" />
-                      <span>Category: {item.category.name}</span>
-                    </div>
-                    <p className="mt-2 text-lg font-semibold">₹{item.price.toFixed(2)}</p>
-                  </div>
+              <CardContent className="pb-4 pt-0">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Tag className="h-4 w-4" />
+                  <span>{item.category.name}</span>
                 </div>
               </CardContent>
-
-              <CardFooter className="flex items-center justify-end gap-2 border-t pt-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setEditingItem(item);
-                    setShowAddDialog(true);
-                  }}
-                  disabled={isSubmitting}
-                >
-                  <Edit2 className="mr-2 h-4 w-4" />
-                  Edit
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDelete(item.id)}
-                  disabled={isSubmitting}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
-                </Button>
-              </CardFooter>
             </Card>
           ))}
 

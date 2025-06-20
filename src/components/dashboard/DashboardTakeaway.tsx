@@ -531,7 +531,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
             </div>
           </div>
 
-          <div className="mt-4 grid gap-3 grid-cols-1 sm:grid-cols-2">
+          <div className="mt-1 grid gap-3 grid-cols-1 sm:grid-cols-2">
             {filteredItems.map(item => (
               <MenuItemCard
                 key={item.id}
@@ -560,7 +560,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
           isCartOpen ? "fixed inset-0 z-50 bg-background" : "hidden", // Toggle on mobile
           "md:static md:z-auto" // Reset on desktop
         )}>
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col" style={{ height: '92%' }}>
             {/* Mobile close button */}
             <div className="flex items-center justify-between p-4 md:hidden">
               <h2 className="text-base font-semibold">Your Order</h2>
