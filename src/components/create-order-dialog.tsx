@@ -509,7 +509,7 @@ function CreateOrderDialogComponent({
             <div className="flex flex-1 flex-col md:flex-row overflow-hidden">
               {/* Categories Sidebar - Collapsible on mobile */}
               <div className={cn(
-                  "border-b bg-muted p-2 md:w-48 md:border-b-0 md:border-r dark:border-border overflow-y-auto",
+                  "border-b bg-muted p-2 md:w-48 md:border-b-0 md:border-r dark:border-border overflow-y-auto custom-scrollbar",
                   "md:relative md:block", // Always visible on desktop
                   isSidebarOpen ? "block" : "hidden", // Toggle on mobile
                   "max-h-[50vh] md:max-h-none shrink-0" // Limit height on mobile
@@ -636,7 +636,7 @@ function CreateOrderDialogComponent({
                     </div>
                   </div>
 
-                  <div className="flex-1 overflow-y-auto p-2 xs:p-3 sm:p-3 pt-0">
+                  <div className="flex-1 overflow-y-auto p-2 xs:p-3 sm:p-3 pt-0 custom-scrollbar">
                     <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 auto-rows-max">
                       {filteredItems.length > 0 ? filteredItems.map(item => (
                           <div
@@ -700,7 +700,7 @@ function CreateOrderDialogComponent({
                       <h2 className="text-base font-semibold">Order Summary</h2>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto px-3 pb-3">
+                    <div className="flex-1 overflow-y-auto px-3 pb-3 custom-scrollbar">
                       {orderItems.length === 0 ? (
                           <div className="flex h-40 flex-col items-center justify-center rounded-md border border-dashed p-4 text-center">
                             <ShoppingCart className="h-8 w-8 text-muted-foreground mb-2" />

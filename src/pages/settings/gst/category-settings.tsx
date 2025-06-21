@@ -2,10 +2,11 @@ import {useEffect, useState} from 'react';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Button} from '@/components/ui/button';
 import {Checkbox} from '@/components/ui/checkbox';
-import {ChevronDown, Loader2} from 'lucide-react';
+import {ChevronDown, Loader2, Search, XCircle} from 'lucide-react';
 import {menuService} from '@/lib/api/services';
 import {Category} from '@/types';
 import {toast} from '@/lib/toast';
+import {Input} from '@/components/ui/input';
 
 interface CategoryGstSettingsProps {
   categories: Category[];
@@ -18,10 +19,18 @@ export function CategoryGstSettings({ categories, onUpdate, onMenuItemsRefresh }
   const [localCategories, setLocalCategories] = useState<Category[]>(categories);
   const [originalCategories, setOriginalCategories] = useState<Category[]>(categories);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Filter categories based on search query
+  const filteredCategories = searchQuery
+    ? localCategories.filter(category => 
+        category.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : localCategories;
 
   // Group categories by parent/child relationship
-  const mainCategories = localCategories.filter(cat => !cat.parent_category_id);
-  const subCategoriesByParent = localCategories.reduce((acc, cat) => {
+  const mainCategories = filteredCategories.filter(cat => !cat.parent_category_id);
+  const subCategoriesByParent = filteredCategories.reduce((acc, cat) => {
     if (cat.parent_category_id) {
       if (!acc[cat.parent_category_id]) {
         acc[cat.parent_category_id] = [];
@@ -155,6 +164,29 @@ export function CategoryGstSettings({ categories, onUpdate, onMenuItemsRefresh }
             {error}
           </div>
         )}
+
+        <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search categories..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-10"
+            />
+            {searchQuery && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full p-0" 
+                onClick={() => setSearchQuery('')}
+              >
+                <XCircle className="h-4 w-4" />
+                <span className="sr-only">Clear search</span>
+              </Button>
+            )}
+          </div>
+        </div>
 
         <p className="mb-4 text-sm text-muted-foreground">
           Select which menu categories should be included in GST calculations

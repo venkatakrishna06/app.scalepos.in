@@ -24,7 +24,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
   // Fetch restaurant data when dialog opens
   useEffect(() => {
     if (open && !restaurant) {
-      fetchRestaurant();
+
     }
   }, [open, restaurant, fetchRestaurant]);
 
@@ -105,7 +105,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
           <DialogHeader>
             <DialogTitle>Current Orders</DialogTitle>
           </DialogHeader>
-          <div className="max-h-[70vh] overflow-y-auto px-1">
+          <div className="max-h-[70vh] overflow-y-auto px-1 custom-scrollbar">
             {activeOrders.length > 0 && (
                 <div className="mb-6">
                   <h3 className="mb-4 text-lg font-semibold">Orders</h3>

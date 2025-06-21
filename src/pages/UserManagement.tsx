@@ -227,7 +227,7 @@ const UserManagement: React.FC = () => {
                 : 'Fill in the details to add a new user.'}
             </DialogDescription>
           </DialogHeader>
-          <div className="max-h-[70vh] overflow-y-auto pr-1">
+          <div className="max-h-[70vh] overflow-y-auto pr-1 custom-scrollbar">
             <UserCreationForm 
               initialData={editingUser || undefined}
               onSuccess={handleFormSubmit}

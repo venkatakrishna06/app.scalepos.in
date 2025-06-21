@@ -426,7 +426,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
   }, [orderItems, user?.staff_id, calculateOrderTotals]);
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] flex-col md:flex-row gap-6">
+    <div className="flex h-[calc(100vh-8rem)] flex-col md:flex-row gap-1">
       {/* Mobile header with toggle buttons */}
       <div className="flex items-center justify-between md:hidden p-2 border-b">
         <Button 
@@ -560,7 +560,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
           isCartOpen ? "fixed inset-0 z-50 bg-background" : "hidden", // Toggle on mobile
           "md:static md:z-auto" // Reset on desktop
         )}>
-          <div className="flex flex-col" style={{ height: '92%' }}>
+          <div className="flex flex-col h-full">
             {/* Mobile close button */}
             <div className="flex items-center justify-between p-4 md:hidden">
               <h2 className="text-base font-semibold">Your Order</h2>

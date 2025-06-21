@@ -55,10 +55,8 @@ export default function Staff() {
       setIsSubmitting(true);
       if (editingStaff) {
         await updateStaff(editingStaff.id, data);
-        toast.success('Staff member updated successfully');
       } else {
         await addStaff(data);
-        toast.success('Staff member added successfully');
       }
       setShowDialog(false);
       setEditingStaff(null);
@@ -272,7 +270,7 @@ export default function Staff() {
                 : 'Fill in the details to add a new staff member.'}
             </DialogDescription>
           </DialogHeader>
-          <div className="max-h-[70vh] overflow-y-auto pr-1">
+          <div className="max-h-[70vh] overflow-y-auto pr-1 custom-scrollbar">
             <StaffForm
               onSubmit={handleSubmit}
               initialData={editingStaff || undefined}

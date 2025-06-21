@@ -13,7 +13,7 @@ export default function SettingsSidebar() {
   const { user } = useAuthStore();
 
   return (
-    <div className="h-full w-full overflow-y-auto overflow-x-hidden border-r">
+    <div className="h-full w-full overflow-y-auto overflow-x-hidden border-r custom-scrollbar">
       <div className=" px-3">
 
         <nav className="space-y-2 px-1">

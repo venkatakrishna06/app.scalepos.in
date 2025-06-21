@@ -42,9 +42,7 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
       setPaymentMethod('card');
 
       // Fetch restaurant data if not already loaded
-      if (!restaurant) {
-        fetchRestaurant();
-      }
+
     }
   }, [open, restaurant, fetchRestaurant]);
 

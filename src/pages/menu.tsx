@@ -1,6 +1,7 @@
 import {useEffect, useState} from 'react';
 import {
     AlertCircle,
+    ArrowUpRight,
     CheckCircle,
     Edit2,
     FileText,
@@ -25,7 +26,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {FilterDropdownContainer} from '@/components/FilterDropdownContainer';
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card';
 import {MenuItemForm} from '@/components/forms/menu-item-form';
 import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
@@ -100,10 +100,11 @@ export default function Menu() {
         setEditingItem(null);
       } else {
         createItem({ ...data, available: true });
+        toast.success('Menu item created successfully');
       }
       setShowAddDialog(false);
-    } catch (err) {
-
+    } catch (error) {
+      handleError(error);
       toast.error('Failed to save menu item');
     } finally {
       setIsSubmitting(false);
@@ -114,7 +115,9 @@ export default function Menu() {
     try {
       setIsSubmitting(true);
       deleteItem(id);
-    } catch (err) {
+      toast.success('Menu item deleted successfully');
+    } catch (error) {
+      handleError(error);
       toast.error('Failed to delete menu item');
     } finally {
       setIsSubmitting(false);
@@ -208,13 +211,25 @@ export default function Menu() {
               placeholder="Search by name, description..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
+              className="pl-9 h-10"
             />
+            {searchQuery && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full p-0" 
+                onClick={() => setSearchQuery('')}
+              >
+                <XCircle className="h-4 w-4" />
+                <span className="sr-only">Clear search</span>
+              </Button>
+            )}
           </div>
 
-          <FilterDropdownContainer>
+          <div className="flex flex-wrap gap-2 sm:flex-nowrap">
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-[130px] sm:w-[180px]">
+              <SelectTrigger className="h-10 w-full sm:w-[180px]">
+                <Tag className="mr-2 h-4 w-4 text-muted-foreground" />
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
@@ -230,7 +245,14 @@ export default function Menu() {
             </Select>
 
             <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
-              <SelectTrigger className="w-[130px] sm:w-[180px]">
+              <SelectTrigger className="h-10 w-full sm:w-[180px]">
+                {availabilityFilter === 'available' ? (
+                  <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                ) : availabilityFilter === 'unavailable' ? (
+                  <XCircle className="mr-2 h-4 w-4 text-red-500" />
+                ) : (
+                  <AlertCircle className="mr-2 h-4 w-4 text-muted-foreground" />
+                )}
                 <SelectValue placeholder="Availability" />
               </SelectTrigger>
               <SelectContent>
@@ -239,148 +261,286 @@ export default function Menu() {
                 <SelectItem value="unavailable">Unavailable</SelectItem>
               </SelectContent>
             </Select>
-          </FilterDropdownContainer>
-        </div>
 
+            <Select value={sortField} onValueChange={(value) => setSortField(value as SortField)}>
+              <SelectTrigger className="h-10 w-full sm:w-[180px]">
+                <LayoutList className="mr-2 h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name">Name</SelectItem>
+                <SelectItem value="price">Price</SelectItem>
+                <SelectItem value="category">Category</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 flex-shrink-0"
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              aria-label={sortOrder === 'asc' ? 'Sort descending' : 'Sort ascending'}
+            >
+              {sortOrder === 'asc' ? (
+                <ArrowUpRight className="h-4 w-4" />
+              ) : (
+                <ArrowUpRight className="h-4 w-4 rotate-180" />
+              )}
+            </Button>
+          </div>
+        </div>
       </div>
 
+      {/* Menu items display */}
       <div className="mt-6">
-        <div className={cn(
-          "grid gap-6",
-          viewMode === 'grid' ? "md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "grid-cols-1"
-        )}>
-          {filteredItems.map((item) => (
-            <Card 
-              key={item.id} 
-              className="overflow-hidden group transition-all duration-200 hover:shadow-md hover:border-primary/20"
-            >
-              <div className="relative">
-                {/* Larger, more prominent image */}
-                <div className="relative w-full h-48 overflow-hidden">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "https://via.placeholder.com/400?text=No+Image";
-                    }}
-                  />
-                  {/* Price tag overlay */}
-                  <div className="absolute bottom-3 left-3 bg-background/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm border">
-                    <p className="text-base font-bold">₹{item.price.toFixed(2)}</p>
+        {viewMode === 'grid' ? (
+          // Grid View
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredItems.map((item) => (
+              <Card 
+                key={item.id} 
+                className="overflow-hidden group transition-all duration-200 hover:shadow-md hover:border-primary/20"
+              >
+                <div className="relative">
+                  {/* Item image */}
+                  <div className="relative w-full h-48 overflow-hidden bg-muted/30">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "https://via.placeholder.com/400?text=No+Image";
+                      }}
+                    />
+                    {/* Price tag overlay */}
+                    <div className="absolute bottom-3 left-3 bg-background/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm border">
+                      <p className="text-base font-bold">₹{item.price.toFixed(2)}</p>
+                    </div>
+                  </div>
+
+                  {/* Availability badge and actions */}
+                  <div className="absolute top-3 right-3 flex items-center gap-2">
+                    <div className={cn(
+                      "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium shadow-sm",
+                      item.available 
+                        ? "bg-green-100 text-green-700 dark:bg-green-900/60 dark:text-green-300" 
+                        : "bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-300"
+                    )}>
+                      {item.available ? (
+                        <>
+                          <CheckCircle className="h-3.5 w-3.5" />
+                          <span>Available</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="h-3.5 w-3.5" />
+                          <span>Unavailable</span>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Actions menu */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="secondary" 
+                          size="icon" 
+                          className="h-8 w-8 bg-background/90 backdrop-blur-sm hover:bg-background shadow-sm"
+                          disabled={isSubmitting}
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem 
+                          onClick={() => handleToggleAvailability(item.id)}
+                          disabled={isSubmitting}
+                        >
+                          {item.available ? (
+                            <>
+                              <XCircle className="mr-2 h-4 w-4" />
+                              <span>Mark Unavailable</span>
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              <span>Mark Available</span>
+                            </>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => {
+                            setEditingItem(item);
+                            setShowAddDialog(true);
+                          }}
+                          disabled={isSubmitting}
+                        >
+                          <Edit2 className="mr-2 h-4 w-4" />
+                          <span>Edit Item</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          onClick={() => handleDelete(item.id)}
+                          disabled={isSubmitting}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          <span>Delete Item</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
 
-                {/* Availability badge and actions - positioned on top of image */}
-                <div className="absolute top-3 right-3 flex items-center gap-2">
-                  <div className={cn(
-                    "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium",
-                    item.available 
-                      ? "bg-green-100 text-green-700 dark:bg-green-900/60 dark:text-green-300" 
-                      : "bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-300"
-                  )}>
-                    {item.available ? (
-                      <>
-                        <CheckCircle className="h-3.5 w-3.5" />
-                        <span>Available</span>
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="h-3.5 w-3.5" />
-                        <span>Unavailable</span>
-                      </>
-                    )}
+                <CardHeader className="pb-2 pt-3">
+                  <div className="flex items-start justify-between">
+                    <CardTitle className="text-lg font-semibold line-clamp-1">{item.name}</CardTitle>
+                  </div>
+                  <CardDescription className="line-clamp-2 mt-1 text-sm">
+                    {item.description || "No description available"}
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent className="pb-4 pt-0">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Tag className="h-4 w-4" />
+                    <span>{item.category.name}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          // List View
+          <div className="space-y-3">
+            {filteredItems.map((item) => (
+              <div 
+                key={item.id} 
+                className="flex flex-col sm:flex-row gap-4 p-3 border rounded-lg hover:shadow-sm hover:border-primary/20 transition-all duration-200 bg-card"
+              >
+                {/* Item image - smaller in list view */}
+                <div className="relative w-full sm:w-24 h-24 sm:h-24 flex-shrink-0 overflow-hidden rounded-md bg-muted/30">
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "https://via.placeholder.com/200?text=No+Image";
+                    }}
+                  />
+                </div>
+
+                {/* Item details */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div>
+                      <h3 className="text-base font-semibold line-clamp-1">{item.name}</h3>
+                      <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5">
+                        {item.description || "No description available"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1 sm:mt-0">
+                      <div className={cn(
+                        "flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium",
+                        item.available 
+                          ? "bg-green-100 text-green-700 dark:bg-green-900/60 dark:text-green-300" 
+                          : "bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-300"
+                      )}>
+                        {item.available ? (
+                          <>
+                            <CheckCircle className="h-3 w-3" />
+                            <span>Available</span>
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="h-3 w-3" />
+                            <span>Unavailable</span>
+                          </>
+                        )}
+                      </div>
+                      <span className="font-semibold">₹{item.price.toFixed(2)}</span>
+                    </div>
                   </div>
 
-                  {/* 3-dots action menu */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Tag className="h-3.5 w-3.5" />
+                      <span>{item.category.name}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
                       <Button 
-                        variant="secondary" 
-                        size="icon" 
-                        className="h-8 w-8 bg-background/90 backdrop-blur-sm hover:bg-background"
-                        disabled={isSubmitting}
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 px-2 text-xs"
                         onClick={() => handleToggleAvailability(item.id)}
                         disabled={isSubmitting}
                       >
                         {item.available ? (
                           <>
-                            <XCircle className="mr-2 h-4 w-4" />
+                            <XCircle className="mr-1.5 h-3.5 w-3.5" />
                             <span>Unavailable</span>
                           </>
                         ) : (
                           <>
-                            <CheckCircle className="mr-2 h-4 w-4" />
+                            <CheckCircle className="mr-1.5 h-3.5 w-3.5" />
                             <span>Available</span>
                           </>
                         )}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
+                      </Button>
+
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 px-2 text-xs"
                         onClick={() => {
                           setEditingItem(item);
                           setShowAddDialog(true);
                         }}
                         disabled={isSubmitting}
                       >
-                        <Edit2 className="mr-2 h-4 w-4" />
+                        <Edit2 className="mr-1.5 h-3.5 w-3.5" />
                         <span>Edit</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem 
+                      </Button>
+
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 px-2 text-xs text-destructive hover:text-destructive"
                         onClick={() => handleDelete(item.id)}
                         disabled={isSubmitting}
-                        className="text-destructive focus:text-destructive"
                       >
-                        <Trash2 className="mr-2 h-4 w-4" />
+                        <Trash2 className="mr-1.5 h-3.5 w-3.5" />
                         <span>Delete</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
+            ))}
+          </div>
+        )}
 
-              <CardHeader className="pb-2 pt-3">
-                <div className="flex items-start justify-between">
-                  <CardTitle className="text-lg font-semibold line-clamp-1">{item.name}</CardTitle>
-                </div>
-                <CardDescription className="line-clamp-2 mt-1 text-sm">
-                  {item.description}
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent className="pb-4 pt-0">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Tag className="h-4 w-4" />
-                  <span>{item.category.name}</span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-
-          {filteredItems.length === 0 && (
-            <div className="col-span-full rounded-lg border border-dashed p-8 text-center">
-              <FileText className="mx-auto h-8 w-8 text-muted-foreground" />
-              <h3 className="mt-2 text-lg font-semibold">No Menu Items Found</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Try adjusting your filters or search criteria
-              </p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => setShowAddDialog(true)}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add New Item
-              </Button>
-            </div>
-          )}
-        </div>
+        {/* Empty state */}
+        {filteredItems.length === 0 && (
+          <div className="rounded-lg border border-dashed p-8 text-center">
+            <FileText className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
+            <h3 className="mt-4 text-lg font-semibold">No Menu Items Found</h3>
+            <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
+              {searchQuery 
+                ? `No items match "${searchQuery}". Try adjusting your search or filters.` 
+                : "Try adjusting your filters or add a new menu item."}
+            </p>
+            <Button
+              variant="default"
+              className="mt-6"
+              onClick={() => setShowAddDialog(true)}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add New Item
+            </Button>
+          </div>
+        )}
       </div>
 
       <Dialog

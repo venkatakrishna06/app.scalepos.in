@@ -11,6 +11,7 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Initialize WebSocket connection
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -19,7 +20,9 @@ export default function Layout({ children }: LayoutProps) {
   // Check if we're on mobile when component mounts
   useEffect(() => {
     const checkIfMobile = () => {
-      setIsSidebarOpen(window.innerWidth >= 768); // 768px is the md breakpoint in Tailwind
+      const mobile = window.innerWidth < 1024; // Use lg breakpoint (1024px) instead of md
+      setIsMobile(mobile);
+      setIsSidebarOpen(!mobile); // Open sidebar by default on desktop
     };
 
     // Initial check
@@ -40,25 +43,26 @@ export default function Layout({ children }: LayoutProps) {
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       <Navbar 
         toggleSidebar={toggleSidebar} 
+        isSidebarOpen={isSidebarOpen}
       />
 
       <div className="flex flex-1 overflow-hidden">
         {/* Overlay - only visible when sidebar is open on mobile */}
-        {isSidebarOpen && (
+        {isSidebarOpen && isMobile && (
           <div 
-            className="fixed inset-0 bg-black/50 z-30 md:hidden" 
+            className="fixed inset-0 bg-black/50 z-30 lg:hidden" 
             onClick={toggleSidebar}
           />
         )}
 
-        {/* Sidebar - fixed width with independent scroll */}
+        {/* Sidebar - responsive width with independent scroll */}
         <div className={cn(
           "flex-shrink-0 overflow-hidden bg-white dark:bg-gray-800",
-          "fixed md:relative h-screen z-40 transition-all duration-300 ease-in-out",
-          "md:w-40", // Width on desktop
+          "fixed lg:relative h-screen z-40 transition-all duration-300 ease-in-out",
+          "lg:w-44 xl:w-52", // Wider on desktop for better readability
           isSidebarOpen 
-            ? "w-[240px] translate-x-0 shadow-xl" // Width on mobile when open with shadow
-            : "w-[240px] -translate-x-full md:translate-x-0" // Width on mobile when closed
+            ? "w-[280px] translate-x-0 shadow-xl" // Wider on mobile when open
+            : "w-[280px] -translate-x-full lg:translate-x-0" // Hidden on mobile when closed
         )}>
           <Sidebar closeSidebar={toggleSidebar} />
         </div>
@@ -66,19 +70,22 @@ export default function Layout({ children }: LayoutProps) {
         {/* Main content - scrolls independently */}
         <main className={cn(
           "flex-1 overflow-y-auto transition-all duration-300 ease-in-out custom-scrollbar",
-          isSidebarOpen ? "md:ml-0" : "ml-0",
-          "pb-20 md:pb-0" // Increased padding at the bottom for mobile nav to prevent overlap
+          isSidebarOpen && !isMobile ? "lg:ml-0" : "ml-0",
+          "pb-20 lg:pb-6" // Increased padding at the bottom for mobile nav to prevent overlap
         )}>
-          <div className="mx-auto max-w-7xl p-4 pb-2 md:pb-4">
+          <div className="mx-auto max-w-7xl p-3 sm:p-4 lg:p-6">
             {children}
           </div>
         </main>
       </div>
 
-      {/* Mobile Navigation */}
-      <MobileNav 
-        toggleSidebar={toggleSidebar} 
-      />
+      {/* Mobile Navigation - only visible on mobile */}
+      {isMobile && (
+        <MobileNav 
+          toggleSidebar={toggleSidebar} 
+          isSidebarOpen={isSidebarOpen}
+        />
+      )}
     </div>
   );
 }

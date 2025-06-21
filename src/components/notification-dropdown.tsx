@@ -16,13 +16,13 @@ export function NotificationDropdown() {
   const navigate = useNavigate();
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotifications } = useNotificationStore();
   const [isOpen, setIsOpen] = useState(false);
-  
+
   // Get only the 10 most recent notifications
   const recentNotifications = notifications.slice(0, 10);
-  
+
   const handleNotificationClick = (notification: Notification) => {
     markAsRead(notification.id);
-    
+
     // Navigate based on notification type
     switch (notification.type) {
       case 'table_update':
@@ -36,10 +36,10 @@ export function NotificationDropdown() {
         navigate('/menu');
         break;
     }
-    
+
     setIsOpen(false);
   };
-  
+
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
@@ -52,7 +52,7 @@ export function NotificationDropdown() {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 max-h-[70vh] overflow-y-auto">
+      <DropdownMenuContent align="end" className="w-80 max-h-[70vh] overflow-y-auto custom-scrollbar">
         <div className="flex justify-between items-center p-2">
           <h3 className="font-semibold">Notifications</h3>
           <div className="flex gap-2">
@@ -65,7 +65,7 @@ export function NotificationDropdown() {
           </div>
         </div>
         <DropdownMenuSeparator />
-        
+
         {recentNotifications.length === 0 ? (
           <div className="p-4 text-center text-muted-foreground">
             No notifications
