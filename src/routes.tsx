@@ -20,6 +20,8 @@ import ProfileSettings from '@/pages/settings/profile-settings';
 import GstSettings from '@/pages/settings/gst-settings';
 import Unauthorized from '@/pages/unauthorized';
 import QuickBill from "@/pages/quick-bill.tsx";
+import CreateOrderPage from '@/pages/create-order';
+import ViewOrdersPage from '@/pages/view-orders';
 
 // Component to handle role-based redirection
 const RoleBasedRedirect = () => {
@@ -91,6 +93,24 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute requiredRoles={['admin', 'manager', 'server']}>
             <Tables />
+          </ProtectedRoute>
+        } 
+      />
+
+      <Route 
+        path="/create-order/:tableId" 
+        element={
+          <ProtectedRoute requiredRoles={['admin', 'manager', 'server']}>
+            <CreateOrderPage />
+          </ProtectedRoute>
+        } 
+      />
+
+      <Route 
+        path="/view-orders/:tableId" 
+        element={
+          <ProtectedRoute requiredRoles={['admin', 'manager', 'server']}>
+            <ViewOrdersPage />
           </ProtectedRoute>
         } 
       />

@@ -38,10 +38,8 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
       setIsSubmitting(false);
       setError(null);
       setCashGiven('');
-      // Set default payment method to 'card' instead of 'cash'
-      setPaymentMethod('card');
-
-      // Fetch restaurant data if not already loaded
+      // Set default payment method to 'upi' instead of 'card'
+      setPaymentMethod('upi');
 
     }
   }, [open, restaurant, fetchRestaurant]);
@@ -580,6 +578,18 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
                 <div className="rounded-lg p-3">
                   <h3 className="text-sm font-semibold mb-2">Payment Method</h3>
                   <div className="space-y-2">
+                    {/* UPI Option */}
+                    <div className="flex items-center p-2 rounded-lg">
+                      <input
+                          type="radio"
+                          id="upi-payment"
+                          name="payment-method"
+                          className="mr-2"
+                          checked={paymentMethod === 'upi'}
+                          onChange={() => setPaymentMethod('upi')}
+                      />
+                      <label htmlFor="upi-payment" className="flex-1 text-sm">UPI (Pay with UPI)</label>
+                    </div>
                     {/* Card Option */}
                     <div className="flex items-center p-2 rounded-lg">
                       <input
@@ -593,18 +603,7 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
                       <label htmlFor="card-payment" className="flex-1 text-sm">Card (Pay with Credit/Debit Card)</label>
                     </div>
 
-                    {/* UPI Option */}
-                    <div className="flex items-center p-2 rounded-lg">
-                      <input
-                          type="radio"
-                          id="upi-payment"
-                          name="payment-method"
-                          className="mr-2"
-                          checked={paymentMethod === 'upi'}
-                          onChange={() => setPaymentMethod('upi')}
-                      />
-                      <label htmlFor="upi-payment" className="flex-1 text-sm">UPI (Pay with UPI)</label>
-                    </div>
+
 
                     {/* Cash Option */}
                     <div className="flex items-center p-2 rounded-lg">

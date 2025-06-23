@@ -96,7 +96,6 @@ export default function Menu() {
       setIsSubmitting(true);
       if (editingItem) {
         updateItem({ id: editingItem.id, item: data });
-        toast.success('Menu item updated successfully');
         setEditingItem(null);
       } else {
         createItem({ ...data, available: true });

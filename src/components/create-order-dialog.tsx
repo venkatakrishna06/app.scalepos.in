@@ -481,29 +481,18 @@ function CreateOrderDialogComponent({
             onClose={!isSubmitting ? onClose : undefined}
             className="h-[90vh] max-h-[90vh] max-w-[90vw] md:max-w-[90vw] lg:max-w-[80vw] p-0 sm:p-2 overflow-hidden">
           <div className="flex h-full flex-col overflow-hidden">
-            {/* Mobile header with toggle buttons */}
-            <div className="flex items-center justify-between md:hidden p-2 border-b shrink-0">
+            {/* Mobile header with toggle button and centered text */}
+            <div className="flex items-center md:hidden p-2 border-b shrink-0">
               <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                  className="absolute left-2"
               >
                 <MenuIcon className="h-5 w-5" />
               </Button>
-              <h2 className="text-lg font-semibold">{table_id ? `Table ${table_id}` : 'Takeaway Order'}</h2>
-              <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative"
-                  onClick={() => setIsCartOpen(!isCartOpen)}
-              >
-                <ShoppingCart className="h-5 w-5" />
-                {totalItems > 0 && (
-                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
-                    {totalItems}
-                  </span>
-                )}
-              </Button>
+              <h2 className="text-lg font-semibold flex-1 text-center">{table_id ? `Table ${table_id}` : 'Takeaway Order'}</h2>
+              <div className="w-10"></div> {/* Spacer to help with centering */}
             </div>
 
             <div className="flex flex-1 flex-col md:flex-row overflow-hidden">
@@ -519,10 +508,10 @@ function CreateOrderDialogComponent({
                   <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7"
+                      className="h-8 w-8"
                       onClick={() => setIsSidebarOpen(false)}
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-5 w-5" />
                   </Button>
                 </div>
 
@@ -689,10 +678,10 @@ function CreateOrderDialogComponent({
                       <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7"
+                          className="h-8 w-8"
                           onClick={() => setIsCartOpen(false)}
                       >
-                        <X className="h-4 w-4" />
+                        <X className="h-5 w-5" />
                       </Button>
                     </div>
 

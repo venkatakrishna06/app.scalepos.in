@@ -2,10 +2,8 @@ import {useEffect, useRef, useState} from 'react';
 import {Merge, Plus, Search} from 'lucide-react';
 import {TablesSkeleton} from '@/components/skeletons/tables-skeleton';
 import {Button} from '@/components/ui/button';
-import {CreateOrderDialog} from '@/components/create-order-dialog';
 import {PaymentDialog} from '@/components/payment-dialog';
 import {TableManagementDialog} from '@/components/table-management-dialog';
-import {ViewOrdersDialog} from '@/components/view-orders-dialog';
 import {TableReservationDialog} from '@/components/table-reservation-dialog';
 import {useMenuStore, useOrderStore, useTableStore} from '@/lib/store';
 import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
@@ -18,6 +16,7 @@ import {FilterDropdownContainer} from '@/components/FilterDropdownContainer';
 import {useTable} from '@/lib/hooks/useTable';
 import {useMenu} from '@/lib/hooks/useMenu';
 import {useOrder} from '@/lib/hooks/useOrder';
+import {useNavigate} from 'react-router-dom';
 
 export default function Tables() {
   // Use both Zustand store and React Query hook
@@ -25,6 +24,7 @@ export default function Tables() {
   const { error: ordersError, getOrdersByTable, fetchOrders } = useOrderStore();
   const { fetchMenuItems, fetchCategories } = useMenuStore();
   const { handleError } = useErrorHandler();
+  const navigate = useNavigate();
 
   // Add React Query hooks to populate DevTools
   // Tables
@@ -51,10 +51,7 @@ export default function Tables() {
 
   const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [isNewOrder, setIsNewOrder] = useState(false);
-  const [showOrderDialog, setShowOrderDialog] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const [showOrdersDialog, setShowOrdersDialog] = useState(false);
   const [tableManagementAction, setTableManagementAction] = useState<'add' | 'merge' | 'split' | null>(null);
 
   // Enhanced filtering and search
@@ -111,19 +108,9 @@ export default function Tables() {
     }
   };
 
-  const handleNewOrder = (tableId: number, isNew: boolean = true) => {
-    setSelectedTableId(tableId);
-    setIsNewOrder(isNew);
-    setShowOrderDialog(true);
-    if (!isNew) {
-      const tableOrders = getOrdersByTable(tableId);
-      const activeOrder = tableOrders.find(order =>
-          order.status !== 'paid' && order.status !== 'cancelled'
-      );
-      if (activeOrder) {
-        setSelectedOrder(activeOrder);
-      }
-    }
+  const handleNewOrder = (tableId: number) => {
+    // Navigate to the create order page with the table ID
+    navigate(`/create-order/${tableId}`);
   };
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -177,15 +164,10 @@ export default function Tables() {
   };
 
   const handleViewOrders = (tableId: number) => {
-    setSelectedTableId(tableId);
-    setShowOrdersDialog(true);
+    // Navigate to the view orders page with the table ID
+    navigate(`/view-orders/${tableId}`);
   };
 
-  const handleOrderPayment = (order: Order) => {
-    setSelectedOrder(order);
-    setShowOrdersDialog(false);
-    setShowPaymentDialog(true);
-  };
 
   // Only show skeleton when initially loading tables, not when placing an order
   // This allows WebSocket updates to handle table updates after order placement
@@ -300,18 +282,6 @@ export default function Tables() {
             </div>
         )}
 
-        <CreateOrderDialog
-            open={showOrderDialog}
-            onClose={() => {
-              setShowOrderDialog(false);
-              setSelectedTableId(null);
-              setSelectedOrder(null);
-            }}
-            table_id={selectedTableId || 0}
-            onCreateOrder={handleCreateOrder}
-            existingOrder={!isNewOrder ? selectedOrder : undefined}
-        />
-
         {selectedOrder && (
             <PaymentDialog
                 open={showPaymentDialog}
@@ -320,18 +290,6 @@ export default function Tables() {
                   setSelectedOrder(null);
                 }}
                 order={selectedOrder}
-            />
-        )}
-
-        {selectedTableId && (
-            <ViewOrdersDialog
-                open={showOrdersDialog}
-                onClose={() => {
-                  setShowOrdersDialog(false);
-                  setSelectedTableId(null);
-                }}
-                orders={getOrdersByTable(selectedTableId)}
-                onPayment={handleOrderPayment}
             />
         )}
 

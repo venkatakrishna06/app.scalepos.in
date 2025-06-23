@@ -45,7 +45,6 @@ export const useMenu = () => {
     onSuccess: () => {
       // Invalidate menu items query to trigger refetch
       queryClient.invalidateQueries({ queryKey: ['menu', 'items'] });
-      toast.success('Menu item updated successfully');
     },
     onError: (error) => {
 

@@ -4,6 +4,10 @@ import Navbar from './navbar';
 import {MobileNav} from './MobileNav';
 import {cn} from '@/lib/utils';
 import {useWebSocket} from '@/hooks';
+import {useAuthStore} from '@/lib/store/auth.store';
+import {useMenuStore} from '@/lib/store/menu.store';
+import {useTableStore} from '@/lib/store/table.store';
+import {useStaffStore} from '@/lib/store/staff.store';
 
 interface LayoutProps {
   children: ReactNode;
@@ -12,10 +16,29 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const { isAuthenticated } = useAuthStore();
+  const { fetchMenuItems, fetchCategories } = useMenuStore();
+  const { fetchTables } = useTableStore();
+  const { fetchStaff } = useStaffStore();
 
   // Initialize WebSocket connection
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { isConnected } = useWebSocket();
+
+  // Fetch initial data after login
+  useEffect(() => {
+    if (isAuthenticated) {
+      // Fetch all required data in parallel
+      Promise.all([
+        fetchMenuItems(),
+        fetchCategories(),
+        fetchTables(),
+        fetchStaff()
+      ]).catch(error => {
+        console.error('Error fetching initial data:', error);
+      });
+    }
+  }, [isAuthenticated, fetchMenuItems, fetchCategories, fetchTables, fetchStaff]);
 
   // Check if we're on mobile when component mounts
   useEffect(() => {
@@ -73,7 +96,7 @@ export default function Layout({ children }: LayoutProps) {
           isSidebarOpen && !isMobile ? "lg:ml-0" : "ml-0",
           "pb-20 lg:pb-6" // Increased padding at the bottom for mobile nav to prevent overlap
         )}>
-          <div className="mx-auto max-w-7xl p-3 sm:p-4 lg:p-6">
+          <div className="mx-auto max-w-7xl p-1 sm:p-2 lg:p-3">
             {children}
           </div>
         </main>
@@ -81,10 +104,7 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Mobile Navigation - only visible on mobile */}
       {isMobile && (
-        <MobileNav 
-          toggleSidebar={toggleSidebar} 
-          isSidebarOpen={isSidebarOpen}
-        />
+        <MobileNav />
       )}
     </div>
   );

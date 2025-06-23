@@ -1,4 +1,4 @@
-import {BarChart2, ClipboardList, LogOut, Menu, PlusCircle, Settings, ShoppingBag, X} from 'lucide-react';
+import {BarChart2, ClipboardList, LogOut, Menu, PlusCircle, Receipt, Settings, ShoppingBag, X} from 'lucide-react';
 import {Button} from './ui/button';
 import {PropsWithChildren, useEffect} from 'react';
 import {useLocation, useNavigate} from 'react-router-dom';
@@ -43,22 +43,22 @@ export default function Navbar({ toggleSidebar, isSidebarOpen }: NavbarProps) {
   const isRouteActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 sm:h-18 items-center px-3 sm:px-4 lg:px-6">
+    <nav className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
+      <div className="container flex h-14 sm:h-16 items-center px-2 sm:px-4 lg:px-6">
         <div className="flex flex-1 items-center justify-between">
-          <div className="flex items-center gap-4 sm:gap-6 lg:gap-8">
+          <div className="flex items-center gap-2 sm:gap-4 lg:gap-6">
             {/* Mobile menu button - only visible on mobile */}
             <Button 
               variant="ghost" 
               size="icon" 
-              className="lg:hidden" 
+              className="lg:hidden h-8 w-8 sm:h-9 sm:w-9"
               onClick={toggleSidebar}
               aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
             >
               {isSidebarOpen ? (
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4 sm:h-5 sm:w-5" />
               ) : (
-                <Menu className="h-5 w-5" />
+                <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
               )}
             </Button>
 
@@ -68,7 +68,7 @@ export default function Navbar({ toggleSidebar, isSidebarOpen }: NavbarProps) {
               onClick={() => navigate(isAdmin ? '/dashboard' : '/tables')}
               style={{ cursor: 'pointer' }}
             >
-              <h1 className="text-lg sm:text-xl font-semibold truncate max-w-[150px] sm:max-w-none">
+              <h1 className="text-base sm:text-lg font-semibold truncate max-w-[120px] xs:max-w-[150px] sm:max-w-none">
                 {restaurant?.name || 'Restaurant'}
               </h1>
             </div>
@@ -81,9 +81,9 @@ export default function Navbar({ toggleSidebar, isSidebarOpen }: NavbarProps) {
                     variant={isRouteActive('/tables') ? "default" : "ghost"}
                     size="sm"
                     onClick={() => navigate('/tables')}
-                    className="rounded-md text-xs sm:text-sm px-2 sm:px-4 h-9 relative"
+                    className="rounded-md text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9 relative"
                   >
-                    <PlusCircle className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                    <PlusCircle className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     <span className="hidden sm:inline">New Order</span>
                     <span className="sm:hidden">Order</span>
                   </Button>
@@ -91,18 +91,18 @@ export default function Navbar({ toggleSidebar, isSidebarOpen }: NavbarProps) {
                     variant={isRouteActive('/takeaway') ? "default" : "ghost"}
                     size="sm"
                     onClick={() => navigate('/takeaway')}
-                    className="rounded-md text-xs sm:text-sm px-2 sm:px-4 h-9 relative"
+                    className="rounded-md text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9 relative"
                   >
-                    <ShoppingBag className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                    <ShoppingBag className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     <span>Takeaway</span>
                   </Button>
                   <Button
                     variant={isRouteActive('/quick-bill') ? "default" : "ghost"}
                     size="sm"
                     onClick={() => navigate('/quick-bill')}
-                    className="rounded-md text-xs sm:text-sm px-2 sm:px-4 h-9 relative"
+                    className="rounded-md text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9 relative"
                   >
-                    <PlusCircle className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                    <Receipt className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                     <span className="hidden sm:inline">Quick Bill</span>
                     <span className="sm:hidden">Bill</span>
                   </Button>
@@ -113,16 +113,16 @@ export default function Navbar({ toggleSidebar, isSidebarOpen }: NavbarProps) {
                   variant={isRouteActive('/orders') ? "default" : "ghost"}
                   size="sm"
                   onClick={() => navigate('/orders')}
-                  className="rounded-md text-xs sm:text-sm px-2 sm:px-4 h-9 relative"
+                  className="rounded-md text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9 relative"
                 >
-                  <ClipboardList className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                  <ClipboardList className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span>Orders</span>
                 </Button>
               )}
             </div>
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-3 lg:gap-4">
+          <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-2 lg:gap-3">
             {/* Notifications - visible on all screen sizes */}
             <div className="flex relative">
               <NotificationDropdown />
@@ -133,26 +133,26 @@ export default function Navbar({ toggleSidebar, isSidebarOpen }: NavbarProps) {
               variant="ghost"
               size="icon"
               onClick={() => navigate('/settings')}
-              className="hidden sm:flex h-9 w-9 sm:h-10 sm:w-10"
+              className="hidden xs:flex h-8 w-8 sm:h-9 sm:w-9"
               aria-label="Settings"
             >
-              <Settings className="h-5 w-5" />
+              <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
 
             {/* Theme toggle - hidden on very small screens */}
-            <div className="hidden sm:block">
+
               <ThemeToggle />
-            </div>
+
 
             {/* User dropdown - always visible */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button className={cn(
                   "relative rounded-full focus:ring-2 focus:ring-primary focus:ring-offset-2",
-                  "h-9 w-9 sm:h-10 sm:w-10"
+                  "h-8 w-8 sm:h-9 sm:w-9"
                 )}>
                   <div className="flex h-full w-full items-center justify-center rounded-full bg-primary text-primary-foreground">
-                    <span className="text-sm sm:text-base font-semibold">
+                    <span className="text-xs sm:text-sm font-semibold">
                       {user?.staff.name?.charAt(0).toUpperCase()}
                     </span>
                   </div>
