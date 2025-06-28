@@ -524,7 +524,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
         "border-b bg-muted p-2 md:w-48 md:border-b-0 md:border-r dark:border-border custom-scrollbar",
         "md:relative md:block", // Always visible on desktop
         isSidebarOpen 
-          ? "fixed inset-0 z-50 pt-14 pb-16 overflow-y-auto" // Full screen on mobile when open
+          ? "fixed inset-0 bottom-20 z-50 pt-14 pb-16 overflow-y-auto" // Full screen on mobile when open
           : "hidden", // Hidden on mobile when closed
         "md:static md:z-auto md:pt-0 md:pb-0" // Reset on desktop
       )}>
