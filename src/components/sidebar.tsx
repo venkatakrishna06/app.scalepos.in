@@ -146,7 +146,7 @@ export default function Sidebar({ closeSidebar }: SidebarProps) {
           <div className="px-2 flex items-center">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground mr-3">
               <span className="text-sm font-semibold">
-                {user?.staff.name?.charAt(0).toUpperCase()}
+                {user?.staff?.name?.charAt(0).toUpperCase()}
               </span>
             </div>
             <div className="overflow-hidden">

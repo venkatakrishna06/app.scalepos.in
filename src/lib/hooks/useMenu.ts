@@ -32,7 +32,7 @@ export const useMenu = () => {
       queryClient.invalidateQueries({ queryKey: ['menu', 'items'] });
       toast.success('Menu item created successfully');
     },
-    onError: (error) => {
+    onError: () => {
 
       toast.error('Failed to create menu item');
     },
@@ -46,7 +46,7 @@ export const useMenu = () => {
       // Invalidate menu items query to trigger refetch
       queryClient.invalidateQueries({ queryKey: ['menu', 'items'] });
     },
-    onError: (error) => {
+    onError: () => {
 
       toast.error('Failed to update menu item');
     },
@@ -59,7 +59,7 @@ export const useMenu = () => {
       // Invalidate menu items query to trigger refetch
       queryClient.invalidateQueries({ queryKey: ['menu', 'items'] });
     },
-    onError: (error) => {
+    onError: () => {
 
     },
   });
@@ -72,7 +72,7 @@ export const useMenu = () => {
       queryClient.invalidateQueries({ queryKey: ['menu', 'categories'] });
       toast.success('Category created successfully');
     },
-    onError: (error) => {
+    onError: () => {
 
       toast.error('Failed to create category');
     },
@@ -87,7 +87,7 @@ export const useMenu = () => {
       queryClient.invalidateQueries({ queryKey: ['menu', 'categories'] });
       toast.success('Category updated successfully');
     },
-    onError: (error) => {
+    onError: () => {
 
       toast.error('Failed to update category');
     },
@@ -101,7 +101,7 @@ export const useMenu = () => {
       queryClient.invalidateQueries({ queryKey: ['menu', 'categories'] });
       toast.success('Category deleted successfully');
     },
-    onError: (error) => {
+    onError: () => {
 
       toast.error('Failed to delete category');
     },

@@ -21,12 +21,6 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
   const { isServer } = usePermissions();
   const [processingItemId, setProcessingItemId] = useState<number | null>(null);
   const activeOrders = orders.filter(order => order.status !== 'paid' && order.status !== 'cancelled');
-  // Fetch restaurant data when dialog opens
-  useEffect(() => {
-    if (open && !restaurant) {
-
-    }
-  }, [open, restaurant, fetchRestaurant]);
 
   // Helper function to get the order total, either from the API or calculated from items
   const getOrderTotal = (order: Order) => {
@@ -105,7 +99,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
           <DialogHeader>
             <DialogTitle>Current Orders</DialogTitle>
           </DialogHeader>
-          <div className="max-h-[70vh] overflow-y-auto px-1 custom-scrollbar">
+          <div className="max-h-[calc(100vh-10rem)] md:max-h-[70vh] overflow-y-auto px-1 custom-scrollbar">
             {activeOrders.length > 0 && (
                 <div className="mb-6">
                   <h3 className="mb-4 text-lg font-semibold">Orders</h3>

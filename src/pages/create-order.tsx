@@ -447,7 +447,7 @@ const CreateOrderPage = () => {
           }))
         };
         await addOrder(newOrder);
-        toast.success('Order created successfully');
+
       }
 
       // Navigate back to tables page
@@ -689,10 +689,10 @@ const CreateOrderPage = () => {
           <div className={cn(
             "border-t bg-muted md:w-72 md:border-l md:border-t-0 flex flex-col dark:border-border overflow-hidden",
             "md:relative md:flex", // Changed block to flex for consistency
-            isCartOpen ? "fixed inset-0 z-50 bg-background" : "hidden", // Toggle on mobile
+            isCartOpen ? "fixed inset-0 bottom-20 z-50 bg-background" : "hidden", // Toggle on mobile, add bottom space for nav bar
             "md:static md:z-auto shrink-0" // Reset on desktop
           )}>
-            <div className="flex flex-col h-full overflow-hidden">
+            <div className="flex flex-col h-full">
               {/* Mobile close button */}
               <div className="flex items-center justify-between p-3 md:hidden shrink-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10 border-b">
                 <h2 className="text-base font-semibold">Your Order</h2>

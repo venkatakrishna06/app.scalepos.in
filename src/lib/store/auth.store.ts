@@ -9,7 +9,7 @@ const USER_STORAGE_KEY = 'user_data';
 
 // Helper functions to store and retrieve user data from storage
 // Uses the same storage type (session or local) as the token service
-const saveUserToStorage = (user: User | null): void => {
+const saveUserToStorage = (user:User | null): void => {
   if (user) {
     if (tokenService.isPersistentSession()) {
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
@@ -102,7 +102,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           }
 
           // Set user data and authenticated state
-          saveUserToStorage(response.user_account);
+          saveUserToStorage(response?.user_account);
           set({ 
             user: response.user_account, 
             isAuthenticated: true,

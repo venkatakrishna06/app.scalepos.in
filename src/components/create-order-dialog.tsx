@@ -441,7 +441,7 @@ function CreateOrderDialogComponent({
 
       // Close the dialog immediately to avoid flashing
       onClose();
-    } catch (error) {
+    } catch() {
       toast.error('Failed to process order');
 
     } finally {

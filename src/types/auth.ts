@@ -1,3 +1,5 @@
+import {StaffMember} from "@/types/index.ts";
+
 export interface User {
   id: number;
   email: string;
@@ -7,6 +9,7 @@ export interface User {
   role: 'admin' | 'manager' | 'kitchen' | 'server' | 'staff' | 'user';
   created_at: string;
   staff_id?: number;
+  staff?: StaffMember;
 }
 
 export interface LoginCredentials {

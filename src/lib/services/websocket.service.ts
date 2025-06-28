@@ -79,7 +79,7 @@ class WebSocketService {
       return;
     }
 
-    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+    const baseURL = import.meta.env.VITE_API_URL || 'https://quickquick-backend-341757523815.asia-south1.run.app';
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsBaseURL = baseURL.replace(/^https?:/, wsProtocol);
     const wsURL = `${wsBaseURL}/ws?token=${token}`;

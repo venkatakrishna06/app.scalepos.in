@@ -49,7 +49,7 @@ export interface Order {
   staff_id: number;
   order_time: string;
   status: 'placed' | 'preparing' | 'served' | 'cancelled' | 'paid';
-  order_type: 'dine-in' | 'takeaway' | 'delivery' | 'quick-bill';
+  order_type: 'dine-in' | 'takeaway' | 'quick-bill';
   sub_total: number;
   sgst_rate: number;
   cgst_rate: number;
