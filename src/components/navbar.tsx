@@ -9,12 +9,12 @@ import {ThemeToggle} from './theme/theme-toggle';
 import {NotificationDropdown} from './notification-dropdown';
 import {cn} from '@/lib/utils';
 import {
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
 interface NavbarProps extends PropsWithChildren {

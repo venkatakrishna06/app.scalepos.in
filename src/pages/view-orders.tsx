@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react';
-import { ArrowLeft, CheckCircle2, Clock, CreditCard, Loader2, Minus, Plus, XCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Order } from '@/types';
-import { format } from 'date-fns';
-import { useOrderStore, useRestaurantStore } from '@/lib/store';
-import { toast } from '@/lib/toast';
-import { usePermissions } from '@/hooks/usePermissions';
-import { useNavigate, useParams } from 'react-router-dom';
-import { PaymentDialog } from '@/components/payment-dialog';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import {useEffect, useState} from 'react';
+import {ArrowLeft, CheckCircle2, Clock, CreditCard, Loader2, Minus, Plus, XCircle} from 'lucide-react';
+import {Button} from '@/components/ui/button';
+import {Order} from '@/types';
+import {format} from 'date-fns';
+import {useOrderStore, useRestaurantStore} from '@/lib/store';
+import {toast} from '@/lib/toast';
+import {usePermissions} from '@/hooks/usePermissions';
+import {useNavigate, useParams} from 'react-router-dom';
+import {PaymentDialog} from '@/components/payment-dialog';
+import {Badge} from '@/components/ui/badge';
+import {cn} from '@/lib/utils';
 
 /**
  * Full page component for viewing and managing orders

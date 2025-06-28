@@ -1,28 +1,28 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import {memo, useCallback, useEffect, useMemo, useState} from 'react';
 import {
-    ChevronDown,
-    ChevronRight,
-    Loader2,
-    Menu as MenuIcon,
-    Minus,
-    Plus,
-    Pencil,
-    Search,
-    ShoppingCart,
-    Star,
-    X,
-    ArrowLeft
+  ArrowLeft,
+  ChevronDown,
+  ChevronRight,
+  Loader2,
+  Menu as MenuIcon,
+  Minus,
+  Pencil,
+  Plus,
+  Search,
+  ShoppingCart,
+  Star,
+  X
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useMenuStore, useOrderStore } from '@/lib/store';
-import { MenuItem, Order, OrderItem } from '@/types';
-import { toast } from '@/lib/toast';
-import { useAuthStore } from "@/lib/store/auth.store";
-import { cn } from '@/lib/utils';
-import { analyticsService } from '@/lib/api/services/analytics.service';
-import { MenuItemAnalytics } from '@/types/analytics';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Card } from '@/components/ui/card';
+import {Button} from '@/components/ui/button';
+import {useMenuStore, useOrderStore} from '@/lib/store';
+import {MenuItem, Order, OrderItem} from '@/types';
+import {toast} from '@/lib/toast';
+import {useAuthStore} from "@/lib/store/auth.store";
+import {cn} from '@/lib/utils';
+import {analyticsService} from '@/lib/api/services/analytics.service';
+import {MenuItemAnalytics} from '@/types/analytics';
+import {useNavigate, useParams} from 'react-router-dom';
+import {Card} from '@/components/ui/card';
 
 /**
  * Full page component for creating and editing orders

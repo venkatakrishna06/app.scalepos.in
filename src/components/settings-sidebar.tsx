@@ -1,14 +1,5 @@
 import {Link, useLocation} from 'react-router-dom';
-import {
-  ChevronRight, 
-  Percent, 
-  User, 
-  Shield, 
-  Bell, 
-  CreditCard, 
-  Store, 
-  HelpCircle
-} from 'lucide-react';
+import {ChevronRight, Percent, User} from 'lucide-react';
 import {cn} from '@/lib/utils';
 import {useAuthStore} from '@/lib/store/auth.store';
 

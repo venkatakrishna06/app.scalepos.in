@@ -1,19 +1,19 @@
 import {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {
-  ArrowRight,
-  ArrowUpRight,
-  ClipboardList,
-  Clock,
-  Coffee,
-  IndianRupee,
-  Loader2,
-  RefreshCw,
-  ShoppingBag,
-  Table2,
-  Tags,
-  TrendingUp,
-  Users
+    ArrowRight,
+    ArrowUpRight,
+    ClipboardList,
+    Clock,
+    Coffee,
+    IndianRupee,
+    Loader2,
+    RefreshCw,
+    ShoppingBag,
+    Table2,
+    Tags,
+    TrendingUp,
+    Users
 } from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {useMenuStore, useOrderStore} from '@/lib/store';

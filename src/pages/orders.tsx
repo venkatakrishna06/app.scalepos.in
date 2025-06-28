@@ -1,16 +1,16 @@
 import {useEffect, useMemo, useState} from 'react';
 import {
-  ArrowUpDown,
-  Clock,
-  Coffee,
-  CreditCard,
-  Download,
-  Edit,
-  FileText,
-  Printer,
-  Search,
-  Trash2,
-  User
+    ArrowUpDown,
+    Clock,
+    Coffee,
+    CreditCard,
+    Download,
+    Edit,
+    FileText,
+    Printer,
+    Search,
+    Trash2,
+    User
 } from 'lucide-react';
 import {OrdersSkeleton} from '@/components/skeletons/orders-skeleton';
 import {Button} from '@/components/ui/button';
@@ -22,11 +22,11 @@ import {Input} from '@/components/ui/input';
 import {Tabs, TabsContent} from '@/components/ui/tabs';
 import {FilterDropdownContainer} from '@/components/FilterDropdownContainer';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
 import {Badge} from '@/components/ui/badge';
@@ -35,12 +35,12 @@ import {toast} from '@/lib/toast';
 import {ViewOrdersDialog} from '@/components/view-orders-dialog';
 import {Order} from '@/types';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from '@/components/ui/dialog';
 
 export default function Orders() {

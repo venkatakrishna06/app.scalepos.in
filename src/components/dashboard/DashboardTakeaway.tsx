@@ -15,15 +15,15 @@ import {
 } from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {useMenuStore, useOrderStore} from '@/lib/store';
-import {Category, MenuItem, Order, OrderItem} from '@/types';
+import {MenuItem, Order, OrderItem} from '@/types';
 import {cn} from '@/lib/utils';
 import {useAuthStore} from "@/lib/store/auth.store";
 import {toast} from '@/lib/toast';
 import {Card} from '@/components/ui/card';
 import {PaymentDialog} from '@/components/payment-dialog';
 import {motion} from 'framer-motion';
-import { analyticsService } from '@/lib/api/services/analytics.service';
-import { MenuItemAnalytics } from '@/types/analytics';
+import {analyticsService} from '@/lib/api/services/analytics.service';
+import {MenuItemAnalytics} from '@/types/analytics';
 
 interface DashboardTakeawayProps {
   /** Optional callback when an order is created */

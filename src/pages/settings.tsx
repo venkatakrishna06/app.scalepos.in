@@ -1,7 +1,7 @@
 import {Navigate, Outlet, useLocation} from 'react-router-dom';
 import {Settings as SettingsIcon} from 'lucide-react';
 import SettingsSidebar from '@/components/settings-sidebar';
-import { Card, CardContent } from '@/components/ui/card';
+import {Card, CardContent} from '@/components/ui/card';
 
 export default function Settings() {
   const location = useLocation();

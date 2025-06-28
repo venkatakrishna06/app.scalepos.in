@@ -1,11 +1,5 @@
 import {useLocation, useNavigate} from 'react-router-dom';
-import {
-  ClipboardList, 
-  LayoutDashboard, 
-  Receipt,
-  ShoppingBag, 
-  Table2
-} from 'lucide-react';
+import {ClipboardList, LayoutDashboard, Receipt, ShoppingBag, Table2} from 'lucide-react';
 import {usePermissions} from '@/hooks/usePermissions';
 import {cn} from '@/lib/utils';
 import {motion} from 'framer-motion';

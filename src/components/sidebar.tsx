@@ -1,17 +1,17 @@
 import {Link, useLocation} from 'react-router-dom';
 import {
-    BarChart2,
-    ChevronRight,
-    ClipboardList,
-    Coffee,
-    LayoutDashboard,
-    Receipt,
-    Settings,
-    ShoppingBag,
-    Table2,
-    Tags,
-    UserCircle,
-    Users,
+  BarChart2,
+  ChevronRight,
+  ClipboardList,
+  Coffee,
+  LayoutDashboard,
+  Receipt,
+  Settings,
+  ShoppingBag,
+  Table2,
+  Tags,
+  UserCircle,
+  Users,
 } from 'lucide-react';
 import {cn} from '@/lib/utils';
 import {useAuthStore} from '@/lib/store/auth.store';

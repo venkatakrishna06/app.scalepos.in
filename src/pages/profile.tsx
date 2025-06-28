@@ -1,12 +1,12 @@
 import {useEffect, useState} from 'react';
 import {useAuthStore} from '@/lib/store/auth.store';
 import {Button} from '@/components/ui/button';
-import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter} from '@/components/ui/dialog';
-import {Camera, Key, Loader2, Mail, Phone, User as UserIcon, Save, X, AlertCircle} from 'lucide-react';
+import {Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle} from '@/components/ui/dialog';
+import {AlertCircle, Camera, Key, Loader2, Mail, Phone, Save, User as UserIcon, X} from 'lucide-react';
 import {toast} from "sonner";
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
-import {Card, CardDescription, CardHeader, CardTitle, CardFooter} from '@/components/ui/card';
+import {Card, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import {Alert, AlertDescription} from '@/components/ui/alert';
 

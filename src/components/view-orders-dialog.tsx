@@ -5,7 +5,7 @@ import {Order} from '@/types';
 import {format} from 'date-fns';
 import {useOrderStore, useRestaurantStore} from '@/lib/store';
 import {toast} from '@/lib/toast';
-import {useEffect, useState} from 'react';
+import {useState} from 'react';
 import {usePermissions} from '@/hooks/usePermissions';
 
 interface ViewOrdersDialogProps {
