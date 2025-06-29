@@ -178,7 +178,8 @@ function CreateOrderDialogComponent({
           order_id: existingOrder?.id || 0,
           menu_item_id: item.id,
           quantity: 1,
-          notes: ''
+          notes: '',
+          include_in_gst: item.include_in_gst
         }];
       }
       return current;
@@ -410,7 +411,8 @@ function CreateOrderDialogComponent({
           return {
             ...item,
             price: menuItem?.price || 0,
-            name: menuItem?.name || ''
+            name: menuItem?.name || '',
+            include_in_gst: menuItem?.include_in_gst
           };
         });
 
@@ -423,11 +425,15 @@ function CreateOrderDialogComponent({
           staff_id: user?.staff_id,
           status: 'placed' as const,
           order_time: new Date().toISOString(),
-          items: orderItems.map(item => ({
-            menu_item_id: item.menu_item_id,
-            quantity: item.quantity,
-            notes: item.notes || ''
-          }))
+          items: orderItems.map(item => {
+            const menuItem = menuItems.find(m => m.id === item.menu_item_id);
+            return {
+              menu_item_id: item.menu_item_id,
+              quantity: item.quantity,
+              notes: item.notes || '',
+              include_in_gst: menuItem?.include_in_gst
+            };
+          })
         };
         await addOrder(newOrder);
       }
@@ -441,7 +447,7 @@ function CreateOrderDialogComponent({
 
       // Close the dialog immediately to avoid flashing
       onClose();
-    } catch() {
+    } catch(error) {
       toast.error('Failed to process order');
 
     } finally {

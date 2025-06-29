@@ -77,8 +77,8 @@ export default function Signup() {
         data.restaurant_gst
       );
       toast.success('Account created successfully!');
-      navigate('/dashboard', { replace: true });
-    } catch (err) {
+      navigate('/login', { replace: true });
+    } catch {
       if (error) {
         toast.error(error);
         clearError();
@@ -320,7 +320,7 @@ export default function Signup() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-gray-700 dark:text-gray-300">
-                            GST Number
+                            GST Number (Optional)
                           </FormLabel>
                           <FormControl>
                             <div className="relative">

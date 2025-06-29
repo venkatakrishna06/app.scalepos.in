@@ -195,7 +195,8 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
           status: 'placed',
           notes: '',
           price: item.price,
-          name: item.name
+          name: item.name,
+          include_in_gst: item.include_in_gst
         }];
       }
       return current;
@@ -465,7 +466,8 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
           quantity: item.quantity,
           notes: item.notes || '',
           name: item.name,
-          price: item.price
+          price: item.price,
+          include_in_gst: item.include_in_gst
         })),
         // Include GST calculations
         sub_total: subTotal,

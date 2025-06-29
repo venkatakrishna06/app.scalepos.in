@@ -77,10 +77,10 @@ const CreateOrderPage = () => {
         order.status !== 'paid' && order.status !== 'cancelled'
       );
 
-      // if (activeOrder) {
-      //   setExistingOrder(activeOrder);
-      //   setOrderItems(activeOrder.items || []);
-      // }
+      if (activeOrder) {
+        setExistingOrder(activeOrder);
+       // setOrderItems(activeOrder.items || []);
+      }
     }
   }, [table_id, getOrdersByTable]);
 
@@ -424,7 +424,8 @@ const CreateOrderPage = () => {
           return {
             ...item,
             price: menuItem?.price || item.price || 0,
-            name: menuItem?.name || item.name || ''
+            name: menuItem?.name || item.name || '',
+            include_in_gst: menuItem?.include_in_gst
           };
         });
 
@@ -438,13 +439,17 @@ const CreateOrderPage = () => {
           staff_id: user?.staff_id,
           status: 'placed' as const,
           order_time: new Date().toISOString(),
-          items: orderItems.map(item => ({
-            menu_item_id: item.menu_item_id,
-            quantity: item.quantity,
-            notes: item.notes || '',
-            name: item.name,
-            price: item.price
-          }))
+          items: orderItems.map(item => {
+            const menuItem = menuItems.find(m => m.id === item.menu_item_id);
+            return {
+              menu_item_id: item.menu_item_id,
+              quantity: item.quantity,
+              notes: item.notes || '',
+              name: item.name,
+              price: item.price,
+              include_in_gst: menuItem?.include_in_gst
+            };
+          })
         };
         await addOrder(newOrder);
 

@@ -133,8 +133,18 @@ export const useOrder = () => {
       return total + (item.price * item.quantity);
     }, 0);
 
-    const sgstAmount = (subTotal * sgstRate) / 100;
-    const cgstAmount = (subTotal * cgstRate) / 100;
+    // Calculate taxable amount (only for items with include_in_gst = true)
+    const taxableAmount = items.reduce((total, item) => {
+      // Check if the item has include_in_gst property and it's true
+      if (item.include_in_gst === true) {
+        return total + (item.price * item.quantity);
+      }
+      return total;
+    }, 0);
+
+    // Calculate tax amounts based on taxable amount
+    const sgstAmount = (taxableAmount * sgstRate) / 100;
+    const cgstAmount = (taxableAmount * cgstRate) / 100;
     const totalAmount = subTotal + sgstAmount + cgstAmount;
 
     return {

@@ -363,9 +363,21 @@ export const useOrderStore = create<OrderState>((set, get) => ({
         0
     );
 
-    // Calculate tax amounts
-    const sgstAmount = (subTotal * sgstRate) / 100;
-    const cgstAmount = (subTotal * cgstRate) / 100;
+    // Calculate taxable amount (only for items with include_in_gst = true)
+    const taxableAmount = validItems.reduce(
+        (sum, item) => {
+          // Check if the item has include_in_gst property and it's true
+          if (item.include_in_gst === true) {
+            return sum + (item.price * item.quantity);
+          }
+          return sum;
+        },
+        0
+    );
+
+    // Calculate tax amounts based on taxable amount
+    const sgstAmount = (taxableAmount * sgstRate) / 100;
+    const cgstAmount = (taxableAmount * cgstRate) / 100;
 
     // Calculate total
     const totalAmount = subTotal + sgstAmount + cgstAmount;

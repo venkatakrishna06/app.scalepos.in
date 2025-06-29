@@ -209,8 +209,18 @@ export default function Tables() {
           </div>
         </div>
 
+
         {/* Enhanced filtering and search */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center mb-4">
+          <div className="relative w-full md:w-auto flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+                placeholder="Search tables..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 w-full"
+            />
+          </div>
           <FilterDropdownContainer>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger className="w-[130px] sm:w-[180px]">
@@ -238,15 +248,7 @@ export default function Tables() {
             </Select>
           </FilterDropdownContainer>
 
-          <div className="relative w-full md:w-auto flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input 
-              placeholder="Search tables..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 w-full"
-            />
-          </div>
+
         </div>
 
 

@@ -39,6 +39,7 @@ export interface OrderItem {
   notes: string;
   price: number;
   name: string;
+  include_in_gst?: boolean;
 }
 
 export interface Order {

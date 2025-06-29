@@ -6,6 +6,7 @@ import {Input} from './ui/input';
 import {useOrderStore, usePaymentStore, useRestaurantStore, useTableStore} from '@/lib/store';
 import {showToast} from '@/lib/toast';
 import {Order, Payment} from '@/types';
+import printJS from 'print-js';
 
 interface PaymentDialogProps {
   open: boolean;
@@ -70,13 +71,6 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
       }
     }
 
-    // Create a new window for the bill
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      showToast('error', 'Please allow pop-ups to print the bill');
-      return;
-    }
-
     // Get current date and time
     const now = new Date();
     const dateFormatted = now.toLocaleDateString();
@@ -103,7 +97,6 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
             margin: 0 auto;
           }
           .receipt {
-            border: 1px solid #ddd;
             padding: 10px;
           }
           .header {
@@ -174,17 +167,6 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
           .footer p {
             margin: 2px 0;
           }
-          .token-no {
-            position: absolute;
-            top: 10px;
-            right: 20px;
-            font-size: 18px;
-            font-weight: bold;
-            background: #fff;
-            padding: 2px 5px;
-            border: 1px dashed #222;
-            border-radius: 6px;
-          }
           .token-no-center {
             text-align: center;
             font-size: 18px;
@@ -196,22 +178,6 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
             letter-spacing: 2px;
             display: block;
             margin: 10px auto 8px auto;
-          }
-          .header-relative {
-            position: relative;
-          }
-          @media print {
-            body {
-              width: 80mm;
-              margin: 0;
-              padding: 0;
-            }
-            .receipt {
-              border: none;
-            }
-            .no-print {
-              display: none;
-            }
           }
         </style>
       </head>
@@ -309,33 +275,22 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
             <p>Please visit again</p>
           </div>
         </div>
-
-        <div class="no-print" style="text-align: center; margin-top: 20px;">
-          <button onclick="window.print();" style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            Print Bill
-          </button>
-          <button onclick="window.close();" style="padding: 10px 20px; background: #f44336; color: white; border: none; border-radius: 4px; margin-left: 10px; cursor: pointer;">
-            Close
-          </button>
-        </div>
       </body>
       </html>
     `;
 
-    // Write the content to the new window
-    printWindow.document.open();
-    printWindow.document.write(billContent);
-    printWindow.document.close();
-
-    // Trigger print when content is loaded
-    printWindow.onload = function() {
-      // Automatically print on load (optional)
-      // printWindow.print();
-      // Don't automatically close after printing
-      // printWindow.onafterprint = function() {
-      //   printWindow.close();
-      // };
-    };
+    // Use print-js to print directly without showing dialog
+    printJS({
+      printable: billContent,
+      type: 'raw-html',
+      documentTitle: `Bill Receipt - Order #${orderId}`,
+      targetStyles: ['*'],
+      style: '@page { size: 80mm auto; margin: 0mm; }',
+      onPrintDialogClose: () => {
+        // Optional: Handle any post-print actions here
+        showToast('success', 'Bill printed successfully');
+      }
+    });
 
     // Return the order that was used for the bill
     return orderForBill;

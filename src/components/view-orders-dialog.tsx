@@ -61,7 +61,6 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
       setProcessingItemId(itemId);
       const newQuantity = currentQuantity + delta;
       await updateOrderItem(orderId, itemId, {quantity: newQuantity});
-      toast.success('Order quantity updated');
 
     } catch {
       toast.error('Failed to update order quantity');
