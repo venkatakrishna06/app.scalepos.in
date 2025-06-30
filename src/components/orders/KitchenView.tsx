@@ -62,7 +62,7 @@ export const KitchenView: React.FC<KitchenViewProps> = ({
     const itemName = item.name || '';
     const orderIdText = `Order #${item.orderId}`;
     const tableText = item.tableNumber ? `Table ${item.tableNumber}` : '';
-    
+
     return searchQuery === '' || (
       itemName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       orderIdText.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -157,6 +157,7 @@ export const KitchenView: React.FC<KitchenViewProps> = ({
                         size="sm"
                         className="border-yellow-300 hover:bg-yellow-100 text-yellow-700"
                         onClick={() => onItemStatusChange(item.orderId, item.id, 'preparing')}
+                        disabled={item.allowed_next_states && !item.allowed_next_states.includes('preparing')}
                       >
                         <Coffee className="mr-2 h-4 w-4" />
                         Start Preparing
@@ -236,6 +237,7 @@ export const KitchenView: React.FC<KitchenViewProps> = ({
                         size="sm"
                         className="border-green-300 hover:bg-green-100 text-green-700"
                         onClick={() => onItemStatusChange(item.orderId, item.id, 'ready')}
+                        disabled={item.allowed_next_states && !item.allowed_next_states.includes('ready')}
                       >
                         <CheckCircle2 className="mr-2 h-4 w-4" />
                         Mark Ready

@@ -529,6 +529,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                           size="sm"
                                           className="text-yellow-600 text-xs h-6 px-1.5 ml-1"
                                           onClick={() => onItemStatusChange(order.id, item.id, 'preparing')}
+                                          disabled={item.allowed_next_states && !item.allowed_next_states.includes('preparing')}
                                         >
                                           Prepare
                                         </Button>
@@ -557,6 +558,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                               size="sm" 
                               className="text-xs h-7 text-blue-700 hover:bg-blue-100"
                               onClick={() => onUpdateOrderStatus(order.id, 'preparing')}
+                              disabled={order.allowed_next_states && !order.allowed_next_states.includes('preparing')}
                             >
                               Move to Preparing →
                             </Button>
@@ -628,6 +630,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                           size="sm"
                                           className="text-green-600 text-xs h-6 px-1.5 ml-1"
                                           onClick={() => onItemStatusChange(order.id, item.id, 'ready')}
+                                          disabled={item.allowed_next_states && !item.allowed_next_states.includes('ready')}
                                         >
                                           Ready
                                         </Button>
@@ -648,6 +651,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                               size="sm" 
                               className="text-xs h-7 text-yellow-700 hover:bg-yellow-100"
                               onClick={() => onUpdateOrderStatus(order.id, 'placed')}
+                              disabled={order.allowed_next_states && !order.allowed_next_states.includes('placed')}
                             >
                               ← Back to Placed
                             </Button>
@@ -656,6 +660,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                               size="sm" 
                               className="text-xs h-7 text-yellow-700 hover:bg-yellow-100"
                               onClick={() => onUpdateOrderStatus(order.id, 'served')}
+                              disabled={order.allowed_next_states && !order.allowed_next_states.includes('served')}
                             >
                               Move to Served →
                             </Button>
@@ -737,6 +742,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                               size="sm" 
                               className="text-xs h-7 text-green-700 hover:bg-green-100"
                               onClick={() => onUpdateOrderStatus(order.id, 'preparing')}
+                              disabled={order.allowed_next_states && !order.allowed_next_states.includes('preparing')}
                             >
                               ← Back to Preparing
                             </Button>
@@ -745,6 +751,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                               size="sm" 
                               className="text-xs h-7 text-green-700 hover:bg-green-100"
                               onClick={() => onUpdateOrderStatus(order.id, 'paid')}
+                              disabled={order.allowed_next_states && !order.allowed_next_states.includes('paid')}
                             >
                               Mark as Paid →
                             </Button>

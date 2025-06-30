@@ -3,6 +3,19 @@ import {orderService} from '@/lib/api/services/order.service';
 import {Order, OrderItem} from '@/types';
 import {toast} from '@/lib/toast';
 
+// Define types for the new API responses
+interface OrderStatusUpdateResponse {
+  order: Order;
+  allowed_next_states: string[];
+}
+
+interface OrderItemStatusUpdateResponse {
+  order: Order;
+  item: OrderItem;
+  allowed_next_item_states: string[];
+  allowed_next_order_states: string[];
+}
+
 export const useOrder = () => {
   const queryClient = useQueryClient();
 
@@ -37,8 +50,7 @@ export const useOrder = () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
 
     },
-    onError: (error) => {
-
+    onError: () => {
       toast.error('Failed to create order');
     },
   });
@@ -57,8 +69,7 @@ export const useOrder = () => {
       // Invalidate orders queries to trigger refetch
       queryClient.invalidateQueries({ queryKey: ['orders'] });
     },
-    onError: (error) => {
-
+    onError: () => {
       toast.error('Failed to update order');
     },
   });
@@ -74,8 +85,7 @@ export const useOrder = () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       toast.success('Order deleted successfully');
     },
-    onError: (error) => {
-
+    onError: () => {
       toast.error('Failed to delete order');
     },
   });
@@ -99,8 +109,7 @@ export const useOrder = () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       toast.success('Order item updated successfully');
     },
-    onError: (error) => {
-
+    onError: () => {
       toast.error('Failed to update order item');
     },
   });
@@ -117,9 +126,115 @@ export const useOrder = () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       toast.success('Item removed from order');
     },
-    onError: (error) => {
-
+    onError: () => {
       toast.error('Failed to remove order item');
+    },
+  });
+
+  // New mutations for order status management
+  const updateOrderStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: string }) => 
+      orderService.updateOrderStatus(id, status),
+    onSuccess: (response: OrderStatusUpdateResponse) => {
+      // Update the order in the cache
+      queryClient.setQueryData(
+        ['orders', 'detail', response.order.id], 
+        response.order
+      );
+
+      // Invalidate orders queries to trigger refetch
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      toast.success(`Order status updated to ${response.order.status}`);
+    },
+    onError: () => {
+      toast.error('Failed to update order status');
+    },
+  });
+
+  // Query to get order status history
+  const useOrderStatusHistoryQuery = (orderId: number) => {
+    return useQuery({
+      queryKey: ['orders', 'status-history', orderId],
+      queryFn: () => orderService.getOrderStatusHistory(orderId),
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+  };
+
+  // Mutation to cancel an order
+  const cancelOrderMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: number; reason: string }) => 
+      orderService.cancelOrder(id, reason),
+    onSuccess: (updatedOrder) => {
+      // Update the order in the cache
+      queryClient.setQueryData(
+        ['orders', 'detail', updatedOrder.id], 
+        updatedOrder
+      );
+
+      // Invalidate orders queries to trigger refetch
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      toast.success('Order cancelled successfully');
+    },
+    onError: () => {
+      toast.error('Failed to cancel order');
+    },
+  });
+
+  // Query to get order cancellations
+  const useOrderCancellationsQuery = (orderId: number) => {
+    return useQuery({
+      queryKey: ['orders', 'cancellations', orderId],
+      queryFn: () => orderService.getOrderCancellations(orderId),
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+  };
+
+  // New mutations for order item status management
+  const updateOrderItemStatusMutation = useMutation({
+    mutationFn: ({ itemId, status }: { itemId: number; status: string }) => 
+      orderService.updateOrderItemStatus(itemId, status),
+    onSuccess: (response: OrderItemStatusUpdateResponse) => {
+      // Update the order in the cache
+      queryClient.setQueryData(
+        ['orders', 'detail', response.order.id], 
+        response.order
+      );
+
+      // Invalidate orders queries to trigger refetch
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      toast.success(`Item status updated to ${response.item.status}`);
+    },
+    onError: () => {
+      toast.error('Failed to update item status');
+    },
+  });
+
+  // Query to get order item status history
+  const useOrderItemStatusHistoryQuery = (itemId: number) => {
+    return useQuery({
+      queryKey: ['order-items', 'status-history', itemId],
+      queryFn: () => orderService.getOrderItemStatusHistory(itemId),
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+  };
+
+  // Mutation to cancel an order item
+  const cancelOrderItemMutation = useMutation({
+    mutationFn: ({ orderId, itemId, reason }: { orderId: number; itemId: number; reason: string }) => 
+      orderService.cancelOrderItem(orderId, itemId, reason),
+    onSuccess: (updatedOrder) => {
+      // Update the order in the cache
+      queryClient.setQueryData(
+        ['orders', 'detail', updatedOrder.id], 
+        updatedOrder
+      );
+
+      // Invalidate orders queries to trigger refetch
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      toast.success('Item cancelled successfully');
+    },
+    onError: () => {
+      toast.error('Failed to cancel item');
     },
   });
 
@@ -159,6 +274,9 @@ export const useOrder = () => {
     // Queries
     useOrdersQuery,
     useOrdersByTableQuery,
+    useOrderStatusHistoryQuery,
+    useOrderCancellationsQuery,
+    useOrderItemStatusHistoryQuery,
 
     // Mutations
     createOrder: createOrderMutation.mutate,
@@ -180,6 +298,26 @@ export const useOrder = () => {
     removeOrderItem: removeOrderItemMutation.mutate,
     isRemovingOrderItem: removeOrderItemMutation.isPending,
     removeOrderItemError: removeOrderItemMutation.error,
+
+    // New order status management mutations
+    updateOrderStatus: updateOrderStatusMutation.mutate,
+    isUpdatingOrderStatus: updateOrderStatusMutation.isPending,
+    updateOrderStatusError: updateOrderStatusMutation.error,
+
+    // Order cancellation
+    cancelOrder: cancelOrderMutation.mutate,
+    isCancellingOrder: cancelOrderMutation.isPending,
+    cancelOrderError: cancelOrderMutation.error,
+
+    // Order item status management
+    updateOrderItemStatus: updateOrderItemStatusMutation.mutate,
+    isUpdatingOrderItemStatus: updateOrderItemStatusMutation.isPending,
+    updateOrderItemStatusError: updateOrderItemStatusMutation.error,
+
+    // Order item cancellation
+    cancelOrderItem: cancelOrderItemMutation.mutate,
+    isCancellingOrderItem: cancelOrderItemMutation.isPending,
+    cancelOrderItemError: cancelOrderItemMutation.error,
 
     // Helper functions
     calculateOrderTotals,

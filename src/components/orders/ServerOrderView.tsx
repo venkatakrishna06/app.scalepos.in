@@ -220,6 +220,7 @@ export const ServerOrderView: React.FC<ServerOrderViewProps> = ({
                                     size="sm" 
                                     className="h-6 px-2 text-xs text-green-700 hover:bg-green-100"
                                     onClick={() => onMarkItemAsServed(order.id, item.id)}
+                                    disabled={item.allowed_next_states && !item.allowed_next_states.includes('served')}
                                   >
                                     <Check className="mr-1 h-3 w-3" /> Mark Served
                                   </Button>
@@ -245,7 +246,8 @@ export const ServerOrderView: React.FC<ServerOrderViewProps> = ({
                       variant="outline"
                       size="sm"
                       onClick={() => onMarkOrderAsPaid(order.id)}
-                      disabled={order.status === 'paid' || order.status === 'cancelled'}
+                      disabled={(order.status === 'paid' || order.status === 'cancelled') || 
+                                (order.allowed_next_states && !order.allowed_next_states.includes('paid'))}
                       className="border-green-300 hover:bg-green-100 text-green-700"
                     >
                       <Check className="mr-2 h-4 w-4" />

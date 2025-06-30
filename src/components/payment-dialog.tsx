@@ -3,7 +3,8 @@ import {AlertCircle, CheckCircle, Loader2} from 'lucide-react';
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from './ui/dialog';
 import {Button} from './ui/button';
 import {Input} from './ui/input';
-import {useOrderStore, usePaymentStore, useRestaurantStore, useTableStore} from '@/lib/store';
+import {usePaymentStore, useRestaurantStore} from '@/lib/store';
+import {useOrder} from '@/lib/hooks/useOrder';
 import {showToast} from '@/lib/toast';
 import {Order, Payment} from '@/types';
 import printJS from 'print-js';
@@ -26,8 +27,8 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
   const [cashGiven, setCashGiven] = useState<string>('');
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
   const { addPayment } = usePaymentStore();
-  const { updateOrder, addOrder } = useOrderStore();
-  const { updateTableStatus } = useTableStore();
+  const { updateOrderStatus } = useOrder();
+  const { addOrder } = useOrder();
   const { restaurant, fetchRestaurant } = useRestaurantStore();
 
   // Use either the provided order, the created order (from draft), or null
@@ -366,12 +367,9 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
 
       await addPayment(payment);
 
-      // // Update table status if this is a dine-in order
-      if (currentOrder?.table_id) {
-        await updateTableStatus(orderToProcess.table_id, 'available');
-      }
-
-      await updateOrder(orderToProcess?.id, {
+      // Update order status to 'paid' - backend will handle table status update
+      await updateOrderStatus({
+        id: orderToProcess?.id,
         status: 'paid'
       });
 

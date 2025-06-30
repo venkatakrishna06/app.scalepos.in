@@ -12,9 +12,9 @@ import {
 } from 'lucide-react';
 import {Order} from '@/types';
 import {format} from 'date-fns';
-import {useOrderStore} from '@/lib/store';
 import {toast} from '@/lib/toast';
 import {useState} from 'react';
+import {useOrder} from '@/lib/hooks/useOrder';
 import {usePermissions} from '@/hooks/usePermissions';
 import {
   Tabs,
@@ -41,7 +41,7 @@ interface ViewOrdersDialogProps {
 }
 
 export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrdersDialogProps) {
-  const { updateOrderItem } = useOrderStore();
+  const { updateOrderItem, updateOrderItemStatus, cancelOrderItem } = useOrder();
   const { isServer } = usePermissions();
   const [processingItemId, setProcessingItemId] = useState<number | null>(null);
   const [activeOrderId, setActiveOrderId] = useState<number | null>(null);
@@ -119,12 +119,13 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
     }
   };
 
-  const handleItemStatusChange = async (orderId: number, itemId: number, newStatus: Order['items'][0]['status']) => {
+  const handleItemStatusChange = async ( number, itemId: number, newStatus: Order['items'][0]['status']) => {
     if (processingItemId) return;
 
     try {
       setProcessingItemId(itemId);
-      await updateOrderItem(orderId, itemId, { status: newStatus });
+      // Use the new updateOrderItemStatus hook that handles all the business logic in the backend
+      await updateOrderItemStatus({ itemId, status: newStatus });
       toast.success(`Item marked as ${newStatus}`);
     } catch {
       toast.error('Failed to update item status');
@@ -259,8 +260,8 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleItemStatusChange(order.id, item.id, 'cancelled')}
-                              disabled={processingItemId === item.id}
+                              onClick={() => cancelOrderItem({ orderId: order.id, itemId: item.id, reason: 'Cancelled by user' })}
+                              disabled={processingItemId === item.id || (item.allowed_next_states && !item.allowed_next_states.includes('cancelled'))}
                             >
                               {processingItemId === item.id ? (
                                 <Loader2 className="h-3 w-3 animate-spin mr-1" />
@@ -272,7 +273,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                             <Button
                               size="sm"
                               onClick={() => handleItemStatusChange(order.id, item.id, 'preparing')}
-                              disabled={processingItemId === item.id}
+                              disabled={processingItemId === item.id || (item.allowed_next_states && !item.allowed_next_states.includes('preparing'))}
                             >
                               {processingItemId === item.id ? (
                                 <Loader2 className="h-3 w-3 animate-spin mr-1" />
@@ -286,7 +287,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                           <Button
                             size="sm"
                             onClick={() => handleItemStatusChange(order.id, item.id, 'ready')}
-                            disabled={processingItemId === item.id}
+                            disabled={processingItemId === item.id || (item.allowed_next_states && !item.allowed_next_states.includes('ready'))}
                           >
                             {processingItemId === item.id ? (
                               <Loader2 className="h-3 w-3 animate-spin mr-1" />
@@ -300,7 +301,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                             <Button
                                 size="sm"
                                 onClick={() => handleItemStatusChange(order.id, item.id, 'served')}
-                                disabled={processingItemId === item.id}
+                                disabled={processingItemId === item.id || (item.allowed_next_states && !item.allowed_next_states.includes('served'))}
                             >
                               {processingItemId === item.id ? (
                                   <Loader2 className="h-3 w-3 animate-spin mr-1" />
@@ -378,8 +379,8 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleItemStatusChange(order.id, item.id, 'cancelled')}
-                              disabled={processingItemId === item.id}
+                              onClick={() => cancelOrderItem({ orderId: order.id, itemId: item.id, reason: 'Cancelled by user' })}
+                              disabled={processingItemId === item.id || (item.allowed_next_states && !item.allowed_next_states.includes('cancelled'))}
                             >
                               {processingItemId === item.id ? (
                                 <Loader2 className="h-3 w-3 animate-spin mr-1" />
@@ -391,7 +392,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                             <Button
                               size="sm"
                               onClick={() => handleItemStatusChange(order.id, item.id, 'preparing')}
-                              disabled={processingItemId === item.id}
+                              disabled={processingItemId === item.id || (item.allowed_next_states && !item.allowed_next_states.includes('preparing'))}
                             >
                               {processingItemId === item.id ? (
                                 <Loader2 className="h-3 w-3 animate-spin mr-1" />
@@ -404,8 +405,22 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                         {item.status === 'preparing' && (
                           <Button
                             size="sm"
+                            onClick={() => handleItemStatusChange(order.id, item.id, 'ready')}
+                            disabled={processingItemId === item.id || (item.allowed_next_states && !item.allowed_next_states.includes('ready'))}
+                          >
+                            {processingItemId === item.id ? (
+                              <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                            ) : (
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                            )}
+                            Mark Ready
+                          </Button>
+                        )}
+                        {item.status === 'ready' && (
+                          <Button
+                            size="sm"
                             onClick={() => handleItemStatusChange(order.id, item.id, 'served')}
-                            disabled={processingItemId === item.id}
+                            disabled={processingItemId === item.id || (item.allowed_next_states && !item.allowed_next_states.includes('served'))}
                           >
                             {processingItemId === item.id ? (
                               <Loader2 className="h-3 w-3 animate-spin mr-1" />

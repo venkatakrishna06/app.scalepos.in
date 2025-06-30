@@ -4,7 +4,6 @@ import { OrdersSkeleton } from '@/components/skeletons/orders-skeleton';
 import { Button } from '@/components/ui/button';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
 import { useOrder } from '@/lib/hooks/useOrder';
-import { useTable } from '@/lib/hooks/useTable';
 import { toast } from '@/lib/toast';
 import { ViewOrdersDialog } from '@/components/view-orders-dialog';
 import { Order } from '@/types';
@@ -26,8 +25,7 @@ export default function Orders() {
   const { handleError } = useErrorHandler();
 
   // Use React Query hooks instead of Zustand store
-  const { useOrdersQuery, updateOrder } = useOrder();
-  const { updateTable } = useTable();
+  const { useOrdersQuery, cancelOrder, updateOrderStatus, updateOrderItemStatus } = useOrder();
   const{user} = useAuth();
 
   // State for role selection
@@ -115,21 +113,12 @@ export default function Orders() {
     if (!orderToCancel) return;
 
     try {
-      // Update order status to cancelled
-      await updateOrder({
+      // Use the new cancelOrder mutation that handles all the business logic in the backend
+      await cancelOrder({
         id: orderToCancel.id,
-        order: { status: 'cancelled' }
+        reason: 'Cancelled by user'
       });
 
-      // If the order is for a table (dine-in), update the table status to available
-      if (orderToCancel.order_type === 'dine-in' && orderToCancel.table_id) {
-        await updateTable({
-          id: orderToCancel.table_id,
-          table: { status: 'available' }
-        });
-      }
-
-      toast.success('Order cancelled successfully');
       // Refresh orders to update the UI
       await refetchOrders();
       // Close the dialog
@@ -150,12 +139,12 @@ export default function Orders() {
   // Handle updating order status (for kanban view)
   const handleUpdateOrderStatus = async (orderId: number, newStatus: Order['status']) => {
     try {
-      await updateOrder({
+      // Use the new updateOrderStatus function that handles all the business logic in the backend
+      await updateOrderStatus({
         id: orderId,
-        order: { status: newStatus }
+        status: newStatus
       });
 
-      toast.success(`Order #${orderId} status updated to ${newStatus}`);
       await refetchOrders();
     } catch (err) {
       handleError(err);
@@ -165,31 +154,12 @@ export default function Orders() {
   // Handle updating individual item status
   const handleItemStatusChange = async (orderId: number, itemId: number, newStatus: string) => {
     try {
-      // Find the order
-      const order = orders.find(o => o.id === orderId);
-      if (!order) {
-        toast.error("Order not found");
-        return;
-      }
-
-      // Find the item
-      const item = order.items.find(i => i.id === itemId);
-      if (!item) {
-        toast.error("Item not found");
-        return;
-      }
-
-      // Update the item status
-      await updateOrder({
-        id: orderId,
-        order: {
-          items: order.items.map(i =>
-              i.id === itemId ? { ...i, status: newStatus } : i
-          )
-        }
+      // Use the new updateOrderItemStatus function that handles all the business logic in the backend
+      await updateOrderItemStatus({
+        itemId,
+        status: newStatus
       });
 
-      toast.success(`Item "${item.name}" status updated to ${newStatus}`);
       await refetchOrders();
     } catch (err) {
       handleError(err);

@@ -10,6 +10,7 @@ import {ThemeProvider} from './components/theme/theme-provider';
 import {Toaster} from 'sonner';
 import {AuthGuard} from './components/auth/auth-guard';
 import {queryClient} from './lib/queryClient';
+import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
 
 // Set up localStorage persistence for React Query
 const localStoragePersister = createSyncStoragePersister({
