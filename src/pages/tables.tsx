@@ -2,8 +2,10 @@ import {useEffect, useRef, useState} from 'react';
 import {Merge, Plus, Search} from 'lucide-react';
 import {TablesSkeleton} from '@/components/skeletons/tables-skeleton';
 import {Button} from '@/components/ui/button';
+import {CreateOrderDialog} from '@/components/create-order-dialog';
 import {PaymentDialog} from '@/components/payment-dialog';
 import {TableManagementDialog} from '@/components/table-management-dialog';
+import {ViewOrdersDialog} from '@/components/view-orders-dialog';
 import {TableReservationDialog} from '@/components/table-reservation-dialog';
 import {useMenuStore, useOrderStore, useTableStore} from '@/lib/store';
 import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
@@ -16,7 +18,6 @@ import {FilterDropdownContainer} from '@/components/FilterDropdownContainer';
 import {useTable} from '@/lib/hooks/useTable';
 import {useMenu} from '@/lib/hooks/useMenu';
 import {useOrder} from '@/lib/hooks/useOrder';
-import {useNavigate} from 'react-router-dom';
 
 export default function Tables() {
   // Use both Zustand store and React Query hook
@@ -24,7 +25,6 @@ export default function Tables() {
   const { error: ordersError, getOrdersByTable, fetchOrders } = useOrderStore();
   const { fetchMenuItems, fetchCategories } = useMenuStore();
   const { handleError } = useErrorHandler();
-  const navigate = useNavigate();
 
   // Add React Query hooks to populate DevTools
   // Tables
@@ -42,16 +42,14 @@ export default function Tables() {
   // Log React Query data to console (this ensures the queries are active for DevTools)
   useEffect(() => {
 
-
-
-
-
-
   }, [reactQueryTables, isLoadingTables, menuItems, isLoadingMenuItems, orders, isLoadingOrders]);
 
   const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isNewOrder, setIsNewOrder] = useState(false);
+  const [showOrderDialog, setShowOrderDialog] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [showOrdersDialog, setShowOrdersDialog] = useState(false);
   const [tableManagementAction, setTableManagementAction] = useState<'add' | 'merge' | 'split' | null>(null);
 
   // Enhanced filtering and search
@@ -108,9 +106,19 @@ export default function Tables() {
     }
   };
 
-  const handleNewOrder = (tableId: number) => {
-    // Navigate to the create order page with the table ID
-    navigate(`/create-order/${tableId}`);
+  const handleNewOrder = (tableId: number, isNew: boolean = true) => {
+    setSelectedTableId(tableId);
+    setIsNewOrder(isNew);
+    setShowOrderDialog(true);
+    if (!isNew) {
+      const tableOrders = getOrdersByTable(tableId);
+      const activeOrder = tableOrders.find(order =>
+          order.status !== 'paid' && order.status !== 'cancelled'
+      );
+      if (activeOrder) {
+        setSelectedOrder(activeOrder);
+      }
+    }
   };
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -164,10 +172,15 @@ export default function Tables() {
   };
 
   const handleViewOrders = (tableId: number) => {
-    // Navigate to the view orders page with the table ID
-    navigate(`/view-orders/${tableId}`);
+    setSelectedTableId(tableId);
+    setShowOrdersDialog(true);
   };
 
+  const handleOrderPayment = (order: Order) => {
+    setSelectedOrder(order);
+    setShowOrdersDialog(false);
+    setShowPaymentDialog(true);
+  };
 
   // Only show skeleton when initially loading tables, not when placing an order
   // This allows WebSocket updates to handle table updates after order placement
@@ -181,14 +194,14 @@ export default function Tables() {
     const matchesStatus = filterStatus === 'all' || table.status === filterStatus;
 
     // Filter by capacity
-    const matchesCapacity = filterCapacity === 'all' || 
-      (filterCapacity === 'small' && table.capacity <= 4) ||
-      (filterCapacity === 'medium' && table.capacity > 4 && table.capacity <= 8) ||
-      (filterCapacity === 'large' && table.capacity > 8);
+    const matchesCapacity = filterCapacity === 'all' ||
+        (filterCapacity === 'small' && table.capacity <= 4) ||
+        (filterCapacity === 'medium' && table.capacity > 4 && table.capacity <= 8) ||
+        (filterCapacity === 'large' && table.capacity > 8);
 
     // Filter by search query (table number)
-    const matchesSearch = searchQuery === '' || 
-      table.table_number.toString().includes(searchQuery);
+    const matchesSearch = searchQuery === '' ||
+        table.table_number.toString().includes(searchQuery);
 
     return matchesStatus && matchesCapacity && matchesSearch;
   });
@@ -209,18 +222,8 @@ export default function Tables() {
           </div>
         </div>
 
-
         {/* Enhanced filtering and search */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center mb-4">
-          <div className="relative w-full md:w-auto flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-                placeholder="Search tables..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 w-full"
-            />
-          </div>
           <FilterDropdownContainer>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger className="w-[130px] sm:w-[180px]">
@@ -248,25 +251,33 @@ export default function Tables() {
             </Select>
           </FilterDropdownContainer>
 
-
+          <div className="relative w-full md:w-auto flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+                placeholder="Search tables..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 w-full"
+            />
+          </div>
         </div>
 
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filteredTables.map((table) => (
-                  <TableCard
-                      key={table.id}
-                      table={table}
-                      getStatusColor={getStatusColor}
-                      onDelete={handleDeleteTable}
-                      onNewOrder={handleNewOrder}
-                      onViewOrders={handleViewOrders}
-                      onPayment={handlePayment}
-                      onStatusChange={handleStatusChange}
-                      onSplit={() => setTableManagementAction('split')}
-                  />
-              ))}
-            </div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredTables.map((table) => (
+              <TableCard
+                  key={table.id}
+                  table={table}
+                  getStatusColor={getStatusColor}
+                  onDelete={handleDeleteTable}
+                  onNewOrder={handleNewOrder}
+                  onViewOrders={handleViewOrders}
+                  onPayment={handlePayment}
+                  onStatusChange={handleStatusChange}
+                  onSplit={() => setTableManagementAction('split')}
+              />
+          ))}
+        </div>
 
         {tables.length === 0 && (
             <div className="flex h-[400px] items-center justify-center rounded-lg border border-dashed">
@@ -284,6 +295,18 @@ export default function Tables() {
             </div>
         )}
 
+        <CreateOrderDialog
+            open={showOrderDialog}
+            onClose={() => {
+              setShowOrderDialog(false);
+              setSelectedTableId(null);
+              setSelectedOrder(null);
+            }}
+            table_id={selectedTableId || 0}
+            onCreateOrder={handleCreateOrder}
+            existingOrder={!isNewOrder ? selectedOrder : undefined}
+        />
+
         {selectedOrder && (
             <PaymentDialog
                 open={showPaymentDialog}
@@ -292,6 +315,18 @@ export default function Tables() {
                   setSelectedOrder(null);
                 }}
                 order={selectedOrder}
+            />
+        )}
+
+        {selectedTableId && (
+            <ViewOrdersDialog
+                open={showOrdersDialog}
+                onClose={() => {
+                  setShowOrdersDialog(false);
+                  setSelectedTableId(null);
+                }}
+                orders={getOrdersByTable(selectedTableId)}
+                onPayment={handleOrderPayment}
             />
         )}
 
@@ -312,8 +347,8 @@ export default function Tables() {
             <TableReservationDialog
                 open={showReservationDialog}
                 onClose={() => {
-                    setShowReservationDialog(false);
-                    setTableForReservation(null);
+                  setShowReservationDialog(false);
+                  setTableForReservation(null);
                 }}
                 table={tableForReservation}
             />

@@ -35,7 +35,7 @@ export interface OrderItem {
   order_id: number;
   menu_item_id: number;
   quantity: number;
-  status: 'placed' | 'preparing' | 'served' | 'cancelled';
+  status: 'placed' | 'preparing' | 'served' | 'cancelled' | "ready";
   notes: string;
   price: number;
   name: string;

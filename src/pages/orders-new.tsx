@@ -4,7 +4,7 @@ import { OrdersSkeleton } from '@/components/skeletons/orders-skeleton';
 import { Button } from '@/components/ui/button';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
 import { useOrder } from '@/lib/hooks/useOrder';
-import { useTable } from '@/lib/hooks/useTable';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/lib/toast';
 import { ViewOrdersDialog } from '@/components/view-orders-dialog';
 import { Order } from '@/types';
@@ -22,18 +22,19 @@ import { AdminOrderOverview } from '@/components/orders/AdminOrderOverview';
 import { ServerOrderView } from '@/components/orders/ServerOrderView';
 import { KitchenView } from '@/components/orders/KitchenView';
 import {useAuth} from "@/lib/hooks";
+
 export default function Orders() {
   const { handleError } = useErrorHandler();
 
   // Use React Query hooks instead of Zustand store
   const { useOrdersQuery, updateOrder } = useOrder();
-  const { updateTable } = useTable();
-  const{user} = useAuth();
-
+  
   // State for role selection
-  const selectedRole = user?.role;
+  const [selectedRole, setSelectedRole] = useState<'admin' | 'server' | 'kitchen'>('admin');
+
+  
   // Mock current server name (in a real app, this would come from auth context)
-  const currentServer = user?.staff?.name ;
+  const currentServer =user?.name;
 
   // State for view orders dialog
   const [isViewOrdersDialogOpen, setIsViewOrdersDialogOpen] = useState(false);
@@ -54,9 +55,9 @@ export default function Orders() {
   }>({});
 
   // Use React Query to fetch orders
-  const {
-    data: orders = [],
-    isLoading: ordersLoading,
+  const { 
+    data: orders = [], 
+    isLoading: ordersLoading, 
     error: ordersError,
     refetch: refetchOrders
   } = useOrdersQuery(queryParams);
@@ -116,18 +117,10 @@ export default function Orders() {
 
     try {
       // Update order status to cancelled
-      await updateOrder({
-        id: orderToCancel.id,
-        order: { status: 'cancelled' }
+      await updateOrder({ 
+        id: orderToCancel.id, 
+        order: { status: 'cancelled' } 
       });
-
-      // If the order is for a table (dine-in), update the table status to available
-      if (orderToCancel.order_type === 'dine-in' && orderToCancel.table_id) {
-        await updateTable({
-          id: orderToCancel.table_id,
-          table: { status: 'available' }
-        });
-      }
 
       toast.success('Order cancelled successfully');
       // Refresh orders to update the UI
@@ -182,9 +175,9 @@ export default function Orders() {
       // Update the item status
       await updateOrder({
         id: orderId,
-        order: {
-          items: order.items.map(i =>
-              i.id === itemId ? { ...i, status: newStatus } : i
+        order: { 
+          items: order.items.map(i => 
+            i.id === itemId ? { ...i, status: newStatus } : i
           )
         }
       });
@@ -209,114 +202,126 @@ export default function Orders() {
   if (ordersLoading) {
     return <OrdersSkeleton />;
   }
-  console.log(selectedOrder);
 
   // Error state
   if (ordersError) {
     return (
-        <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
-          <div className="mx-auto max-w-md text-center">
-            <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-4 text-lg font-semibold">Error Loading Orders</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {ordersError instanceof Error ? ordersError.message : 'An error occurred while loading orders'}
-            </p>
-            <Button
-                variant="outline"
-                size="sm"
-                className="mt-4"
-                onClick={() => {
-                  refetchOrders();
-                }}
-            >
-              Try Again
-            </Button>
-          </div>
+      <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
+        <div className="mx-auto max-w-md text-center">
+          <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
+          <h3 className="mt-4 text-lg font-semibold">Error Loading Orders</h3>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {ordersError instanceof Error ? ordersError.message : 'An error occurred while loading orders'}
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-4"
+            onClick={() => {
+              refetchOrders();
+            }}
+          >
+            Try Again
+          </Button>
         </div>
+      </div>
     );
   }
 
   return (
-      <div className="space-y-6">
-        {/* Page header with title and role selector */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-2xl font-semibold tracking-tight">Orders</h1>
+    <div className="space-y-6">
+      {/* Page header with title and role selector */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl font-semibold tracking-tight">Orders</h1>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => refreshOrders()}>
-              Refresh
-            </Button>
-          </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Role Selector */}
+          <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as 'admin' | 'server' | 'kitchen')}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Select Role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="admin">Admin</SelectItem>
+              <SelectItem value="server">Server</SelectItem>
+              <SelectItem value="kitchen">Kitchen</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button variant="outline" size="sm" onClick={() => refreshOrders()}>
+            Refresh
+          </Button>
         </div>
-
-        {/* Render the appropriate component based on the selected role */}
-        {selectedRole === 'admin' && (
-            <AdminOrderOverview
-                orders={orders}
-                onEditOrder={handleEditOrder}
-                onCancelOrder={showCancelConfirmation}
-                onRefreshOrders={refreshOrders}
-                onUpdateOrderStatus={handleUpdateOrderStatus}
-                onItemStatusChange={handleItemStatusChange}
-            />
-        )}
-
-        {selectedRole === 'server' && (
-            <ServerOrderView
-                orders={orders}
-                currentServer={currentServer}
-                onMarkItemAsServed={(orderId, itemId) => handleItemStatusChange(orderId, itemId, 'served')}
-                onMarkOrderAsPaid={(orderId) => handleUpdateOrderStatus(orderId, 'paid')}
-                onPrintBill={(orderId) => toast.success(`Printing bill for order #${orderId}`)}
-            />
-        )}
-
-        {selectedRole === 'kitchen' && (
-            <KitchenView
-                orders={orders}
-                onItemStatusChange={handleItemStatusChange}
-            />
-        )}
-
-        {/* View Orders Dialog for editing orders */}
-        {selectedOrder && (
-            <ViewOrdersDialog
-                open={isViewOrdersDialogOpen}
-                orders={[selectedOrder]}
-                onClose={handleCloseViewOrdersDialog}
-            />
-        )}
-
-        {/* Cancel Order Confirmation Dialog */}
-        <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Cancel Order</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to cancel this order? This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <p className="text-sm text-muted-foreground">
-                Order #{orderToCancel?.id} - {orderToCancel?.order_type === 'takeaway' ? 'Takeaway' : orderToCancel?.order_type === 'quick-bill' ? 'Quick Bill' : `Table ${orderToCancel?.table?.table_number || 'Unknown'}`}
-              </p>
-            </div>
-            <DialogFooter>
-              <Button
-                  variant="outline"
-                  onClick={() => setIsCancelDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                  variant="destructive"
-                  onClick={handleCancelOrder}
-              >
-                Yes, Cancel Order
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
+
+      {/* Render the appropriate component based on the selected role */}
+      {selectedRole === 'admin' && (
+        <AdminOrderOverview
+          orders={orders}
+          onEditOrder={handleEditOrder}
+          onCancelOrder={showCancelConfirmation}
+          onRefreshOrders={refreshOrders}
+          onUpdateOrderStatus={handleUpdateOrderStatus}
+          onItemStatusChange={handleItemStatusChange}
+        />
+      )}
+
+      {selectedRole === 'server' && (
+        <ServerOrderView
+          orders={orders}
+          currentServer={currentServer}
+          onMarkItemAsServed={(orderId, itemId) => handleItemStatusChange(orderId, itemId, 'served')}
+          onMarkOrderAsPaid={(orderId) => handleUpdateOrderStatus(orderId, 'paid')}
+          onPrintBill={(orderId) => toast.success(`Printing bill for order #${orderId}`)}
+        />
+      )}
+
+      {selectedRole === 'kitchen' && (
+        <KitchenView
+          orders={orders}
+          onItemStatusChange={handleItemStatusChange}
+        />
+      )}
+
+      {/* View Orders Dialog for editing orders */}
+      {selectedOrder && (
+        <ViewOrdersDialog
+          open={isViewOrdersDialogOpen}
+          onOpenChange={setIsViewOrdersDialogOpen}
+          order={selectedOrder}
+          onClose={handleCloseViewOrdersDialog}
+        />
+      )}
+
+      {/* Cancel Order Confirmation Dialog */}
+      <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancel Order</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to cancel this order? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              Order #{orderToCancel?.id} - {orderToCancel?.order_type === 'takeaway' ? 'Takeaway' : orderToCancel?.order_type === 'quick-bill' ? 'Quick Bill' : `Table ${orderToCancel?.table?.table_number || 'Unknown'}`}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsCancelDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCancelOrder}
+            >
+              Yes, Cancel Order
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
