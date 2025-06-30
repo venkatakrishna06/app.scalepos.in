@@ -14,6 +14,7 @@ import {
     Trash2,
     XCircle
 } from 'lucide-react';
+import {useAuth} from '@/lib/hooks/useAuth';
 import {MenuSkeleton} from '@/components/skeletons/menu-skeleton';
 import {Button} from '@/components/ui/button';
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from '@/components/ui/dialog';
@@ -39,6 +40,8 @@ type ViewMode = 'grid' | 'list';
 
 export default function Menu() {
   const { handleError } = useErrorHandler();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
 
   // Use React Query hooks instead of Zustand store
   const { 
@@ -194,10 +197,12 @@ export default function Menu() {
             {viewMode === 'grid' ? 'List View' : 'Grid View'}
           </Button>
 
-          <Button onClick={() => setShowAddDialog(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Item
-          </Button>
+          {isAdmin && (
+            <Button onClick={() => setShowAddDialog(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Item
+            </Button>
+          )}
         </div>
       </div>
 
@@ -367,25 +372,29 @@ export default function Menu() {
                             </>
                           )}
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => {
-                            setEditingItem(item);
-                            setShowAddDialog(true);
-                          }}
-                          disabled={isSubmitting}
-                        >
-                          <Edit2 className="mr-2 h-4 w-4" />
-                          <span>Edit Item</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          onClick={() => handleDelete(item.id)}
-                          disabled={isSubmitting}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          <span>Delete Item</span>
-                        </DropdownMenuItem>
+                        {isAdmin && (
+                          <>
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setEditingItem(item);
+                                setShowAddDialog(true);
+                              }}
+                              disabled={isSubmitting}
+                            >
+                              <Edit2 className="mr-2 h-4 w-4" />
+                              <span>Edit Item</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => handleDelete(item.id)}
+                              disabled={isSubmitting}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              <span>Delete Item</span>
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -488,30 +497,34 @@ export default function Menu() {
                         )}
                       </Button>
 
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 px-2 text-xs"
-                        onClick={() => {
-                          setEditingItem(item);
-                          setShowAddDialog(true);
-                        }}
-                        disabled={isSubmitting}
-                      >
-                        <Edit2 className="mr-1.5 h-3.5 w-3.5" />
-                        <span>Edit</span>
-                      </Button>
+                      {isAdmin && (
+                        <>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 px-2 text-xs"
+                            onClick={() => {
+                              setEditingItem(item);
+                              setShowAddDialog(true);
+                            }}
+                            disabled={isSubmitting}
+                          >
+                            <Edit2 className="mr-1.5 h-3.5 w-3.5" />
+                            <span>Edit</span>
+                          </Button>
 
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 px-2 text-xs text-destructive hover:text-destructive"
-                        onClick={() => handleDelete(item.id)}
-                        disabled={isSubmitting}
-                      >
-                        <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                        <span>Delete</span>
-                      </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 px-2 text-xs text-destructive hover:text-destructive"
+                            onClick={() => handleDelete(item.id)}
+                            disabled={isSubmitting}
+                          >
+                            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                            <span>Delete</span>
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -528,16 +541,18 @@ export default function Menu() {
             <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
               {searchQuery 
                 ? `No items match "${searchQuery}". Try adjusting your search or filters.` 
-                : "Try adjusting your filters or add a new menu item."}
+                : isAdmin ? "Try adjusting your filters or add a new menu item." : "Try adjusting your filters."}
             </p>
-            <Button
-              variant="default"
-              className="mt-6"
-              onClick={() => setShowAddDialog(true)}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add New Item
-            </Button>
+            {isAdmin && (
+              <Button
+                variant="default"
+                className="mt-6"
+                onClick={() => setShowAddDialog(true)}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add New Item
+              </Button>
+            )}
           </div>
         )}
       </div>

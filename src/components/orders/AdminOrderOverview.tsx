@@ -430,7 +430,6 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                         onClick={() => onEditOrder(order)}
                         disabled={
                           order.status === 'cancelled' ||
-                          (order.order_type === 'dine-in' && order.status !== 'placed') ||
                           order.status === 'paid'
                         }
                         className="border-blue-300 hover:bg-blue-100 text-blue-700"
@@ -821,24 +820,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                               )}
                             </div>
                           </div>
-                          <div className="flex justify-between mt-2">
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="text-xs h-7 text-purple-700 hover:bg-purple-100"
-                              onClick={() => onUpdateOrderStatus(order.id, 'served')}
-                            >
-                              ← Back to Served
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="text-xs h-7 text-purple-700 hover:bg-purple-100"
-                              onClick={() => toast.success("Print bill started")}
-                            >
-                              <Printer className="h-3 w-3 mr-1" /> Print Bill
-                            </Button>
-                          </div>
+
                         </CardContent>
                       </Card>
                     ))}

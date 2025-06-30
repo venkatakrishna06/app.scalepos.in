@@ -285,7 +285,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                         {!isServer && item.status === 'preparing' && (
                           <Button
                             size="sm"
-                            onClick={() => handleItemStatusChange(order.id, item.id, 'served')}
+                            onClick={() => handleItemStatusChange(order.id, item.id, 'ready')}
                             disabled={processingItemId === item.id}
                           >
                             {processingItemId === item.id ? (
@@ -293,8 +293,22 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                             ) : (
                               <CheckCircle2 className="h-3 w-3 mr-1" />
                             )}
-                            Mark Served
+                            Mark Ready
                           </Button>
+                        )}
+                        {!isServer && item.status === 'ready' && (
+                            <Button
+                                size="sm"
+                                onClick={() => handleItemStatusChange(order.id, item.id, 'served')}
+                                disabled={processingItemId === item.id}
+                            >
+                              {processingItemId === item.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                              ) : (
+                                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                              )}
+                              Mark Served
+                            </Button>
                         )}
                       </td>
                     </tr>
