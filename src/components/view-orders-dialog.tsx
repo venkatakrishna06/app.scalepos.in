@@ -13,7 +13,7 @@ import {
 import {Order} from '@/types';
 import {format} from 'date-fns';
 import {toast} from '@/lib/toast';
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 import {useOrder} from '@/lib/hooks/useOrder';
 import {usePermissions} from '@/hooks/usePermissions';
 import {
@@ -41,13 +41,32 @@ interface ViewOrdersDialogProps {
 }
 
 export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrdersDialogProps) {
-  const { updateOrderItem, updateOrderItemStatus, cancelOrderItem } = useOrder();
+  const { updateOrderItem, updateOrderItemStatus, cancelOrderItem, useOrdersQuery } = useOrder();
   const { isServer } = usePermissions();
   const [processingItemId, setProcessingItemId] = useState<number | null>(null);
   const [activeOrderId, setActiveOrderId] = useState<number | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Extract table ID from the first order (all orders should be for the same table)
+  const tableId = orders.length > 0 ? orders[0].table_id : null;
+
+  // Use React Query to get the latest orders data
+  const { data: latestOrders, refetch } = useOrdersQuery();
+
+  // Filter the latest orders for the current table if available, otherwise use the props
+  const currentOrders = latestOrders && tableId 
+    ? latestOrders.filter(order => order.table_id === tableId)
+    : orders;
+
+  // Refresh the data when an item is cancelled or updated
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      refetch();
+    }
+  }, [refreshTrigger, refetch]);
 
   // Filter active orders (not paid or cancelled)
-  const activeOrders = orders.filter(order => order.status !== 'paid' && order.status !== 'cancelled');
+  const activeOrders = currentOrders.filter(order => order.status !== 'paid' && order.status !== 'cancelled');
 
   // Set the first order as active if none is selected and there are orders
   if (activeOrders.length > 0 && activeOrderId === null) {
@@ -119,13 +138,15 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
     }
   };
 
-  const handleItemStatusChange = async ( number, itemId: number, newStatus: Order['items'][0]['status']) => {
+  const handleItemStatusChange = async (orderId: number, itemId: number, newStatus: Order['items'][0]['status']) => {
     if (processingItemId) return;
 
     try {
       setProcessingItemId(itemId);
       // Use the new updateOrderItemStatus hook that handles all the business logic in the backend
       await updateOrderItemStatus({ itemId, status: newStatus });
+      // Trigger a refresh to update the UI with the latest data
+      setRefreshTrigger(prev => prev + 1);
       toast.success(`Item marked as ${newStatus}`);
     } catch {
       toast.error('Failed to update item status');
@@ -142,6 +163,22 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
   //   return status === 'placed';
   // };
 
+  // Handle item cancellation and trigger a refresh
+  const handleCancelItem = async (orderId: number, itemId: number) => {
+    if (processingItemId) return;
+
+    try {
+      setProcessingItemId(itemId);
+      await cancelOrderItem({ orderId, itemId, reason: 'Cancelled by user' });
+      // Trigger a refresh to update the UI with the latest data
+      setRefreshTrigger(prev => prev + 1);
+    } catch {
+      toast.error('Failed to cancel item');
+    } finally {
+      setProcessingItemId(null);
+    }
+  };
+
 
   // Define the OrderDetails component props type
   interface OrderDetailsProps {
@@ -149,6 +186,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
     onPayment?: (order: Order) => void;
     handleQuantityChange: (orderId: number, itemId: number, delta: number, currentQuantity: number) => Promise<void>;
     handleItemStatusChange: (orderId: number, itemId: number, newStatus: string) => Promise<void>;
+    handleCancelItem: (orderId: number, itemId: number) => Promise<void>;
     processingItemId: number | null;
     getOrderTotal: (order: Order) => number;
     getGstDetails: (order: Order) => {
@@ -168,7 +206,8 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
     order, 
     onPayment, 
     handleQuantityChange, 
-    handleItemStatusChange, 
+    handleItemStatusChange,
+    handleCancelItem,
     processingItemId,
     getOrderTotal,
     getGstDetails,
@@ -260,7 +299,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => cancelOrderItem({ orderId: order.id, itemId: item.id, reason: 'Cancelled by user' })}
+                              onClick={() => handleCancelItem(order.id, item.id)}
                               disabled={processingItemId === item.id || (item.allowed_next_states && !item.allowed_next_states.includes('cancelled'))}
                             >
                               {processingItemId === item.id ? (
@@ -379,7 +418,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => cancelOrderItem({ orderId: order.id, itemId: item.id, reason: 'Cancelled by user' })}
+                              onClick={() => handleCancelItem(order.id, item.id)}
                               disabled={processingItemId === item.id || (item.allowed_next_states && !item.allowed_next_states.includes('cancelled'))}
                             >
                               {processingItemId === item.id ? (
@@ -514,6 +553,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                       onPayment={onPayment}
                       handleQuantityChange={handleQuantityChange}
                       handleItemStatusChange={handleItemStatusChange}
+                      handleCancelItem={handleCancelItem}
                       processingItemId={processingItemId}
                       getOrderTotal={getOrderTotal}
                       getGstDetails={getGstDetails}
@@ -532,6 +572,7 @@ export function ViewOrdersDialog({ open, onClose, orders, onPayment }: ViewOrder
                 onPayment={onPayment}
                 handleQuantityChange={handleQuantityChange}
                 handleItemStatusChange={handleItemStatusChange}
+                handleCancelItem={handleCancelItem}
                 processingItemId={processingItemId}
                 getOrderTotal={getOrderTotal}
                 getGstDetails={getGstDetails}

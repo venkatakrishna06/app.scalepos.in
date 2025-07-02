@@ -208,17 +208,6 @@ export default function Orders() {
 
   return (
       <div className="space-y-6">
-        {/* Page header with title and role selector */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-2xl font-semibold tracking-tight">Orders</h1>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => refreshOrders()}>
-              Refresh
-            </Button>
-          </div>
-        </div>
-
         {/* Render the appropriate component based on the selected role */}
         {selectedRole === 'admin' && (
             <AdminOrderOverview

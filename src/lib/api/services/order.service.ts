@@ -113,7 +113,7 @@ export const orderService = {
 
   getOrdersByTable: async (tableId: number) => {
     try {
-      const response = await api.get<Order[]>(`${API_ENDPOINTS.ORDERS.LIST}?table_id=${tableId}`);
+      const response = await api.get<Order[]>(`${API_ENDPOINTS.ORDERS.LIST}?table_number=${tableId}`);
       return response.data;
     } catch (error) {
       handleApiError(error, 'Failed to fetch orders for table');
