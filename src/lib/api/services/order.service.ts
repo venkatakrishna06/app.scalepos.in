@@ -1,6 +1,11 @@
 import {api} from '../axios';
 import {API_ENDPOINTS} from '../endpoints';
 import {Order, OrderItem} from '@/types';
+import {
+  orderSchema, 
+  ordersSchema, 
+  validateApiResponse
+} from '@/lib/validation/apiSchemas';
 
 // Define error type for better type safety
 interface ApiErrorResponse {
@@ -75,7 +80,9 @@ export const orderService = {
       }
 
       const response = await api.get<Order[]>(API_ENDPOINTS.ORDERS.LIST, { params: finalParams });
-      return response.data;
+
+      // Validate the response data against the schema
+      return validateApiResponse(response.data, ordersSchema);
     } catch (error) {
       handleApiError(error, 'Failed to fetch orders');
       return [];
@@ -85,7 +92,7 @@ export const orderService = {
   createOrder: async (order: Omit<Order, 'id'>) => {
     try {
       const response = await api.post<Order>(API_ENDPOINTS.ORDERS.CREATE, order);
-      return response.data;
+      return validateApiResponse(response.data, orderSchema);
     } catch (error) {
       handleApiError(error, 'Failed to create order');
       throw error;
@@ -95,7 +102,7 @@ export const orderService = {
   updateOrder: async (id: number, order: Partial<Order>) => {
     try {
       const response = await api.put<Order>(API_ENDPOINTS.ORDERS.UPDATE(id), order);
-      return response.data;
+      return validateApiResponse(response.data, orderSchema);
     } catch (error) {
       handleApiError(error, 'Failed to update order');
       throw error;
@@ -113,8 +120,8 @@ export const orderService = {
 
   getOrdersByTable: async (tableId: number) => {
     try {
-      const response = await api.get<Order[]>(`${API_ENDPOINTS.ORDERS.LIST}?table_number=${tableId}`);
-      return response.data;
+      const response = await api.get<Order[]>(`${API_ENDPOINTS.ORDERS.LIST}?table_id=${tableId}`);
+      return validateApiResponse(response.data, ordersSchema);
     } catch (error) {
       handleApiError(error, 'Failed to fetch orders for table');
       return [];
@@ -173,7 +180,7 @@ export const orderService = {
   },
 
   // Order item operations
-  updateOrderItem: async (orderId: number, itemId: number, updates: Partial<OrderItem>) => {
+  updateOrderItem: async ( orderId :number,itemId: number, updates: Partial<OrderItem>) => {
     try {
       const response = await api.put<OrderItem>(`${API_ENDPOINTS.ORDER_ITEMS.UPDATE(itemId)}`, updates);
       return response.data;

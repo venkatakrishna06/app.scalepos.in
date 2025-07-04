@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import {useEffect, useState, useRef} from 'react';
 import {AlertCircle, CheckCircle, Loader2} from 'lucide-react';
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from './ui/dialog';
 import {Button} from './ui/button';
@@ -8,11 +8,12 @@ import {useOrder} from '@/lib/hooks/useOrder';
 import {showToast} from '@/lib/toast';
 import {Order, Payment} from '@/types';
 import printJS from 'print-js';
+import {orderService} from "@/lib/api/services";
 
 interface PaymentDialogProps {
   open: boolean;
   onClose: () => void;
-  order?: Order;
+  order?: Order[];
   draftOrder?: Omit<Order, 'id'>;
   onPaymentComplete?: (order: Order) => void;
 }
@@ -20,6 +21,9 @@ interface PaymentDialogProps {
 type PaymentStep = 'method' | 'processing' | 'complete';
 
 export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentComplete }: PaymentDialogProps) {
+  console.log(`[DEBUG] PaymentDialog MOUNTED with order ID:`, order?.id);
+  console.log(`[DEBUG] PaymentDialog rendered with order:`, order);
+
   const [paymentMethod, setPaymentMethod] = useState<Payment['payment_method']>('upi');
   const [currentStep, setCurrentStep] = useState<PaymentStep>('method');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,23 +32,40 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
   const { addPayment } = usePaymentStore();
   const { updateOrderStatus } = useOrder();
-  const { addOrder } = useOrder();
-  const { restaurant, fetchRestaurant } = useRestaurantStore();
+  const { createOrder } = useOrder();
+  const { restaurant } = useRestaurantStore();
+
+  // Store the order in a ref to track if it changes
+  const orderRef = useRef(order);
+  useEffect(() => {
+    if (order && orderRef.current !== order) {
+      console.log(`[DEBUG] Order prop changed in PaymentDialog:`, { 
+        previous: orderRef.current, 
+        current: order 
+      });
+      orderRef.current = order;
+    }
+  }, [order]);
 
   // Use either the provided order, the created order (from draft), or null
   const currentOrder = order || createdOrder;
+  console.log(`[DEBUG] currentOrder in PaymentDialog:`, currentOrder);
 
+  // Reset component state when order changes or dialog opens
   useEffect(() => {
+    console.log(`[DEBUG] PaymentDialog useEffect triggered, open: ${open}, order:`, order);
     if (open) {
+      // Reset all state variables to ensure fresh state for new order
       setCurrentStep('method');
       setIsSubmitting(false);
       setError(null);
       setCashGiven('');
-      // Set default payment method to 'upi' instead of 'card'
       setPaymentMethod('upi');
-
+      // Reset createdOrder to null to ensure we use the new order prop
+      setCreatedOrder(null);
+      console.log(`[DEBUG] PaymentDialog state reset, currentOrder after reset:`, order);
     }
-  }, [open, restaurant, fetchRestaurant]);
+  }, [open, order]);
 
 
   const handlePrintBill = async () => {
@@ -324,7 +345,7 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
     if (!draftOrder) return null;
 
     try {
-      const newOrder = await addOrder(draftOrder);
+      const newOrder = await orderService.createOrder(draftOrder);
       setCreatedOrder(newOrder);
       return newOrder;
     } catch (err) {

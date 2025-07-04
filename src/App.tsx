@@ -53,7 +53,7 @@ function App() {
           />
         </Router>
       </ThemeProvider>
-      {/*<ReactQueryDevtools initialIsOpen={false} />*/}
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
 }

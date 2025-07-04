@@ -59,6 +59,8 @@ export default function Orders() {
     refetch: refetchOrders
   } = useOrdersQuery(queryParams);
 
+  console.log(orders);
+
   // Set up polling for orders when the dialog is open
   useEffect(() => {
     let intervalId: NodeJS.Timeout | null = null;
@@ -241,7 +243,7 @@ export default function Orders() {
         {selectedOrder && (
             <ViewOrdersDialog
                 open={isViewOrdersDialogOpen}
-                orders={[selectedOrder]}
+                tableId={selectedOrder.table_id || null}
                 onClose={handleCloseViewOrdersDialog}
             />
         )}

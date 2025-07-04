@@ -38,6 +38,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
           // Schedule next refresh
           scheduleTokenRefresh();
+
         }
       } catch (error) {
 

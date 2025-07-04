@@ -10,6 +10,7 @@ interface RestaurantState {
   fetchRestaurant: () => Promise<void>;
   updateRestaurant: (updates: Partial<Restaurant>) => Promise<void>;
   updateGstSettings: (sgstRate: number, cgstRate: number) => Promise<void>;
+  toggleOrderTracking: (enabled: boolean) => Promise<void>;
 }
 
 /**
@@ -73,6 +74,27 @@ export const useRestaurantStore = create<RestaurantState>((set, get) => ({
     } catch (err) {
 
       const errorMessage = 'Failed to update GST settings';
+      set({ error: errorMessage });
+      toast.error(errorMessage);
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  toggleOrderTracking: async (enabled) => {
+    try {
+      set({ loading: true, error: null });
+      const restaurant = get().restaurant;
+      if (!restaurant) {
+        throw new Error('No restaurant found');
+      }
+      const updatedRestaurant = await restaurantService.updateRestaurant(restaurant.id, {
+        enable_order_status_tracking: enabled
+      });
+      set({ restaurant: updatedRestaurant });
+      toast.success(`Order status tracking ${enabled ? 'enabled' : 'disabled'} successfully`);
+    } catch (err) {
+      const errorMessage = `Failed to ${enabled ? 'enable' : 'disable'} order status tracking`;
       set({ error: errorMessage });
       toast.error(errorMessage);
     } finally {

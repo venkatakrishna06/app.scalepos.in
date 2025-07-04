@@ -1,16 +1,16 @@
-import axios from 'axios';
 import {tokenService} from '@/lib/services/token.service';
-import {handleApiError, showToast} from '@/lib/toast';
+import {showToast} from '@/lib/toast';
 import {authService} from '@/lib/api/services/auth.service';
+import {createApiClient} from './apiClient';
 
 // Flag to prevent multiple simultaneous refresh token requests
 let isRefreshing = false;
 // Queue of requests to be executed after token refresh
 let refreshSubscribers: Array<(token: string) => void> = [];
 
-const baseURL = import.meta.env.VITE_API_URL;
-export const api = axios.create({
-  baseURL,
+// Create API client with enhanced error handling and request cancellation
+export const api = createApiClient({
+  baseURL: import.meta.env.VITE_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -132,7 +132,9 @@ api.interceptors.response.use(
     // Handle other error types (400, 500, etc.)
     if (error.response && error.response.status !== 401) {
       // Don't handle 401 errors here as they're handled above
-      handleApiError(error, `Request failed with status ${error.response.status}`);
+      // Error handling is now done by the apiClient interceptors
+      // This is just a fallback
+      showToast('error', `Request failed with status ${error.response.status}`);
     }
 
     return Promise.reject(error);

@@ -127,6 +127,7 @@ export interface Restaurant {
   is_active: boolean;
   default_sgst_rate: number;
   default_cgst_rate: number;
+  enable_order_status_tracking: boolean;
 }
 
 export interface User {

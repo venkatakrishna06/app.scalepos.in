@@ -29,7 +29,6 @@ export const useOrder = () => {
     return useQuery({
       queryKey: ['orders', params],
       queryFn: () => orderService.getOrders(params),
-      staleTime: 5 * 60 * 1000, // 5 minutes
     });
   };
 
@@ -38,7 +37,6 @@ export const useOrder = () => {
     return useQuery({
       queryKey: ['orders', 'table', tableId],
       queryFn: () => orderService.getOrdersByTable(tableId),
-      staleTime: 5 * 60 * 1000, // 5 minutes
     });
   };
 
@@ -48,7 +46,6 @@ export const useOrder = () => {
     onSuccess: () => {
       // Invalidate orders queries to trigger refetch
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-
     },
     onError: () => {
       toast.error('Failed to create order');
@@ -92,12 +89,12 @@ export const useOrder = () => {
 
   // Mutation to update an order item
   const updateOrderItemMutation = useMutation({
-    mutationFn: ({ 
-      orderId, 
+    mutationFn: ({
+      orderId,
       itemId, 
       updates 
     }: { 
-      orderId: number; 
+      orderId: number;
       itemId: number; 
       updates: Partial<OrderItem> 
     }) => orderService.updateOrderItem(orderId, itemId, updates),
@@ -156,7 +153,7 @@ export const useOrder = () => {
     return useQuery({
       queryKey: ['orders', 'status-history', orderId],
       queryFn: () => orderService.getOrderStatusHistory(orderId),
-      staleTime: 5 * 60 * 1000, // 5 minutes
+
     });
   };
 
@@ -185,7 +182,7 @@ export const useOrder = () => {
     return useQuery({
       queryKey: ['orders', 'cancellations', orderId],
       queryFn: () => orderService.getOrderCancellations(orderId),
-      staleTime: 5 * 60 * 1000, // 5 minutes
+
     });
   };
 
@@ -214,7 +211,7 @@ export const useOrder = () => {
     return useQuery({
       queryKey: ['order-items', 'status-history', itemId],
       queryFn: () => orderService.getOrderItemStatusHistory(itemId),
-      staleTime: 5 * 60 * 1000, // 5 minutes
+
     });
   };
 
