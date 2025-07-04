@@ -2,6 +2,7 @@ import {create} from 'zustand';
 import {Category, MenuItem} from '@/types';
 import {menuService} from '@/lib/api/services/menu.service';
 import {toast} from '@/lib/toast';
+import {useAuthStore} from './auth.store';
 
 interface MenuState {
   // State
@@ -50,14 +51,26 @@ export const useMenuStore = create<MenuState>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
+      // Get current user role
+      const { user } = useAuthStore.getState();
+
+      if (!user) {
+        set({ menuItems: [] });
+        return;
+      }
+
+
       // Fetch from API directly (no caching)
       const items = await menuService.getItems();
       set({ menuItems: items });
-    } catch (err) {
-
+    } catch (error) {
       const errorMessage = 'Failed to fetch menu items';
       set({ error: errorMessage });
-      toast.error(errorMessage);
+      // Only show error toast for roles that should have access to menu items
+      const { user } = useAuthStore.getState();
+      if (user && user.role !== 'server') {
+        toast.error(errorMessage);
+      }
     } finally {
       set({ loading: false });
     }
@@ -67,14 +80,26 @@ export const useMenuStore = create<MenuState>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
+      // Get current user role
+      const { user } = useAuthStore.getState();
+
+      if (!user) {
+        set({ categories: [] });
+        return;
+      }
+
+
       // Fetch from API directly (no caching)
       const categories = await menuService.getCategories();
       set({ categories });
-    } catch (err) {
-
+    } catch (error) {
       const errorMessage = 'Failed to fetch categories';
       set({ error: errorMessage });
-      toast.error(errorMessage);
+      // Only show error toast for roles that should have access to categories
+      const { user } = useAuthStore.getState();
+      if (user && user.role !== 'server') {
+        toast.error(errorMessage);
+      }
     } finally {
       set({ loading: false });
     }

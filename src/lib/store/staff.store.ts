@@ -2,6 +2,7 @@ import {create} from 'zustand';
 import {StaffMember} from '@/types';
 import {staffService} from "@/lib/api/services/staff.service";
 import {toast} from '@/lib/toast';
+import {useAuthStore} from './auth.store';
 
 interface StaffState {
   staff: StaffMember[];
@@ -32,13 +33,34 @@ export const useStaffStore = create<StaffState>((set) => ({
   fetchStaff: async () => {
     try {
       set({ loading: true, error: null });
+
+      // Get current user role
+      const { user } = useAuthStore.getState();
+
+      if (!user) {
+        set({ staff: [] });
+        return;
+      }
+
+      // Check if user role should have access to staff data
+      if (user.role === 'server' || user.role === 'kitchen') {
+        // Server and kitchen staff don't need access to all staff data
+        set({ staff: [] });
+        return;
+      }
+
+      // Fetch from API directly (no caching)
       const staff = await staffService.getStaff();
       set({ staff: staff });
-    } catch (err) {
-
+    } catch (error) {
       const errorMessage = 'Failed to fetch staff';
       set({ error: errorMessage });
-      toast.error(errorMessage);
+
+      // Only show error toast for roles that should have access to staff data
+      const { user } = useAuthStore.getState();
+      if (user && user.role !== 'server' && user.role !== 'kitchen') {
+        toast.error(errorMessage);
+      }
     } finally {
       set({ loading: false });
     }

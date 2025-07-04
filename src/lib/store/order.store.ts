@@ -3,6 +3,7 @@ import {MenuItem, Order, OrderItem} from '@/types';
 import {orderService} from '@/lib/api/services/order.service';
 import {toast} from '@/lib/toast';
 import {useRestaurantStore} from './restaurant.store';
+import {useAuthStore} from './auth.store';
 
 // Default tax rates
 const DEFAULT_SGST_RATE = 2.5;
@@ -111,9 +112,35 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
+      // Get current user role
+      const { user } = useAuthStore.getState();
+
+      if (!user) {
+        set({ orders: [] });
+        return;
+      }
+
       // Fetch from API directly (no caching)
       const orders = await orderService.getOrders(params);
-      set({ orders });
+
+      // Filter orders based on user role
+      let filteredOrders = orders;
+
+      if (user.role === 'kitchen') {
+        // Kitchen staff only needs to see orders that are being prepared
+        filteredOrders = orders.filter(order => 
+          order.status === 'placed' || order.status === 'preparing'
+        );
+      } else if (user.role === 'server') {
+        // Servers only need to see orders for their assigned tables
+        filteredOrders = orders.filter(order => 
+          order.staff_id === user.staff_id || 
+          (order.status === 'preparing' || order.status === 'served')
+        );
+      }
+      // Admin and manager can see all orders
+
+      set({ orders: filteredOrders });
     } catch (error) {
       console.error('Error fetching orders:', error);
       const errorMessage = 'Failed to fetch orders';

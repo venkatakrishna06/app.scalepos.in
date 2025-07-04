@@ -2,6 +2,7 @@ import {create} from 'zustand';
 import {Table} from '@/types';
 import {tableService} from '@/lib/api/services/table.service';
 import {toast} from '@/lib/toast';
+import {useAuthStore} from './auth.store';
 
 interface TableState {
   tables: Table[];
@@ -37,14 +38,33 @@ export const useTableStore = create<TableState>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
+      // Get current user role
+      const { user } = useAuthStore.getState();
+
+      if (!user) {
+        set({ tables: [] });
+        return;
+      }
+
+      // Check if user role should have access to tables
+      if (user.role === 'kitchen') {
+        // Kitchen staff don't need tables for their primary functions
+        set({ tables: [] });
+        return;
+      }
+
       // Fetch from API directly (no caching)
       const tables = await tableService.getTables();
       set({ tables });
-    } catch (err) {
-
+    } catch (error) {
       const errorMessage = 'Failed to fetch tables';
       set({ error: errorMessage });
-      toast.error(errorMessage);
+
+      // Only show error toast for roles that should have access to tables
+      const { user } = useAuthStore.getState();
+      if (user && user.role !== 'kitchen') {
+        toast.error(errorMessage);
+      }
     } finally {
       set({ loading: false });
     }

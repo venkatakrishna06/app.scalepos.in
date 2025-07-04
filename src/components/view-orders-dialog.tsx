@@ -130,7 +130,7 @@ export function ViewOrdersDialog({ open, onClose, tableId, onPayment }: ViewOrde
       await updateOrderItemStatus({ itemId, status: newStatus });
       // Trigger a refresh to update the UI with the latest data
       setRefreshTrigger(prev => prev + 1);
-      toast.success(`Item marked as ${newStatus}`);
+
     } catch {
       toast.error('Failed to update item status');
     } finally {
@@ -181,8 +181,8 @@ export function ViewOrdersDialog({ open, onClose, tableId, onPayment }: ViewOrde
                   <th className="pb-2 font-medium">Qty</th>
                   <th className="pb-2 font-medium">Price</th>
                   <th className="pb-2 font-medium">Total</th>
-                  <th className="pb-2 font-medium">Status</th>
-                  <th className="pb-2 font-medium">Actions</th>
+                  {/*<th className="pb-2 font-medium">Status</th>*/}
+                  {/*<th className="pb-2 font-medium">Actions</th>*/}
                 </tr>
               </thead>
               <tbody>

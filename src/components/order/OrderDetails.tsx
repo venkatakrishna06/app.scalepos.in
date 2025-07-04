@@ -81,8 +81,8 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                   <th className="pb-2 font-medium">Qty</th>
                   <th className="pb-2 font-medium">Price</th>
                   <th className="pb-2 font-medium">Total</th>
-                  <th className="pb-2 font-medium">Status</th>
-                  {!isServer && <th className="pb-2 font-medium">Actions</th>}
+                  {/*<th className="pb-2 font-medium">Status</th>*/}
+                  {/*{!isServer && <th className="pb-2 font-medium">Actions</th>}*/}
                 </tr>
               </thead>
               <tbody>
@@ -122,7 +122,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
         </div>
       </CardContent>
 
-      <CardFooter className="px-0 flex-col sm:flex-row items-start sm:items-center justify-between border-t pt-4">
+      <CardFooter className="px-0 flex-col sm:flex-row items-start sm:items-center justify-between border-t pt-3">
         <div className="text-sm text-muted-foreground mb-4 sm:mb-0">
           <span className="font-medium">Server:</span> {order.server}
         </div>
