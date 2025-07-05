@@ -1,6 +1,6 @@
 import React from 'react';
-import { AccessibleInput } from '@/components/ui/accessible-input';
-import { Payment } from '@/types';
+import {AccessibleInput} from '@/components/ui/accessible-input';
+import {Payment} from '@/types';
 
 interface PaymentMethodSelectorProps {
   paymentMethod: Payment['payment_method'];

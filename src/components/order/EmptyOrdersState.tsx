@@ -1,5 +1,5 @@
 import React from 'react';
-import { Info } from 'lucide-react';
+import {Info} from 'lucide-react';
 
 /**
  * Component for rendering an empty state when there are no active orders

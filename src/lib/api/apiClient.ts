@@ -1,6 +1,6 @@
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
-import { errorService, ErrorCategory } from '@/lib/services/error.service';
-import { toast } from '@/lib/toast';
+import axios, {AxiosError, AxiosInstance, AxiosRequestConfig} from 'axios';
+import {ErrorCategory, errorService} from '@/lib/services/error.service';
+import {toast} from '@/lib/toast';
 
 // Configuration for the API client
 interface ApiClientConfig {
@@ -160,9 +160,6 @@ export const createApiClient = (config: Partial<ApiClientConfig> = {}): AxiosIns
         // Check if we should retry
         if (originalRequest._retry < finalConfig.retries) {
           originalRequest._retry++;
-
-          // Log the retry attempt
-          console.info(`Retrying request (${originalRequest._retry}/${finalConfig.retries}): ${originalRequest.url}`);
 
           // Wait before retrying
           await new Promise(resolve => setTimeout(resolve, finalConfig.retryDelay));

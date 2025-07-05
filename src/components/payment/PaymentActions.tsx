@@ -1,6 +1,6 @@
 import React from 'react';
-import { AccessibleButton } from '@/components/ui/accessible-button';
-import { Order } from '@/types';
+import {AccessibleButton} from '@/components/ui/accessible-button';
+import {Order} from '@/types';
 
 interface PaymentActionsProps {
   isSubmitting: boolean;

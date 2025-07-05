@@ -1,11 +1,7 @@
 import {api} from '../axios';
 import {API_ENDPOINTS} from '../endpoints';
 import {Order, OrderItem} from '@/types';
-import {
-  orderSchema, 
-  ordersSchema, 
-  validateApiResponse
-} from '@/lib/validation/apiSchemas';
+import {orderSchema, ordersSchema, validateApiResponse} from '@/lib/validation/apiSchemas';
 
 // Define error type for better type safety
 interface ApiErrorResponse {

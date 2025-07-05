@@ -62,10 +62,6 @@ class ErrorService {
       stack: errorObj.stack,
     };
 
-    // Log to console in development
-    if (this.config.enableConsoleLogging) {
-      this.logToConsole(logData);
-    }
 
     // Log to remote service in production
     if (this.config.enableRemoteLogging && this.config.remoteLoggingEndpoint) {
@@ -119,27 +115,6 @@ class ErrorService {
     return ErrorCategory.UNEXPECTED;
   }
 
-  /**
-   * Log error data to the console with appropriate formatting
-   */
-  private logToConsole(logData: ErrorLogData): void {
-    console.group(`[${logData.category}] ${logData.timestamp}`);
-    console.error(logData.message);
-    
-    if (logData.context) {
-      console.info('Context:', logData.context);
-    }
-    
-    if (logData.stack) {
-      console.debug('Stack:', logData.stack);
-    }
-    
-    console.groupEnd();
-  }
-
-  /**
-   * Log error data to a remote service
-   */
   private logToRemoteService(logData: ErrorLogData): void {
     if (!this.config.remoteLoggingEndpoint) {
       return;
@@ -150,7 +125,7 @@ class ErrorService {
     try {
       // This would be an actual API call in a real implementation
       console.info(`[Remote Logging] Would send error to ${this.config.remoteLoggingEndpoint}:`, logData);
-      
+
       // Example implementation with fetch:
       /*
       fetch(this.config.remoteLoggingEndpoint, {

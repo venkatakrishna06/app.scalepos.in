@@ -139,16 +139,12 @@ export default function Tables() {
   };
 
   const handlePayment = async (table: Table) => {
-    console.log(`[DEBUG] handlePayment called for table ${table.id}, table number ${table.table_number}`);
     const tableOrders = await orderService.getOrdersByTable(table.id);
-    console.log(`[DEBUG] Orders fetched for table ${table.id}:`, tableOrders);
     const activeOrder = tableOrders.find(order =>
         order.status !== 'paid' && order.status !== 'cancelled'
     );
-    console.log(`[DEBUG] Active order for table ${table.id}:`, activeOrder);
     if (activeOrder) {
       setSelectedOrder(activeOrder);
-      console.log(`[DEBUG] selectedOrder set to:`, activeOrder);
       setShowPaymentDialog(true);
     }
   };
@@ -314,12 +310,10 @@ export default function Tables() {
 
         {selectedOrder && (
             <>
-              {console.log(`[DEBUG] Rendering PaymentDialog with selectedOrder:`, selectedOrder)}
               <PaymentDialog
                   key={`payment-dialog-${selectedOrder.id}`}
                   open={showPaymentDialog}
                   onClose={() => {
-                    console.log(`[DEBUG] PaymentDialog onClose called`);
                     setShowPaymentDialog(false);
                     setSelectedOrder(null);
                   }}

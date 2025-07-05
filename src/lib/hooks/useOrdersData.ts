@@ -1,9 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { orderService } from '@/lib/api/services/order.service';
-import { Order, OrderItem } from '@/types';
-import { useOrderUIStore } from '@/lib/store/orderUI.store';
-import { toast } from '@/lib/toast';
-import { useMemo } from 'react';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {orderService} from '@/lib/api/services/order.service';
+import {Order, OrderItem} from '@/types';
+import {useOrderUIStore} from '@/lib/store/orderUI.store';
+import {toast} from '@/lib/toast';
+import {useMemo} from 'react';
 
 /**
  * Hook that combines React Query for server state with Zustand for UI state
@@ -60,7 +60,6 @@ export const useOrdersData = (params?: {
     onSuccess: (updatedOrder) => {
       queryClient.setQueryData(['orders', 'detail', updatedOrder.id], updatedOrder);
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-      toast.success('Order updated successfully');
     },
     onError: (error) => {
       toast.error('Failed to update order', { 

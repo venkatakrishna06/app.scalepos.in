@@ -1,6 +1,6 @@
-import { useCallback } from 'react';
-import { toast } from '@/lib/toast';
-import { errorService, ErrorCategory } from '@/lib/services/error.service';
+import {useCallback} from 'react';
+import {toast} from '@/lib/toast';
+import {ErrorCategory, errorService} from '@/lib/services/error.service';
 
 interface ErrorHandlerOptions {
   showToast?: boolean;

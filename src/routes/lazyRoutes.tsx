@@ -1,6 +1,6 @@
 import React from 'react';
-import { SuspenseWrapper } from '@/components/suspense/SuspenseWrapper';
-import { errorService, ErrorCategory } from '@/lib/services/error.service';
+import {SuspenseWrapper} from '@/components/suspense/SuspenseWrapper';
+import {ErrorCategory, errorService} from '@/lib/services/error.service';
 
 // Lazy load pages to reduce initial bundle size
 const Dashboard = React.lazy(() => import('@/pages/dashboard'));

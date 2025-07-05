@@ -1,6 +1,6 @@
-import React, { Suspense } from 'react';
-import { Loader2 } from 'lucide-react';
-import { ErrorBoundary } from '@/components/error/ErrorBoundary';
+import React, {Suspense} from 'react';
+import {Loader2} from 'lucide-react';
+import {ErrorBoundary} from '@/components/error/ErrorBoundary';
 
 interface SuspenseWrapperProps {
   children: React.ReactNode;

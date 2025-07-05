@@ -142,7 +142,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
       set({ orders: filteredOrders });
     } catch (error) {
-      console.error('Error fetching orders:', error);
+
       const errorMessage = 'Failed to fetch orders';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -249,7 +249,6 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       }
 
       await get().updateOrder(id, { status });
-      toast.success(`Order status updated to ${status}`);
     } catch (error) {
       console.error(`Error updating order status to ${status}:`, error);
       const errorMessage = `Failed to update order status to ${status}`;

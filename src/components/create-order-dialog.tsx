@@ -91,7 +91,6 @@ function CreateOrderDialogComponent({
           const menuItemAnalytics = await analyticsService.getMenuItemAnalytics(params);
           setFavouriteItems(menuItemAnalytics);
         } catch (err) {
-          console.error('Failed to load favourite items:', err);
           toast.error('Failed to load favourite items');
         } finally {
           setIsLoadingFavourites(false);
@@ -475,7 +474,6 @@ function CreateOrderDialogComponent({
       // Close the dialog immediately to avoid flashing
       onClose();
     } catch(err) {
-      console.error('Failed to process order:', err);
       toast.error('Failed to process order');
     } finally {
       setIsSubmitting(false);

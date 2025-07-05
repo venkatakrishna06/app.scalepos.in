@@ -141,7 +141,6 @@ export const useOrder = () => {
 
       // Invalidate orders queries to trigger refetch
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-      toast.success(`Order status updated to ${response.order.status}`);
     },
     onError: () => {
       toast.error('Failed to update order status');

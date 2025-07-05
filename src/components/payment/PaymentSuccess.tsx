@@ -1,6 +1,6 @@
 import React from 'react';
-import { CheckCircle } from 'lucide-react';
-import { AccessibleButton } from '@/components/ui/accessible-button';
+import {CheckCircle} from 'lucide-react';
+import {AccessibleButton} from '@/components/ui/accessible-button';
 
 interface PaymentSuccessProps {
   onClose: () => void;

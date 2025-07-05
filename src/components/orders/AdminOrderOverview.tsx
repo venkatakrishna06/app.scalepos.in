@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   ArrowUpDown,
   Coffee,
@@ -10,15 +10,14 @@ import {
   LayoutList,
   Printer,
   Search,
-  Trash2,
-  User
+  Trash2
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { format, isToday, isYesterday, subDays } from 'date-fns';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FilterDropdownContainer } from '@/components/FilterDropdownContainer';
+import {Button} from '@/components/ui/button';
+import {format, isToday, isYesterday, subDays} from 'date-fns';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
+import {Input} from '@/components/ui/input';
+import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
+import {FilterDropdownContainer} from '@/components/FilterDropdownContainer';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,12 +25,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { toast } from '@/lib/toast';
-import { Order } from '@/types';
-import { useRestaurantStore } from '@/lib/store';
+import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
+import {Badge} from '@/components/ui/badge';
+import {cn} from '@/lib/utils';
+import {toast} from '@/lib/toast';
+import {Order} from '@/types';
+import {useRestaurantStore} from '@/lib/store';
 
 interface AdminOrderOverviewProps {
   orders: Order[];
@@ -198,8 +197,6 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
           return new Date(b.order_time).getTime() - new Date(a.order_time).getTime();
       }
     });
-
-  console.log(filteredOrders);
 
   return (
     <div className="space-y-6">

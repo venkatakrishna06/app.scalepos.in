@@ -175,11 +175,6 @@ export const handleApiError = (error: ApiError, fallbackMessage: string = 'An er
         .map(([field, message]) => `${field}: ${message}`)
         .join('\n');
     }
-
-    // Include the error code in the console log for debugging
-    if (errorData.code) {
-
-    }
   } else if (error?.message) {
     errorMessage = error.message;
   }

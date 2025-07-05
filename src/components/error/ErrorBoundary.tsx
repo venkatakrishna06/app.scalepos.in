@@ -1,6 +1,6 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Button } from '@/components/ui/button';
-import { AlertTriangle } from 'lucide-react';
+import React, {Component, ErrorInfo, ReactNode} from 'react';
+import {Button} from '@/components/ui/button';
+import {AlertTriangle} from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -42,7 +42,6 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.props.onError) {
       this.props.onError(error, info);
     } else {
-      console.error('Error caught by ErrorBoundary:', error, info);
     }
   }
 

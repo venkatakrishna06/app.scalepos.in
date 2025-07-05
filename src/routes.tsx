@@ -5,21 +5,21 @@ import {ProtectedRoute} from '@/components/auth/protected-route';
 
 // Import lazy-loaded components
 import {
-  LazyDashboard,
-  LazyTables,
-  LazyOrders,
-  LazyTakeaway,
-  LazyMenu,
-  LazyCategories,
-  LazyStaff,
-  LazyPayments,
-  LazyProfile,
-  LazyUserManagement,
-  LazySettings,
-  LazyProfileSettings,
-  LazyGstSettings,
-  LazyOrderTrackingSettings,
-  LazyQuickBill
+    LazyCategories,
+    LazyDashboard,
+    LazyGstSettings,
+    LazyMenu,
+    LazyOrders,
+    LazyOrderTrackingSettings,
+    LazyPayments,
+    LazyProfile,
+    LazyProfileSettings,
+    LazyQuickBill,
+    LazySettings,
+    LazyStaff,
+    LazyTables,
+    LazyTakeaway,
+    LazyUserManagement
 } from '@/routes/lazyRoutes';
 
 // Import non-lazy-loaded pages (login and error pages should load quickly)

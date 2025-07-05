@@ -1,6 +1,6 @@
-import React, { forwardRef } from 'react';
-import { Button, ButtonProps } from './button';
-import { cn } from '@/lib/utils';
+import React, {forwardRef} from 'react';
+import {Button, ButtonProps} from './button';
+import {cn} from '@/lib/utils';
 
 export interface AccessibleButtonProps extends ButtonProps {
   /**

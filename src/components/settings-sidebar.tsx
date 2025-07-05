@@ -1,5 +1,5 @@
 import {Link, useLocation} from 'react-router-dom';
-import {ChevronRight, Percent, User, ClipboardList} from 'lucide-react';
+import {ChevronRight, ClipboardList, Percent, User} from 'lucide-react';
 import {cn} from '@/lib/utils';
 import {useAuthStore} from '@/lib/store/auth.store';
 

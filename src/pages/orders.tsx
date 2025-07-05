@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
-import { FileText } from 'lucide-react';
-import { OrdersSkeleton } from '@/components/skeletons/orders-skeleton';
-import { Button } from '@/components/ui/button';
-import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
-import { useOrder } from '@/lib/hooks/useOrder';
-import { toast } from '@/lib/toast';
-import { ViewOrdersDialog } from '@/components/view-orders-dialog';
-import { Order } from '@/types';
+import {useEffect, useState} from 'react';
+import {FileText} from 'lucide-react';
+import {OrdersSkeleton} from '@/components/skeletons/orders-skeleton';
+import {Button} from '@/components/ui/button';
+import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
+import {useOrder} from '@/lib/hooks/useOrder';
+import {toast} from '@/lib/toast';
+import {ViewOrdersDialog} from '@/components/view-orders-dialog';
+import {Order} from '@/types';
 import {
   Dialog,
   DialogContent,
@@ -17,10 +17,11 @@ import {
 } from '@/components/ui/dialog';
 
 // Import role-based components
-import { AdminOrderOverview } from '@/components/orders/AdminOrderOverview';
-import { ServerOrderView } from '@/components/orders/ServerOrderView';
-import { KitchenView } from '@/components/orders/KitchenView';
+import {AdminOrderOverview} from '@/components/orders/AdminOrderOverview';
+import {ServerOrderView} from '@/components/orders/ServerOrderView';
+import {KitchenView} from '@/components/orders/KitchenView';
 import {useAuth} from "@/lib/hooks";
+
 export default function Orders() {
   const { handleError } = useErrorHandler();
 
@@ -59,7 +60,6 @@ export default function Orders() {
     refetch: refetchOrders
   } = useOrdersQuery(queryParams);
 
-  console.log(orders);
 
   // Set up polling for orders when the dialog is open
   useEffect(() => {
@@ -181,7 +181,6 @@ export default function Orders() {
   if (ordersLoading) {
     return <OrdersSkeleton />;
   }
-  console.log(selectedOrder);
 
   // Error state
   if (ordersError) {

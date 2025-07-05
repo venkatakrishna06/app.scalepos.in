@@ -1,13 +1,13 @@
 import {Dialog, DialogContent, DialogHeader, DialogTitle} from './ui/dialog';
 import {Order} from '@/types';
 import {toast} from '@/lib/toast';
-import React, {useState, useEffect, useCallback, useMemo} from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {useOrder} from '@/lib/hooks/useOrder';
 import {usePermissions} from '@/hooks/usePermissions';
 import {EmptyOrdersState} from './order/EmptyOrdersState';
 import {OrderDetails} from "@/components/order/OrderDetails.tsx";
 import {Skeleton} from "@/components/ui/skeleton";
-import {Card, CardHeader, CardContent, CardFooter} from '@/components/ui/card';
+import {Card, CardContent, CardFooter, CardHeader} from '@/components/ui/card';
 import {Separator} from '@/components/ui/separator';
 
 interface ViewOrdersDialogProps {

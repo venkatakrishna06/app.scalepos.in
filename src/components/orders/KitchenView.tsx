@@ -1,19 +1,12 @@
-import React, { useState } from 'react';
-import {
-  FileText,
-  Search,
-  Clock,
-  CheckCircle2,
-  Coffee,
-  Utensils
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { format } from 'date-fns';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { Order } from '@/types';
+import React, {useState} from 'react';
+import {CheckCircle2, Clock, Coffee, FileText, Search, Utensils} from 'lucide-react';
+import {Button} from '@/components/ui/button';
+import {format} from 'date-fns';
+import {Input} from '@/components/ui/input';
+import {Card, CardContent, CardHeader} from '@/components/ui/card';
+import {Badge} from '@/components/ui/badge';
+import {cn} from '@/lib/utils';
+import {Order} from '@/types';
 
 interface KitchenViewProps {
   orders: Order[];

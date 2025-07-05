@@ -1,18 +1,18 @@
 import {useEffect, useState} from 'react';
 import {
-    AlertCircle,
-    ArrowUpRight,
-    CheckCircle,
-    Edit2,
-    FileText,
-    LayoutGrid,
-    LayoutList,
-    MoreVertical,
-    Plus,
-    Search,
-    Tag,
-    Trash2,
-    XCircle
+  AlertCircle,
+  ArrowUpRight,
+  CheckCircle,
+  Edit2,
+  FileText,
+  LayoutGrid,
+  LayoutList,
+  MoreVertical,
+  Plus,
+  Search,
+  Tag,
+  Trash2,
+  XCircle
 } from 'lucide-react';
 import {useAuth} from '@/lib/hooks/useAuth';
 import {MenuSkeleton} from '@/components/skeletons/menu-skeleton';
@@ -21,11 +21,11 @@ import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} fr
 import {Input} from '@/components/ui/input';
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card';
 import {MenuItemForm} from '@/components/forms/menu-item-form';

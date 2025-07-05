@@ -1,6 +1,6 @@
-import React, { forwardRef, InputHTMLAttributes } from 'react';
-import { Input } from './input';
-import { cn } from '@/lib/utils';
+import React, {forwardRef, InputHTMLAttributes} from 'react';
+import {Input} from './input';
+import {cn} from '@/lib/utils';
 
 export interface AccessibleInputProps extends InputHTMLAttributes<HTMLInputElement> {
   /**

@@ -1,7 +1,7 @@
 import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Order } from '@/types';
-import { OrderDetails } from './OrderDetails';
+import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
+import {Order} from '@/types';
+import {OrderDetails} from './OrderDetails';
 
 interface OrderTabsProps {
   orders: Order[];

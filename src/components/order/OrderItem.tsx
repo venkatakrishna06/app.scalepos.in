@@ -1,10 +1,10 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Loader2, Minus, Plus, XCircle, CheckCircle2 } from 'lucide-react';
-import { OrderItem as OrderItemType } from '@/types';
-import { useRestaurantStore } from '@/lib/store';
+import {Button} from '@/components/ui/button';
+import {Badge} from '@/components/ui/badge';
+import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
+import {CheckCircle2, Loader2, Minus, Plus, XCircle} from 'lucide-react';
+import {OrderItem as OrderItemType} from '@/types';
+import {useRestaurantStore} from '@/lib/store';
 
 interface OrderItemProps {
   item: OrderItemType;

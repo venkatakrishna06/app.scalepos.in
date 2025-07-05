@@ -1,13 +1,13 @@
 import React from 'react';
-import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { CreditCard, Clock } from 'lucide-react';
-import { format } from 'date-fns';
-import { Order } from '@/types';
-import { OrderItemRow, OrderItemCard } from './OrderItem';
-import { useRestaurantStore } from '@/lib/store';
+import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
+import {Badge} from '@/components/ui/badge';
+import {Button} from '@/components/ui/button';
+import {Separator} from '@/components/ui/separator';
+import {Clock, CreditCard} from 'lucide-react';
+import {format} from 'date-fns';
+import {Order} from '@/types';
+import {OrderItemCard, OrderItemRow} from './OrderItem';
+import {useRestaurantStore} from '@/lib/store';
 
 interface OrderDetailsProps {
   order: Order;

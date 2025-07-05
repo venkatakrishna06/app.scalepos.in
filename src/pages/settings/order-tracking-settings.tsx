@@ -1,7 +1,7 @@
 import {useEffect, useState} from 'react';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Button} from '@/components/ui/button';
-import {Loader2, ClipboardList} from 'lucide-react';
+import {ClipboardList, Loader2} from 'lucide-react';
 import {useRestaurantStore} from '@/lib/store';
 import {toast} from '@/lib/toast';
 import {Switch} from '@/components/ui/switch';

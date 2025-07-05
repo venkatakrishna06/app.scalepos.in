@@ -101,7 +101,6 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
         const menuItemAnalytics = await analyticsService.getMenuItemAnalytics(params);
         setFavouriteItems(menuItemAnalytics);
       } catch (err) {
-        console.error('Failed to load favourite items:', err);
         toast.error('Failed to load favourite items');
       } finally {
         setIsLoadingFavourites(false);
