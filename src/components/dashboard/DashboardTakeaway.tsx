@@ -100,7 +100,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
         };
         const menuItemAnalytics = await analyticsService.getMenuItemAnalytics(params);
         setFavouriteItems(menuItemAnalytics);
-      } catch (err) {
+      } catch {
         toast.error('Failed to load favourite items');
       } finally {
         setIsLoadingFavourites(false);
@@ -158,8 +158,8 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
       return menuItems.filter(item => {
         const isFavourite = favouriteItemIds.includes(item.id);
         const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchAvailability = item.available;
-        return isFavourite && matchesSearch && matchAvailability;
+        // Don't filter by availability, show all items
+        return isFavourite && matchesSearch;
       });
     }
 
@@ -167,13 +167,18 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
     return menuItems.filter(item => {
       const matchesCategory = selectedCategory === 'all' || item.category_id === parseInt(selectedCategory);
       const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchAvailability = item.available;
-      return matchesCategory && matchesSearch && matchAvailability;
+      // Don't filter by availability, show all items
+      return matchesCategory && matchesSearch;
     });
   }, [menuItems, selectedCategory, searchQuery, favouriteItems]);
 
   // Handle quantity change for an item
   const handleQuantityChange = useCallback((item: MenuItem, delta: number) => {
+    // Don't allow adding unavailable items
+    if (!item.available && delta > 0) {
+      return;
+    }
+
     setOrderItems(current => {
       const existingItem = current.find(i => i.menu_item_id === item.id);
       if (existingItem) {
@@ -686,18 +691,25 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
               {filteredItems.length > 0 ? filteredItems.map(item => (
                 <Card
                   key={item.id}
-                  className="overflow-hidden cursor-pointer hover:bg-accent/50 transition-colors border-primary/10"
+                  className={`overflow-hidden ${item.available ? 'cursor-pointer hover:bg-accent/50' : 'cursor-not-allowed opacity-75'} transition-colors border-primary/10`}
                   onClick={() => handleQuantityChange(item, 1)}
                 >
                   <div className="flex items-center gap-2 p-2 sm:p-3">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="h-14 w-14 sm:h-16 sm:w-16 rounded-md object-cover flex-shrink-0"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = "https://via.placeholder.com/200?text=No+Image";
-                      }}
-                    />
+                    <div className="relative">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="h-14 w-14 sm:h-16 sm:w-16 rounded-md object-cover flex-shrink-0"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "https://via.placeholder.com/200?text=No+Image";
+                        }}
+                      />
+                      {!item.available && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-md">
+                          <span className="text-white text-xs font-bold px-1 py-0.5 bg-red-500 rounded">Unavailable</span>
+                        </div>
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium leading-tight text-sm line-clamp-2">{item.name}</h3>
                       <div className="mt-1 flex items-center justify-between">

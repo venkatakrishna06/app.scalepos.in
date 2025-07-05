@@ -1,6 +1,13 @@
 import React from 'react';
 import {SuspenseWrapper} from '@/components/suspense/SuspenseWrapper';
 import {ErrorCategory, errorService} from '@/lib/services/error.service';
+import {TablesSkeleton} from '@/components/skeletons/tables-skeleton';
+import {OrdersSkeleton} from '@/components/skeletons/orders-skeleton';
+import {MenuSkeleton} from '@/components/skeletons/menu-skeleton';
+import {CategoriesSkeleton} from '@/components/skeletons/categories-skeleton';
+import {StaffSkeleton} from '@/components/skeletons/staff-skeleton';
+import {PaymentsSkeleton} from '@/components/skeletons/payments-skeleton';
+import {UserManagementSkeleton} from '@/components/skeletons/user-management-skeleton';
 
 // Lazy load pages to reduce initial bundle size
 const Dashboard = React.lazy(() => import('@/pages/dashboard'));
@@ -36,13 +43,19 @@ export const LazyDashboard = () => (
 );
 
 export const LazyTables = () => (
-  <SuspenseWrapper onError={handleLazyLoadError}>
+  <SuspenseWrapper 
+    onError={handleLazyLoadError}
+    fallback={<TablesSkeleton />}
+  >
     <Tables />
   </SuspenseWrapper>
 );
 
 export const LazyOrders = () => (
-  <SuspenseWrapper onError={handleLazyLoadError}>
+  <SuspenseWrapper 
+    onError={handleLazyLoadError}
+    fallback={<OrdersSkeleton />}
+  >
     <Orders />
   </SuspenseWrapper>
 );
@@ -54,25 +67,37 @@ export const LazyTakeaway = () => (
 );
 
 export const LazyMenu = () => (
-  <SuspenseWrapper onError={handleLazyLoadError}>
+  <SuspenseWrapper 
+    onError={handleLazyLoadError}
+    fallback={<MenuSkeleton />}
+  >
     <Menu />
   </SuspenseWrapper>
 );
 
 export const LazyCategories = () => (
-  <SuspenseWrapper onError={handleLazyLoadError}>
+  <SuspenseWrapper 
+    onError={handleLazyLoadError}
+    fallback={<CategoriesSkeleton />}
+  >
     <Categories />
   </SuspenseWrapper>
 );
 
 export const LazyStaff = () => (
-  <SuspenseWrapper onError={handleLazyLoadError}>
+  <SuspenseWrapper 
+    onError={handleLazyLoadError}
+    fallback={<StaffSkeleton />}
+  >
     <Staff />
   </SuspenseWrapper>
 );
 
 export const LazyPayments = () => (
-  <SuspenseWrapper onError={handleLazyLoadError}>
+  <SuspenseWrapper 
+    onError={handleLazyLoadError}
+    fallback={<PaymentsSkeleton />}
+  >
     <Payments />
   </SuspenseWrapper>
 );
@@ -84,7 +109,10 @@ export const LazyProfile = () => (
 );
 
 export const LazyUserManagement = () => (
-  <SuspenseWrapper onError={handleLazyLoadError}>
+  <SuspenseWrapper 
+    onError={handleLazyLoadError}
+    fallback={<UserManagementSkeleton />}
+  >
     <UserManagement />
   </SuspenseWrapper>
 );
