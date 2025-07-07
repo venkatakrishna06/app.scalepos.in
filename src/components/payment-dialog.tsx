@@ -681,6 +681,7 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
                         onClick={handlePayment}
                         className="w-full h-9 text-xs font-medium"
                         disabled={isSubmitting}
+                        variant="outline"
                     >
                       {isSubmitting ? (
                         <>

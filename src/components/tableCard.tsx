@@ -91,6 +91,7 @@ export const TableCard = React.memo(({
                                 <Settings2 className="h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>
+                        {table.status !== 'occupied' &&
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => onStatusChange(table.id, 'available')}>
                                 <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
@@ -118,6 +119,7 @@ export const TableCard = React.memo(({
                                 </DropdownMenuItem>
                             )}
                         </DropdownMenuContent>
+                        }
                     </DropdownMenu>
                 </div>
 

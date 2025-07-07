@@ -174,9 +174,6 @@ export const createApiClient = (config: Partial<ApiClientConfig> = {}): AxiosIns
           retries: originalRequest._retry,
         });
 
-        toast.error('Server Error', { 
-          description: 'Something went wrong on our end. Please try again later.' 
-        });
       }
 
       // Handle all other errors

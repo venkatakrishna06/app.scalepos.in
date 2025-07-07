@@ -3,6 +3,7 @@ import {User} from '@/types/auth';
 import {authService} from '@/lib/api/services/auth.service';
 import {tokenService} from '@/lib/services/token.service';
 import {api} from '@/lib/api/axios';
+import {toast} from '@/lib/toast';
 
 // Key for storing user data in storage
 const USER_STORAGE_KEY = 'user_data';
@@ -140,6 +141,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       const response = await authService.login({ email, password });
 
+
       // Store both tokens if refresh token is provided
       if (response.refreshToken) {
         // This now just sets a flag indicating we have a refresh token
@@ -154,8 +156,13 @@ export const useAuthStore = create<AuthState>((set) => ({
         state.setToken(response.token);
         return { user: response.user_account, isAuthenticated: true };
       });
-    } catch {
-      set({ error: 'Invalid credentials' });
+    } catch (error) {
+      // Check if the error is a 401 Unauthorized error
+      if (error) {
+        toast.error('Invalid username or password');
+      } else {
+        toast.error('Login failed. Please try again.');
+      }
     } finally {
       set({ loading: false });
     }

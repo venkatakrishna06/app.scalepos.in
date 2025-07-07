@@ -25,6 +25,7 @@ QuickQuick is a comprehensive restaurant management system designed to streamlin
 - **Form Handling**: React Hook Form, Zod
 - **Data Visualization**: Recharts
 - **Build Tools**: Vite, ESLint
+- **Desktop Application**: Electron
 
 ## Installation
 
@@ -54,11 +55,23 @@ QuickQuick is a comprehensive restaurant management system designed to streamlin
 
 ## Usage
 
-### Development
+### Web Application Development
 - `npm run dev` - Start the development server
 - `npm run lint` - Run ESLint to check for code issues
 - `npm run build` - Build the application for production
 - `npm run preview` - Preview the production build locally
+
+### Desktop Application
+This application can also be run as a desktop application using Electron.
+
+#### Development
+- `npm run electron:dev` - Start the development server with Electron
+
+#### Building
+- `npm run electron:build` - Build the desktop application for distribution
+- `npm run electron:preview` - Preview the built desktop application
+
+For detailed instructions on running and building the desktop application, see [DESKTOP_APP.md](./DESKTOP_APP.md).
 
 ## Documentation
 

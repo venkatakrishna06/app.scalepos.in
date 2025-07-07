@@ -3,6 +3,7 @@ import {
   AlertCircle,
   ChevronDown,
   ChevronRight,
+  Info,
   Loader2,
   Menu as MenuIcon,
   Minus,
@@ -14,13 +15,14 @@ import {
   X
 } from 'lucide-react';
 import {Button} from '@/components/ui/button';
-import {useMenuStore, useOrderStore} from '@/lib/store';
+import {useMenuStore, useOrderStore, usePaymentStore, useRestaurantStore} from '@/lib/store';
 import {MenuItem, Order, OrderItem} from '@/types';
 import {cn} from '@/lib/utils';
 import {useAuthStore} from "@/lib/store/auth.store";
+import {useOrder} from '@/lib/hooks/useOrder';
+import {orderService} from "@/lib/api/services";
 import {toast} from '@/lib/toast';
 import {Card} from '@/components/ui/card';
-import {PaymentDialog} from '@/components/payment-dialog';
 import {motion} from 'framer-motion';
 import {analyticsService} from '@/lib/api/services/analytics.service';
 import {MenuItemAnalytics} from '@/types/analytics';
@@ -56,9 +58,6 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
-  const [draftOrder, setDraftOrder] = useState<Omit<Order, 'id'> | null>(null);
   const [favouriteItems, setFavouriteItems] = useState<MenuItemAnalytics[]>([]);
   const [isLoadingFavourites, setIsLoadingFavourites] = useState(false);
 
@@ -66,10 +65,18 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [itemNote, setItemNote] = useState<string>('');
 
+  // Payment state
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'upi' | ''>('');
+  const [cashGiven, setCashGiven] = useState<string>('');
+  const [showTaxDetails, setShowTaxDetails] = useState(false);
+
   // Store state
   const { menuItems, categories } = useMenuStore();
   const { calculateOrderTotals } = useOrderStore();
   const { user } = useAuthStore();
+  const { addPayment } = usePaymentStore();
+  const { updateOrderStatus } = useOrder();
+  const { restaurant } = useRestaurantStore();
 
   // Effect to set initial sidebar state based on screen size
   useEffect(() => {
@@ -233,31 +240,48 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
     }
   }, [editingItemId, itemNote]);
 
-  // Calculate total amount
-  const totalAmount = useMemo(() => 
-    orderItems.reduce(
-      (sum, item) => sum + (item.price * item.quantity),
-      0
-    ),
-  [orderItems]);
 
   // Calculate total items
   const totalItems = useMemo(() => 
     orderItems.reduce((sum, item) => sum + item.quantity, 0),
   [orderItems]);
 
-  // Function to print KOT (Kitchen Order Ticket)
-  const handlePrintKOT = useCallback(() => {
-    // Check if we have items to print
-    if (orderItems.length === 0) {
-      toast.error('No items to print');
-      return;
-    }
+  // Calculate GST amounts
+  const gstDetails = useMemo(() => {
+    const { subTotal, sgstAmount, cgstAmount, totalAmount: calculatedTotal } = calculateOrderTotals(
+      orderItems.map(item => ({
+        ...item,
+        price: item.price,
+        quantity: item.quantity
+      }))
+    );
 
-    // Create a new window for the KOT
+    // Default GST rates
+    const sgstRate = 2.5;
+    const cgstRate = 2.5;
+
+    return {
+      subTotal,
+      sgstAmount,
+      cgstAmount,
+      sgstRate,
+      cgstRate,
+      totalAmount: calculatedTotal,
+      roundedAmount: Math.ceil(calculatedTotal),
+      roundingDifference: Math.ceil(calculatedTotal) - calculatedTotal
+    };
+  }, [orderItems, calculateOrderTotals]);
+
+  // Calculate change amount if cash payment
+  const cashGivenNumber = cashGiven ? parseFloat(cashGiven) : 0;
+  const changeAmount = cashGivenNumber > gstDetails.roundedAmount ? cashGivenNumber - gstDetails.roundedAmount : 0;
+
+  // Function to print bill
+  const handlePrintBill = useCallback((order: Order) => {
+    // Create a new window for the bill
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      toast.error('Please allow pop-ups to print the KOT');
+      toast.error('Please allow pop-ups to print the bill');
       return;
     }
 
@@ -266,12 +290,12 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
     const dateFormatted = now.toLocaleDateString();
     const timeFormatted = now.toLocaleTimeString();
 
-    // Generate KOT HTML content
-    const kotContent = `
+    // Generate bill HTML content
+    const billContent = `
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Kitchen Order Ticket</title>
+        <title>Bill Receipt - Order #${order.id}</title>
         <style>
           body {
             font-family: 'Arial', sans-serif;
@@ -352,6 +376,18 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
           .footer p {
             margin: 2px 0;
           }
+          .token-no-center {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            background: #fff;
+            padding: 2px 10px;
+            border: 2px dashed #222;
+            border-radius: 6px;
+            letter-spacing: 2px;
+            display: block;
+            margin: 10px auto 8px auto;
+          }
           @media print {
             body {
               width: 80mm;
@@ -370,46 +406,93 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
       <body>
         <div class="receipt">
           <div class="header">
-            <div class="restaurant-name">KITCHEN ORDER TICKET</div>
-            <div class="restaurant-details">Date: ${dateFormatted} Time: ${timeFormatted}</div>
+            <div class="restaurant-name">${restaurant?.name || 'Restaurant Name'}</div>
+            <div class="restaurant-details">${restaurant?.address || 'Restaurant Address'}</div>
+            <div class="restaurant-details">Phone: ${restaurant?.phone || 'Phone Number'}</div>
+            <div class="restaurant-details">GST No: ${restaurant?.gst_number || 'GST Number'}</div>
           </div>
 
           <div class="bill-info">
-            <div><strong>KOT No:</strong> ${Date.now().toString().slice(-6)}</div>
-            <div><strong>Table:</strong> Takeaway</div>
-            <div><strong>Server:</strong> ${user?.name || 'N/A'}</div>
-            <div><strong>Type:</strong> ${type}</div>
+            <div><strong>Bill No:</strong> ${order.id}</div>
+            <div><strong>Date:</strong> ${dateFormatted}</div>
+            <div><strong>Time:</strong> ${timeFormatted}</div>
+            <div><strong>Type:</strong> ${order.order_type.charAt(0).toUpperCase() + order.order_type.slice(1)}</div>
           </div>
+
+          ${
+            order.token_number
+              ? `<div class="token-no-center">Token No: ${order.token_number}</div>`
+              : ''
+          }
 
           <table class="items-table">
             <thead>
               <tr>
                 <th>Item</th>
                 <th>Qty</th>
-                <th>Notes</th>
+                <th>Price</th>
+                <th>Amount</th>
               </tr>
             </thead>
             <tbody>
-              ${orderItems.map(item => {
-                return `
+              ${order.items
+                .filter(item => item.status !== 'cancelled')
+                .map(item => `
                   <tr>
-                    <td>${item.name || 'Unknown Item'}</td>
+                    <td>${item.name}</td>
                     <td>${item.quantity}</td>
-                    <td>${item.notes || '-'}</td>
+                    <td>₹${item.price.toFixed(2)}</td>
+                    <td>₹${(item.quantity * item.price).toFixed(2)}</td>
                   </tr>
-                `;
-              }).join('')}
+                `).join('')}
             </tbody>
           </table>
 
+          <div class="amount-details">
+            <div class="amount-row">
+              <span>Subtotal:</span>
+              <span>₹${order.sub_total.toFixed(2)}</span>
+            </div>
+
+            ${order.sgst_amount > 0 ? `
+            <div class="amount-row">
+              <span>SGST (${order.sgst_rate}%):</span>
+              <span>₹${order.sgst_amount.toFixed(2)}</span>
+            </div>
+            ` : ''}
+
+            ${order.cgst_amount > 0 ? `
+            <div class="amount-row">
+              <span>CGST (${order.cgst_rate}%):</span>
+              <span>₹${order.cgst_amount.toFixed(2)}</span>
+            </div>
+            ` : ''}
+
+            <div class="amount-row">
+              <span>Rounding Adjustment:</span>
+              <span>₹${(Math.ceil(order.total_amount) - order.total_amount).toFixed(2)}</span>
+            </div>
+
+            <div class="amount-row total-amount">
+              <span>Total Amount:</span>
+              <span>₹${Math.ceil(order.total_amount).toFixed(2)}</span>
+            </div>
+
+            <div class="amount-row" style="margin-top: 10px;">
+              <span>Payment Method:</span>
+              <span>${paymentMethod.toUpperCase()}</span>
+            </div>
+          </div>
+
           <div class="footer">
-            <p>*** Kitchen Copy ***</p>
+            <p>Thank you for your visit!</p>
+            <p>Please visit again</p>
           </div>
         </div>
 
         <div class="no-print" style="text-align: center; margin-top: 20px;">
           <button onclick="window.print();" style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            Print KOT
+            Print Bill
           </button>
           <button onclick="window.close();" style="padding: 10px 20px; background: #f44336; color: white; border: none; border-radius: 4px; margin-left: 10px; cursor: pointer;">
             Close
@@ -421,7 +504,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
 
     // Write the content to the new window
     printWindow.document.open();
-    printWindow.document.write(kotContent);
+    printWindow.document.write(billContent);
     printWindow.document.close();
 
     // Trigger print when content is loaded
@@ -429,42 +512,218 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
       // Automatically print on load (optional)
       // printWindow.print();
     };
+  }, [restaurant, paymentMethod]);
 
-    toast.success('KOT generated successfully');
-  }, [orderItems, user, type]);
+  // Function to print KOT (Kitchen Order Ticket)
+  const handlePrintKOT = useCallback(async () => {
+    // Check if we have items to print
+    if (orderItems.length === 0) {
+      toast.error('No items to print');
+      return;
+    }
 
-  // Handle order submission
-  const handlePlaceOrder = useCallback(async () => {
-    if (orderItems.length === 0) return;
+    // Check if payment method is selected
+    if (!paymentMethod) {
+      setError('Please select a payment method');
+      toast.error('Please select a payment method');
+      return;
+    }
 
     try {
       setIsSubmitting(true);
       setError(null);
 
-      // Calculate GST amounts
-      const { subTotal, sgstAmount, cgstAmount, totalAmount: calculatedTotal } = calculateOrderTotals(
-        orderItems.map(item => ({
-          ...item,
-          price: item.price,
-          quantity: item.quantity
-        }))
-      );
+      // First print the KOT
+      // Create a new window for the KOT
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        toast.error('Please allow pop-ups to print the KOT');
+        return;
+      }
 
-      // Default GST rates
-      const sgstRate = 2.5;
-      const cgstRate = 2.5;
+      // Get current date and time
+      const now = new Date();
+      const dateFormatted = now.toLocaleDateString();
+      const timeFormatted = now.toLocaleTimeString();
 
       // Generate a token number for the order
       const tokenNumber = `${type.charAt(0).toUpperCase()}${Date.now().toString().slice(-6)}`;
 
-      // Prepare the order data but don't create it yet
-      const draftOrder = {
+      // Generate KOT HTML content
+      const kotContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Kitchen Order Ticket</title>
+          <style>
+            body {
+              font-family: 'Arial', sans-serif;
+              margin: 0;
+              padding: 20px;
+              max-width: 80mm; /* Standard receipt width */
+              margin: 0 auto;
+            }
+            .receipt {
+              border: 1px solid #ddd;
+              padding: 10px;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 10px;
+              border-bottom: 1px dashed #ccc;
+              padding-bottom: 8px;
+            }
+            .restaurant-name {
+              font-size: 16px;
+              font-weight: bold;
+              margin-bottom: 4px;
+            }
+            .restaurant-details {
+              font-size: 11px;
+              margin-bottom: 3px;
+              line-height: 1.2;
+            }
+            .bill-info {
+              margin-bottom: 12px;
+              font-size: 12px;
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              grid-template-rows: repeat(3, auto);
+              gap: 4px 8px;
+            }
+            .bill-info div {
+              margin-bottom: 2px;
+            }
+            .items-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 10px;
+              font-size: 11px;
+            }
+            .items-table th {
+              text-align: left;
+              padding: 3px 0;
+              border-bottom: 1px solid #ddd;
+            }
+            .items-table td {
+              padding: 3px 0;
+              border-bottom: 1px dashed #eee;
+            }
+            .amount-details {
+              margin-top: 8px;
+              font-size: 11px;
+            }
+            .amount-row {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 3px;
+            }
+            .total-amount {
+              font-weight: bold;
+              font-size: 13px;
+              margin-top: 4px;
+              border-top: 1px solid #ddd;
+              padding-top: 4px;
+            }
+            .footer {
+              margin-top: 12px;
+              text-align: center;
+              font-size: 11px;
+              border-top: 1px dashed #ccc;
+              padding-top: 8px;
+            }
+            .footer p {
+              margin: 2px 0;
+            }
+            @media print {
+              body {
+                width: 80mm;
+                margin: 0;
+                padding: 0;
+              }
+              .receipt {
+                border: none;
+              }
+              .no-print {
+                display: none;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="receipt">
+            <div class="header">
+              <div class="restaurant-name">KITCHEN ORDER TICKET</div>
+              <div class="restaurant-details">Date: ${dateFormatted} Time: ${timeFormatted}</div>
+            </div>
+
+            <div class="bill-info">
+              <div><strong>KOT No:</strong> ${tokenNumber.slice(-6)}</div>
+              <div><strong>Table:</strong> Takeaway</div>
+              <div><strong>Server:</strong> ${user?.name || 'N/A'}</div>
+              <div><strong>Type:</strong> ${type}</div>
+            </div>
+
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Qty</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${orderItems.map(item => {
+                  return `
+                    <tr>
+                      <td>${item.name || 'Unknown Item'}</td>
+                      <td>${item.quantity}</td>
+                      <td>${item.notes || '-'}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+
+            <div class="footer">
+              <p>*** Kitchen Copy ***</p>
+            </div>
+          </div>
+
+          <div class="no-print" style="text-align: center; margin-top: 20px;">
+            <button onclick="window.print();" style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+              Print KOT
+            </button>
+            <button onclick="window.close();" style="padding: 10px 20px; background: #f44336; color: white; border: none; border-radius: 4px; margin-left: 10px; cursor: pointer;">
+              Close
+            </button>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // Write the content to the new window
+      printWindow.document.open();
+      printWindow.document.write(kotContent);
+      printWindow.document.close();
+
+      // Trigger print when content is loaded
+      printWindow.onload = function() {
+        // Automatically print on load (optional)
+        // printWindow.print();
+      };
+
+      toast.success('KOT generated successfully');
+
+      // Now place the order
+      // Prepare the order data
+      const newOrder = {
         order_type: type,
         customer_id: 1, // Default for walk-in customers
         staff_id: user?.staff_id,
         status: 'placed' as const,
         order_time: new Date().toISOString(),
-        token_number: tokenNumber, // Add token number to the order
+        token_number: tokenNumber,
         items: orderItems.map(item => ({
           menu_item_id: item.menu_item_id,
           quantity: item.quantity,
@@ -474,30 +733,152 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
           include_in_gst: item.include_in_gst
         })),
         // Include GST calculations
-        sub_total: subTotal,
-        sgst_rate: sgstRate,
-        cgst_rate: cgstRate,
-        sgst_amount: sgstAmount,
-        cgst_amount: cgstAmount,
-        total_amount: calculatedTotal
+        sub_total: gstDetails.subTotal,
+        sgst_rate: gstDetails.sgstRate,
+        cgst_rate: gstDetails.cgstRate,
+        sgst_amount: gstDetails.sgstAmount,
+        cgst_amount: gstDetails.cgstAmount,
+        total_amount: gstDetails.totalAmount
       };
 
-      // Show payment dialog with draft order
-      setCreatedOrder(null);
-      setShowPaymentDialog(true);
+      // Create the order
+      const createdOrder = await orderService.createOrder(newOrder);
 
-      // Store the draft order to pass to the payment dialog
-      // The actual order will be created after payment is successful
-      setDraftOrder(draftOrder);
+      // Create payment object
+      const payment = {
+        order_id: createdOrder.id,
+        amount: gstDetails.roundedAmount,
+        payment_method: paymentMethod,
+        payment_status: 'completed',
+        transaction_id: `txn_${Date.now()}`,
+      };
+
+      // Process payment
+      await addPayment(payment);
+
+      // Update order status to 'paid'
+      await updateOrderStatus({
+        id: createdOrder.id,
+        status: 'paid'
+      });
+
+      // Print the bill
+      handlePrintBill(createdOrder);
+
+      toast.success('Order placed and payment completed successfully');
+
+      // Reset state after payment is complete
+      setOrderItems([]);
+      setSearchQuery('');
+      setSelectedCategory('all');
+      setIsCartOpen(false);
+      setPaymentMethod('');
+      setCashGiven('');
+
+      // Notify parent if needed
+      if (onOrderCreated) {
+        onOrderCreated();
+      }
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to prepare order';
+      const errorMessage = error instanceof Error ? error.message : 'Failed to process order';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
-  }, [orderItems, user?.staff_id, calculateOrderTotals, type]);
+  }, [orderItems, user, type, paymentMethod, gstDetails, setError, setIsSubmitting, user?.staff_id, addPayment, updateOrderStatus, handlePrintBill, onOrderCreated]);
+
+  // Handle order submission
+  const handlePlaceOrder = useCallback(async () => {
+    if (orderItems.length === 0) return;
+
+    // Check if payment method is selected
+    if (!paymentMethod) {
+      setError('Please select a payment method');
+      toast.error('Please select a payment method');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setError(null);
+
+      // Generate a token number for the order
+      const tokenNumber = `${type.charAt(0).toUpperCase()}${Date.now().toString().slice(-6)}`;
+
+      // Prepare the order data
+      const newOrder = {
+        order_type: type,
+        customer_id: 1, // Default for walk-in customers
+        staff_id: user?.staff_id,
+        status: 'placed' as const,
+        order_time: new Date().toISOString(),
+        token_number: tokenNumber,
+        items: orderItems.map(item => ({
+          menu_item_id: item.menu_item_id,
+          quantity: item.quantity,
+          notes: item.notes || '',
+          name: item.name,
+          price: item.price,
+          include_in_gst: item.include_in_gst
+        })),
+        // Include GST calculations
+        sub_total: gstDetails.subTotal,
+        sgst_rate: gstDetails.sgstRate,
+        cgst_rate: gstDetails.cgstRate,
+        sgst_amount: gstDetails.sgstAmount,
+        cgst_amount: gstDetails.cgstAmount,
+        total_amount: gstDetails.totalAmount
+      };
+
+      // Create the order
+      const createdOrder = await orderService.createOrder(newOrder);
+
+      // Create payment object
+      const payment = {
+        order_id: createdOrder.id,
+        amount: gstDetails.roundedAmount,
+        payment_method: paymentMethod,
+        payment_status: 'completed',
+        transaction_id: `txn_${Date.now()}`,
+      };
+
+      // Process payment
+      await addPayment(payment);
+
+      // Update order status to 'paid'
+      await updateOrderStatus({
+        id: createdOrder.id,
+        status: 'paid'
+      });
+
+      // Print the bill
+      handlePrintBill(createdOrder);
+
+      toast.success('Order placed and payment completed successfully');
+
+      // Reset state after payment is complete
+      setOrderItems([]);
+      setSearchQuery('');
+      setSelectedCategory('all');
+      setIsCartOpen(false);
+      setPaymentMethod('');
+      setCashGiven('');
+
+      // Notify parent if needed
+      if (onOrderCreated) {
+        onOrderCreated();
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to process order';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [orderItems, user?.staff_id, type, paymentMethod, gstDetails, cashGiven, addPayment, updateOrderStatus, onOrderCreated, handlePrintBill]);
 
   return (
     <div className="flex h-[calc(100vh-8rem)] flex-col md:flex-row gap-1">
@@ -687,30 +1068,20 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
           </div>
 
           <div className="flex-1 overflow-y-auto p-2 xs:p-3 sm:p-3 pt-0 custom-scrollbar">
-            <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 auto-rows-max">
+            <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 auto-rows-max">
               {filteredItems.length > 0 ? filteredItems.map(item => (
                 <Card
                   key={item.id}
                   className={`overflow-hidden ${item.available ? 'cursor-pointer hover:bg-accent/50' : 'cursor-not-allowed opacity-75'} transition-colors border-primary/10`}
                   onClick={() => handleQuantityChange(item, 1)}
                 >
-                  <div className="flex items-center gap-2 p-2 sm:p-3">
-                    <div className="relative">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="h-14 w-14 sm:h-16 sm:w-16 rounded-md object-cover flex-shrink-0"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = "https://via.placeholder.com/200?text=No+Image";
-                        }}
-                      />
-                      {!item.available && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-md">
-                          <span className="text-white text-xs font-bold px-1 py-0.5 bg-red-500 rounded">Unavailable</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
+                  <div className="p-2 sm:p-3">
+                    {!item.available && (
+                      <div className="absolute top-1 right-1">
+                        <span className="text-white text-xs font-bold px-1 py-0.5 bg-red-500 rounded">Unavailable</span>
+                      </div>
+                    )}
+                    <div className="min-w-0">
                       <h3 className="font-medium leading-tight text-sm line-clamp-2">{item.name}</h3>
                       <div className="mt-1 flex items-center justify-between">
                         <span className="text-sm font-semibold">₹{item.price.toFixed(2)}</span>
@@ -736,7 +1107,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
 
         {/* Order Summary Section - Collapsible on mobile */}
         <div className={cn(
-          "border-t bg-muted md:w-72 md:border-l md:border-t-0 flex flex-col dark:border-border overflow-hidden",
+          "border-t bg-muted md:w-[30rem] md:border-l md:border-t-0 flex flex-col dark:border-border overflow-hidden",
           "md:relative md:flex", // Changed block to flex for consistency
           isCartOpen ? "fixed inset-0 bottom-20 z-50 bg-background" : "hidden", // Toggle on mobile
           "md:static md:z-auto shrink-0" // Reset on desktop
@@ -767,7 +1138,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
                   <p className="text-xs text-muted-foreground mt-1">Add items from the menu to get started</p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-1">
                   {orderItems.map(item => (
                     <div key={item.id} className="flex flex-col gap-2 p-2 rounded-lg border border-primary/10 bg-card">
                       <div className="flex items-start justify-between gap-2">
@@ -847,37 +1218,149 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
             </div>
 
             <div className="p-3 border-t mt-auto bg-muted dark:border-border shrink-0">
-              <div className="space-y-2">
+              <div className="space-y-3">
+                {/* Total amount with info icon */}
                 <div className="flex items-center justify-between">
                   <span className="font-semibold">Total Amount</span>
-                  <span className="text-lg font-semibold text-primary">₹{totalAmount.toFixed(2)}</span>
+                  <div className="flex items-center gap-1">
+                    <button 
+                      onClick={() => setShowTaxDetails(!showTaxDetails)} 
+                      className="text-muted-foreground hover:text-primary"
+                    >
+                      <Info className="h-4 w-4" />
+                    </button>
+                    <span className="text-lg font-semibold text-primary">₹{gstDetails.roundedAmount.toFixed(2)}</span>
+                  </div>
                 </div>
-                <Button
-                  className="w-full justify-between py-3 text-sm h-auto"
-                  onClick={handlePrintKOT}
-                  disabled={orderItems.length === 0 || isSubmitting}
-                  variant="outline"
-                >
-                  <span>Kitchen Order Ticket (KOT)</span>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-                <Button
-                  className="w-full justify-between py-3 text-sm h-auto"
-                  onClick={handlePlaceOrder}
-                  disabled={orderItems.length === 0 || isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      <span>Processing...</span>
-                    </>
-                  ) : (
-                    <>
+
+                {/* Tax details (collapsible) */}
+                {showTaxDetails && (
+                  <div className="text-xs space-y-1 bg-background/50 p-2 rounded-md">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Subtotal:</span>
+                      <span>₹{gstDetails.subTotal.toFixed(2)}</span>
+                    </div>
+                    {gstDetails.sgstAmount > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">SGST ({gstDetails.sgstRate}%):</span>
+                        <span>₹{gstDetails.sgstAmount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {gstDetails.cgstAmount > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">CGST ({gstDetails.cgstRate}%):</span>
+                        <span>₹{gstDetails.cgstAmount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Rounding:</span>
+                      <span>₹{gstDetails.roundingDifference.toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Payment method selection */}
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Payment Method</label>
+                  <div className="grid grid-cols-3 gap-1">
+                    <button
+                      className={cn(
+                        "flex items-center justify-center p-2 rounded-md text-xs border",
+                        paymentMethod === 'cash' 
+                          ? "bg-primary text-primary-foreground border-primary" 
+                          : "bg-background hover:bg-muted"
+                      )}
+                      onClick={() => setPaymentMethod(paymentMethod === 'cash' ? '' : 'cash')}
+                    >
+                      Cash
+                    </button>
+                    <button
+                      className={cn(
+                        "flex items-center justify-center p-2 rounded-md text-xs border",
+                        paymentMethod === 'card' 
+                          ? "bg-primary text-primary-foreground border-primary" 
+                          : "bg-background hover:bg-muted"
+                      )}
+                      onClick={() => setPaymentMethod(paymentMethod === 'card' ? '' : 'card')}
+                    >
+                      Card
+                    </button>
+                    <button
+                      className={cn(
+                        "flex items-center justify-center p-2 rounded-md text-xs border",
+                        paymentMethod === 'upi' 
+                          ? "bg-primary text-primary-foreground border-primary" 
+                          : "bg-background hover:bg-muted"
+                      )}
+                      onClick={() => setPaymentMethod(paymentMethod === 'upi' ? '' : 'upi')}
+                    >
+                      UPI
+                    </button>
+                  </div>
+                </div>
+
+                {/* Cash amount input (only shown when cash is selected) */}
+                {paymentMethod === 'cash' && (
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium">Cash Amount Given</label>
+                    <input
+                      type="text"
+                      placeholder="Enter Amount"
+                      value={cashGiven}
+                      onChange={(e) => {
+                        // Only allow positive numbers
+                        const value = e.target.value;
+                        if (value === '' || (/^\d*\.?\d*$/.test(value) && parseFloat(value) >= 0)) {
+                          setCashGiven(value);
+                        }
+                      }}
+                      className="w-full h-8 text-sm px-2 border rounded-md"
+                    />
+
+                    {cashGiven && (
+                      <div className="mt-1 text-xs space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Amount to Pay:</span>
+                          <span>₹{gstDetails.roundedAmount.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Cash Given:</span>
+                          <span>₹{cashGivenNumber > 0 ? cashGivenNumber.toFixed(2) : '0.00'}</span>
+                        </div>
+                        <div className="flex justify-between font-medium">
+                          <span>Return Amount:</span>
+                          <span>₹{changeAmount > 0 ? changeAmount.toFixed(2) : '0.00'}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Action buttons in a single row */}
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    className="justify-center py-3 text-sm h-auto"
+                    onClick={handlePrintKOT}
+                    disabled={orderItems.length === 0 || isSubmitting}
+                    variant="outline"
+                  >
+                    Print KOT
+                  </Button>
+                  <Button
+                    className="justify-center py-3 text-sm h-auto"
+                    onClick={handlePlaceOrder}
+                    disabled={orderItems.length === 0 || isSubmitting || !paymentMethod}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <span>Processing...</span>
+                      </>
+                    ) : (
                       <span>Place Order</span>
-                      <ChevronRight className="h-4 w-4" />
-                    </>
-                  )}
-                </Button>
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -906,34 +1389,6 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
         </motion.div>
       )}
 
-      {/* Payment Dialog */}
-      <PaymentDialog
-        open={showPaymentDialog}
-        onClose={() => {
-          setShowPaymentDialog(false);
-          setCreatedOrder(null);
-          setDraftOrder(null);
-          // Don't reset order items when dialog is closed without payment
-          // This allows users to modify their order after closing the dialog
-        }}
-        order={createdOrder}
-        draftOrder={draftOrder}
-        onPaymentComplete={(order) => {
-          // Store the created order
-          setCreatedOrder(order);
-
-          // Reset state after payment is complete
-          setOrderItems([]);
-          setSearchQuery('');
-          setSelectedCategory('all');
-          setIsCartOpen(false); // Close the order summary dialog
-
-          // Notify parent if needed
-          if (onOrderCreated) {
-            onOrderCreated();
-          }
-        }}
-      />
     </div>
   );
 };

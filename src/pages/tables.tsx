@@ -156,9 +156,9 @@ export default function Tables() {
         await deleteTable(tableId);
       }
     } catch (err) {
-      toast.error("Failed to delete table", {
-        description: err instanceof Error ? err.message : "An unknown error occurred",
-      });
+        toast.error(`Failed to delete table`, {
+            description: err instanceof Error ? err.message : "An unknown error occurred",
+        });
     }
   };
 

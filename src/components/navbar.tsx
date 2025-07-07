@@ -62,6 +62,21 @@ export default function Navbar({ toggleSidebar, isSidebarOpen }: NavbarProps) {
               )}
             </Button>
 
+            {/* Desktop menu button - only visible on desktop */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="hidden lg:flex h-8 w-8 sm:h-9 sm:w-9"
+              onClick={toggleSidebar}
+              aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+            >
+              {isSidebarOpen ? (
+                <Menu className="h-4 w-4 sm:h-5 sm:w-5 rotate-90" />
+              ) : (
+                <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
+              )}
+            </Button>
+
             {/* Restaurant name */}
             <div 
               className="flex items-center"

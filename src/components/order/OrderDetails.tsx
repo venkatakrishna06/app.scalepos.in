@@ -147,7 +147,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
             <Button
               onClick={() => onPayment(order)}
               // disabled={isTrackingEnabled ? order.status !== 'served' : order.status !== 'placed'}
-              variant={(isTrackingEnabled && order.status === 'served') || (!isTrackingEnabled && order.status === 'placed') ? 'default' : 'outline'}
+              variant={ 'default'}
               className="w-full sm:w-auto"
             >
               <CreditCard className="mr-2 h-4 w-4" />

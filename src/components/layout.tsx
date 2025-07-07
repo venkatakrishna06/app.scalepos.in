@@ -34,7 +34,8 @@ export default function Layout({ children }: LayoutProps) {
         fetchCategories(),
         fetchTables(),
         fetchStaff()
-      ]).catch(error => {
+      ]).catch(() => {
+        // Handle fetch errors silently
       });
     }
   }, [isAuthenticated, fetchMenuItems, fetchCategories, fetchTables, fetchStaff]);
@@ -44,7 +45,7 @@ export default function Layout({ children }: LayoutProps) {
     const checkIfMobile = () => {
       const mobile = window.innerWidth < 1024; // Use lg breakpoint (1024px) instead of md
       setIsMobile(mobile);
-      setIsSidebarOpen(!mobile); // Open sidebar by default on desktop
+      setIsSidebarOpen(false); // Keep sidebar closed by default on all devices
     };
 
     // Initial check
@@ -81,10 +82,9 @@ export default function Layout({ children }: LayoutProps) {
         <div className={cn(
           "flex-shrink-0 overflow-hidden bg-white dark:bg-gray-800",
           "fixed lg:relative h-screen z-40 transition-all duration-300 ease-in-out",
-          "lg:w-44 xl:w-52", // Wider on desktop for better readability
           isSidebarOpen 
-            ? "w-[280px] translate-x-0 shadow-xl" // Wider on mobile when open
-            : "w-[280px] -translate-x-full lg:translate-x-0" // Hidden on mobile when closed
+            ? "lg:w-44 xl:w-52 w-[280px] translate-x-0 shadow-xl" // Visible when open
+            : "w-[280px] -translate-x-full lg:w-0 lg:translate-x-0" // Hidden on mobile, collapsed on desktop
         )}>
           <Sidebar closeSidebar={toggleSidebar} />
         </div>
@@ -92,10 +92,13 @@ export default function Layout({ children }: LayoutProps) {
         {/* Main content - scrolls independently */}
         <main className={cn(
           "flex-1 overflow-y-auto transition-all duration-300 ease-in-out custom-scrollbar",
-          isSidebarOpen && !isMobile ? "lg:ml-0" : "ml-0",
+          isSidebarOpen ? "" : "lg:pl-0", // Adjust padding when sidebar is closed
           "pb-20 lg:pb-6" // Increased padding at the bottom for mobile nav to prevent overlap
         )}>
-          <div className="mx-auto max-w-7xl p-1 sm:p-2 lg:p-3">
+          <div className={cn(
+            "mx-auto p-1 sm:p-2 lg:p-3",
+            isSidebarOpen ? "max-w-7xl" : "max-w-full" // Adjust max width based on sidebar state
+          )}>
             {children}
           </div>
         </main>
