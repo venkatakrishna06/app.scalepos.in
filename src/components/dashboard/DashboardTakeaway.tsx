@@ -1077,8 +1077,10 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
                 >
                   <div className="p-2 sm:p-3">
                     {!item.available && (
-                      <div className="absolute top-1 right-1">
-                        <span className="text-white text-xs font-bold px-1 py-0.5 bg-red-500 rounded">Unavailable</span>
+                      <div className="absolute -top-1 -right-1 z-10">
+                        <div className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md shadow-sm">
+                          Unavailable
+                        </div>
                       </div>
                     )}
                     <div className="min-w-0">

@@ -690,28 +690,20 @@ function CreateOrderDialogComponent({
                   </div>
 
                   <div className="flex-1 overflow-y-auto p-2 xs:p-3 sm:p-3 pt-0 custom-scrollbar">
-                    <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 auto-rows-max">
+                    <div className="grid gap-2 grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 auto-rows-max">
                       {filteredItems.length > 0 ? filteredItems.map(item => (
                           <div
                               key={item.id}
-                              className={`flex items-center gap-3 p-2 rounded-md border bg-card ${item.available ? 'cursor-pointer hover:bg-accent/50' : 'cursor-not-allowed opacity-75'} transition-colors`}
+                              className={`relative p-2 rounded-md border bg-card ${item.available ? 'cursor-pointer hover:bg-accent/50' : 'cursor-not-allowed opacity-75'} transition-colors`}
                               onClick={() => item.available && handleQuantityChange(item, 1)}
                           >
-                            <div className="relative">
-                              <img
-                                  src={item.image}
-                                  alt={item.name}
-                                  className="h-14 w-14 rounded-md object-cover flex-shrink-0"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).src = "https://via.placeholder.com/200?text=No+Image";
-                                  }}
-                              />
                               {!item.available && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-md">
-                                  <span className="text-white text-xs font-bold px-1 py-0.5 bg-red-500 rounded">Unavailable</span>
+                                <div className="absolute -top-1 -right-1 z-10">
+                                  <div className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md shadow-sm">
+                                    Unavailable
+                                  </div>
                                 </div>
                               )}
-                            </div>
                             <div className="flex-1 min-w-0">
                               <h3 className="font-medium leading-tight text-sm line-clamp-2">{item.name}</h3>
                               <div className="mt-1 flex items-center justify-between">
