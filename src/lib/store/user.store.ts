@@ -2,6 +2,7 @@ import {create} from 'zustand';
 import {User} from '@/types';
 import {userService} from '@/lib/api/services/user.service';
 import {toast} from '@/lib/toast';
+import {useAuthStore} from './auth.store';
 
 interface UserState {
   users: User[];
@@ -28,13 +29,34 @@ export const useUserStore = create<UserState>((set) => ({
   fetchUsers: async () => {
     try {
       set({ loading: true, error: null });
+
+      // Get current user role
+      const { user } = useAuthStore.getState();
+
+      if (!user) {
+        set({ users: [] });
+        return;
+      }
+
+      // Only admin should have access to user management
+      if (user.role !== 'admin') {
+        // Non-admin users don't need access to user data
+        set({ users: [] });
+        return;
+      }
+
+      // Fetch from API directly (no caching)
       const users = await userService.getUsers();
       set({ users });
-    } catch (err) {
-
+    } catch (error) {
       const errorMessage = 'Failed to fetch users';
       set({ error: errorMessage });
-      toast.error(errorMessage);
+
+      // Only show error toast for admin role
+      const { user } = useAuthStore.getState();
+      if (user && user.role === 'admin') {
+        toast.error(errorMessage);
+      }
     } finally {
       set({ loading: false });
     }

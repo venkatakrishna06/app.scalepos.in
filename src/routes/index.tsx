@@ -8,7 +8,8 @@ import Staff from '@/pages/staff';
 import Payments from '@/pages/payments';
 import Profile from '@/pages/profile';
 import UserManagement from '../pages/UserManagement';
-import ProtectedRoute from '@/components/ProtectedRoute';
+import {ProtectedRoute} from '@/components/auth/protected-route';
+
 
 interface AppRoutesProps {
   orderType: 'dine-in' | 'takeaway' | 'orders';

@@ -1,17 +1,19 @@
-import {useEffect, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {AlertCircle, CheckCircle, Loader2} from 'lucide-react';
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from './ui/dialog';
 import {Button} from './ui/button';
 import {Input} from './ui/input';
-import {useOrderStore, usePaymentStore, useRestaurantStore, useTableStore} from '@/lib/store';
+import {usePaymentStore, useRestaurantStore} from '@/lib/store';
+import {useOrder} from '@/lib/hooks/useOrder';
 import {showToast} from '@/lib/toast';
 import {Order, Payment} from '@/types';
 import printJS from 'print-js';
+import {orderService} from "@/lib/api/services";
 
 interface PaymentDialogProps {
   open: boolean;
   onClose: () => void;
-  order?: Order;
+  order?: Order[];
   draftOrder?: Omit<Order, 'id'>;
   onPaymentComplete?: (order: Order) => void;
 }
@@ -19,31 +21,39 @@ interface PaymentDialogProps {
 type PaymentStep = 'method' | 'processing' | 'complete';
 
 export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentComplete }: PaymentDialogProps) {
-  const [paymentMethod, setPaymentMethod] = useState<Payment['payment_method']>('upi');
+  const [paymentMethod, setPaymentMethod] = useState<Payment['payment_method'] | ''>('');
   const [currentStep, setCurrentStep] = useState<PaymentStep>('method');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cashGiven, setCashGiven] = useState<string>('');
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
   const { addPayment } = usePaymentStore();
-  const { updateOrder, addOrder } = useOrderStore();
-  const { updateTableStatus } = useTableStore();
-  const { restaurant, fetchRestaurant } = useRestaurantStore();
+  const { updateOrderStatus } = useOrder();
+  const { restaurant } = useRestaurantStore();
+
+  // Store the order in a ref to track if it changes
+  const orderRef = useRef(order);
+  useEffect(() => {
+    if (order && orderRef.current !== order) {
+      orderRef.current = order;
+    }
+  }, [order]);
 
   // Use either the provided order, the created order (from draft), or null
   const currentOrder = order || createdOrder;
 
+  // Reset component state when order changes or dialog opens
   useEffect(() => {
     if (open) {
       setCurrentStep('method');
       setIsSubmitting(false);
       setError(null);
       setCashGiven('');
-      // Set default payment method to 'upi' instead of 'card'
-      setPaymentMethod('upi');
-
+      setPaymentMethod('');
+      // Reset createdOrder to null to ensure we use the new order prop
+      setCreatedOrder(null);
     }
-  }, [open, restaurant, fetchRestaurant]);
+  }, [open, order]);
 
 
   const handlePrintBill = async () => {
@@ -262,7 +272,7 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
               <span>₹${roundedAmount.toFixed(2)}</span>
             </div>
 
-            ${paymentMethod ? `
+            ${paymentMethod && paymentMethod !== '' ? `
             <div class="amount-row" style="margin-top: 10px;">
               <span>Payment Method:</span>
               <span>${paymentMethod.replace('_', ' ').toUpperCase()}</span>
@@ -297,6 +307,13 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
   };
 
   const handlePrintBillAndPayment = async () => {
+    // Check if payment method is selected
+    if (!paymentMethod) {
+      setError('Please select a payment method');
+      showToast('error', 'Please select a payment method');
+      return;
+    }
+
     try {
       // First print the bill (which now creates the order if it's a draft)
       // Modify handlePrintBill to return the created order
@@ -323,7 +340,7 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
     if (!draftOrder) return null;
 
     try {
-      const newOrder = await addOrder(draftOrder);
+      const newOrder = await orderService.createOrder(draftOrder);
       setCreatedOrder(newOrder);
       return newOrder;
     } catch (err) {
@@ -335,6 +352,13 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
   };
 
   const handlePayment = async (passedOrder?: Order) => {
+    // Check if payment method is selected
+    if (!paymentMethod) {
+      setError('Please select a payment method');
+      showToast('error', 'Please select a payment method');
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
     //setCurrentStep('processing');
@@ -366,12 +390,9 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
 
       await addPayment(payment);
 
-      // // Update table status if this is a dine-in order
-      if (currentOrder?.table_id) {
-        await updateTableStatus(orderToProcess.table_id, 'available');
-      }
-
-      await updateOrder(orderToProcess?.id, {
+      // Update order status to 'paid' - backend will handle table status update
+      await updateOrderStatus({
+        id: orderToProcess?.id,
         status: 'paid'
       });
 
@@ -536,24 +557,36 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
                     {/* UPI Option */}
                     <div className="flex items-center p-2 rounded-lg">
                       <input
-                          type="radio"
+                          type="checkbox"
                           id="upi-payment"
                           name="payment-method"
                           className="mr-2"
                           checked={paymentMethod === 'upi'}
-                          onChange={() => setPaymentMethod('upi')}
+                          onChange={() => {
+                            if (paymentMethod === 'upi') {
+                              setPaymentMethod('');
+                            } else {
+                              setPaymentMethod('upi');
+                            }
+                          }}
                       />
                       <label htmlFor="upi-payment" className="flex-1 text-sm">UPI (Pay with UPI)</label>
                     </div>
                     {/* Card Option */}
                     <div className="flex items-center p-2 rounded-lg">
                       <input
-                          type="radio"
+                          type="checkbox"
                           id="card-payment"
                           name="payment-method"
                           className="mr-2"
                           checked={paymentMethod === 'card'}
-                          onChange={() => setPaymentMethod('card')}
+                          onChange={() => {
+                            if (paymentMethod === 'card') {
+                              setPaymentMethod('');
+                            } else {
+                              setPaymentMethod('card');
+                            }
+                          }}
                       />
                       <label htmlFor="card-payment" className="flex-1 text-sm">Card (Pay with Credit/Debit Card)</label>
                     </div>
@@ -563,12 +596,18 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
                     {/* Cash Option */}
                     <div className="flex items-center p-2 rounded-lg">
                       <input
-                          type="radio"
+                          type="checkbox"
                           id="cash-payment"
                           name="payment-method"
                           className="mr-2"
                           checked={paymentMethod === 'cash'}
-                          onChange={() => setPaymentMethod('cash')}
+                          onChange={() => {
+                            if (paymentMethod === 'cash') {
+                              setPaymentMethod('');
+                            } else {
+                              setPaymentMethod('cash');
+                            }
+                          }}
                       />
                       <label htmlFor="cash-payment" className="flex-1 text-sm">Cash (Pay with Cash)</label>
                     </div>

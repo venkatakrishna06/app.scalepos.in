@@ -40,6 +40,7 @@ export interface OrderItem {
   price: number;
   name: string;
   include_in_gst?: boolean;
+  allowed_next_states?: string[]; // Added for state machine support
 }
 
 export interface Order {
@@ -49,7 +50,7 @@ export interface Order {
   table_id: number;
   staff_id: number;
   order_time: string;
-  status: 'placed' | 'preparing' | 'served' | 'cancelled' | 'paid';
+  status: 'placed' | 'preparing' | 'served' | 'cancelled' | 'paid' | 'partially-cancelled';
   order_type: 'dine-in' | 'takeaway' | 'quick-bill';
   sub_total: number;
   sgst_rate: number;
@@ -63,6 +64,7 @@ export interface Order {
   customer?: string;
   payment_method?: string;
   token_number?: string;
+  allowed_next_states?: string[]; // Added for state machine support
 }
 
 export interface Table {
@@ -125,6 +127,7 @@ export interface Restaurant {
   is_active: boolean;
   default_sgst_rate: number;
   default_cgst_rate: number;
+  enable_order_status_tracking: boolean;
 }
 
 export interface User {

@@ -2,6 +2,8 @@ import {create} from 'zustand';
 import {MenuItem, Order, OrderItem} from '@/types';
 import {orderService} from '@/lib/api/services/order.service';
 import {toast} from '@/lib/toast';
+import {useRestaurantStore} from './restaurant.store';
+import {useAuthStore} from './auth.store';
 
 // Default tax rates
 const DEFAULT_SGST_RATE = 2.5;
@@ -40,6 +42,10 @@ interface OrderState {
   updateOrderItem: (orderId: number, itemId: number, updates: Partial<OrderItem>) => Promise<void>;
   removeOrderItem: (orderId: number, itemId: number) => Promise<void>;
 
+  // Helper methods for order status tracking
+  isOrderStatusAllowed: (status: Order['status']) => boolean;
+  isOrderItemStatusAllowed: (status: OrderItem['status']) => boolean;
+
   // Calculations
   calculateOrderTotals: (items: OrderItem[], sgstRate?: number, cgstRate?: number) => {
     subTotal: number;
@@ -68,19 +74,74 @@ interface OrderState {
  * - Adding, updating, and removing order items
  * - Calculating order totals including taxes
  */
+// Define allowed statuses when tracking is disabled
+const BASIC_ORDER_STATUSES = ['placed', 'paid', 'cancelled'];
+const BASIC_ORDER_ITEM_STATUSES = ['placed', 'cancelled'];
+
 export const useOrderStore = create<OrderState>((set, get) => ({
   orders: [],
   loading: false,
   error: null,
 
+  // Helper methods for order status tracking
+  isOrderStatusAllowed: (status) => {
+    const restaurant = useRestaurantStore.getState().restaurant;
+
+    // If tracking is disabled, only allow basic statuses
+    if (restaurant && !restaurant.enable_order_status_tracking) {
+      return BASIC_ORDER_STATUSES.includes(status);
+    }
+
+    // If tracking is enabled, allow all statuses
+    return true;
+  },
+
+  isOrderItemStatusAllowed: (status) => {
+    const restaurant = useRestaurantStore.getState().restaurant;
+
+    // If tracking is disabled, only allow basic statuses
+    if (restaurant && !restaurant.enable_order_status_tracking) {
+      return BASIC_ORDER_ITEM_STATUSES.includes(status);
+    }
+
+    // If tracking is enabled, allow all statuses
+    return true;
+  },
+
   fetchOrders: async (params) => {
     try {
       set({ loading: true, error: null });
 
+      // Get current user role
+      const { user } = useAuthStore.getState();
+
+      if (!user) {
+        set({ orders: [] });
+        return;
+      }
+
       // Fetch from API directly (no caching)
       const orders = await orderService.getOrders(params);
-      set({ orders });
-    } catch (err) {
+
+      // Filter orders based on user role
+      let filteredOrders = orders;
+
+      if (user.role === 'kitchen') {
+        // Kitchen staff only needs to see orders that are being prepared
+        filteredOrders = orders.filter(order => 
+          order.status === 'placed' || order.status === 'preparing'
+        );
+      } else if (user.role === 'server') {
+        // Servers only need to see orders for their assigned tables
+        filteredOrders = orders.filter(order => 
+          order.staff_id === user.staff_id || 
+          (order.status === 'preparing' || order.status === 'served')
+        );
+      }
+      // Admin and manager can see all orders
+
+      set({ orders: filteredOrders });
+    } catch (error) {
 
       const errorMessage = 'Failed to fetch orders';
       set({ error: errorMessage });
@@ -116,7 +177,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       }
 
       const newOrder = await orderService.createOrder(order);
-      //set(state => ({ orders: [...state.orders, newOrder] }));
+      set(state => ({ orders: [...state.orders, newOrder] }));
       toast.success('Order created successfully');
       return newOrder; // Explicitly return the created order
     } catch (err) {
@@ -165,8 +226,8 @@ export const useOrderStore = create<OrderState>((set, get) => ({
         ),
       }));
       toast.success('Order updated successfully');
-    } catch (err) {
-
+    } catch (error) {
+      console.error('Error updating order:', error);
       const errorMessage = 'Failed to update order';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -178,10 +239,18 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   updateOrderStatus: async (id, status) => {
     try {
       set({ loading: true, error: null });
-      await get().updateOrder(id, { status });
-      toast.success(`Order status updated to ${status}`);
-    } catch (err) {
 
+      // Check if the status is allowed based on tracking settings
+      if (!get().isOrderStatusAllowed(status)) {
+        const errorMessage = `Status '${status}' is not allowed when order tracking is disabled`;
+        set({ error: errorMessage });
+        toast.error(errorMessage);
+        return;
+      }
+
+      await get().updateOrder(id, { status });
+    } catch (error) {
+      console.error(`Error updating order status to ${status}:`, error);
       const errorMessage = `Failed to update order status to ${status}`;
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -198,8 +267,8 @@ export const useOrderStore = create<OrderState>((set, get) => ({
         orders: state.orders.filter(order => order.id !== id),
       }));
       toast.success('Order deleted successfully');
-    } catch (err) {
-
+    } catch (error) {
+      console.error('Error deleting order:', error);
       const errorMessage = 'Failed to delete order';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -250,8 +319,8 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       });
 
       toast.success('Items added to order');
-    } catch (err) {
-
+    } catch (error) {
+      console.error('Error adding items to order:', error);
       const errorMessage = 'Failed to add items to order';
       set({ error: errorMessage });
       toast.error(errorMessage);
@@ -263,6 +332,14 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   updateOrderItem: async (orderId, itemId, updates) => {
     try {
       set({ loading: true, error: null });
+
+      // Check if status update is allowed based on tracking settings
+      if (updates.status && !get().isOrderItemStatusAllowed(updates.status)) {
+        const errorMessage = `Item status '${updates.status}' is not allowed when order tracking is disabled`;
+        set({ error: errorMessage });
+        toast.error(errorMessage);
+        return;
+      }
 
       // First update the item through the API
       await orderService.updateOrderItem(orderId, itemId, updates);
@@ -396,7 +473,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     return orders.find(order => order.id === id);
   },
 
-  getOrdersByTable: (tableId) => {
+  getOrdersByTable:  (tableId) => {
     const { orders } = get();
     return orders.filter(order =>
         order.table_id === tableId &&

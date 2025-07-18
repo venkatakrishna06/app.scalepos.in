@@ -1,5 +1,5 @@
 import {Link, useLocation} from 'react-router-dom';
-import {ChevronRight, Percent, User} from 'lucide-react';
+import {ChevronRight, ClipboardList, Percent, User} from 'lucide-react';
 import {cn} from '@/lib/utils';
 import {useAuthStore} from '@/lib/store/auth.store';
 
@@ -16,6 +16,13 @@ const settingsNavigation = [
     href: '/settings/gst', 
     icon: Percent, 
     description: 'Configure tax rates and settings',
+    roles: ['admin'] 
+  },
+  { 
+    name: 'Order Tracking', 
+    href: '/settings/order-tracking', 
+    icon: ClipboardList, 
+    description: 'Configure order status tracking',
     roles: ['admin'] 
   },
   // These are placeholder items that could be implemented in the future

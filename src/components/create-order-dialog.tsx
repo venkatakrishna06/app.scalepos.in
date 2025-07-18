@@ -18,7 +18,7 @@ import {useMenuStore, useOrderStore} from '@/lib/store';
 import {MenuItem, Order, OrderItem} from '@/types';
 import {toast} from '@/lib/toast';
 import {useAuthStore} from "@/lib/store/auth.store.ts";
-import {cn} from '@/lib/utils';
+import {cn, generateTokenNumber} from '@/lib/utils';
 import {analyticsService} from '@/lib/api/services/analytics.service';
 import {MenuItemAnalytics} from '@/types/analytics';
 
@@ -28,6 +28,7 @@ interface CreateOrderDialogProps {
   table_id?: number;
   onCreateOrder: (items: OrderItem[]) => void;
   existingOrder?: Order | null;
+  orderType?: 'dine-in' | 'takeaway' | 'quick-bill';
 }
 
 function CreateOrderDialogComponent({
@@ -35,7 +36,8 @@ function CreateOrderDialogComponent({
                                       onClose,
                                       table_id,
                                       onCreateOrder,
-                                      existingOrder
+                                      existingOrder,
+                                      orderType
                                     }: CreateOrderDialogProps) {
   const { addOrder, addItemsToOrder } = useOrderStore();
   const { menuItems, categories } = useMenuStore();
@@ -54,6 +56,9 @@ function CreateOrderDialogComponent({
   // Mobile UI state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [currentOrderType, setCurrentOrderType] = useState<'dine-in' | 'takeaway' | 'quick-bill'>(
+    table_id ? 'dine-in' : orderType || 'takeaway'
+  );
 
   // Effect to set initial sidebar state based on screen size
   useEffect(() => {
@@ -86,7 +91,6 @@ function CreateOrderDialogComponent({
           const menuItemAnalytics = await analyticsService.getMenuItemAnalytics(params);
           setFavouriteItems(menuItemAnalytics);
         } catch (err) {
-          console.error('Failed to load favourite items:', err);
           toast.error('Failed to load favourite items');
         } finally {
           setIsLoadingFavourites(false);
@@ -348,10 +352,16 @@ function CreateOrderDialogComponent({
 
           <div class="bill-info">
             <div><strong>KOT No:</strong> ${Date.now().toString().slice(-6)}</div>
-            <div><strong>Table:</strong> ${table_id || 'Takeaway'}</div>
+            <div><strong>Table:</strong> ${table_id || 'N/A'}</div>
             <div><strong>Server:</strong> ${user?.name || 'N/A'}</div>
-            <div><strong>Type:</strong> ${table_id ? 'Dine-in' : 'Takeaway'}</div>
+            <div><strong>Type:</strong> ${table_id ? 'Dine-in' : currentOrderType.charAt(0).toUpperCase() + currentOrderType.slice(1)}</div>
           </div>
+
+          ${!table_id ? `
+          <div style="text-align: center; font-size: 16px; font-weight: bold; margin: 10px 0; padding: 5px; border: 2px dashed #000; border-radius: 5px;">
+            Token No: ${generateTokenNumber()}
+          </div>
+          ` : ''}
 
           <table class="items-table">
             <thead>
@@ -404,7 +414,7 @@ function CreateOrderDialogComponent({
     };
 
     toast.success('KOT generated successfully');
-  }, [orderItems, menuItems, table_id, user]);
+  }, [orderItems, menuItems, table_id, user, currentOrderType, generateTokenNumber]);
 
   // Memoize submit order handler to prevent recreation on every render
   const handleSubmitOrder = useCallback(async () => {
@@ -431,6 +441,9 @@ function CreateOrderDialogComponent({
           staff_id: user?.staff_id,
           status: 'placed' as const,
           order_time: new Date().toISOString(),
+          order_type: table_id ? 'dine-in' : currentOrderType,
+          // Generate token number for takeaway and quick-bill orders
+          token_number: !table_id ? generateTokenNumber() : undefined,
           items: orderItems.map(item => {
             const menuItem = menuItems.find(m => m.id === item.menu_item_id);
             return {
@@ -442,6 +455,13 @@ function CreateOrderDialogComponent({
           })
         };
         await addOrder(newOrder);
+
+        // Automatically print KOT for takeaway and quick-bill orders
+        if (!table_id && (currentOrderType === 'takeaway' || currentOrderType === 'quick-bill')) {
+          // Print KOT automatically
+          handlePrintKOT();
+          toast.success(`${currentOrderType === 'takeaway' ? 'Takeaway' : 'Quick Bill'} order created with token: ${newOrder.token_number}`);
+        }
       }
 
       setOrderItems([]);
@@ -454,7 +474,6 @@ function CreateOrderDialogComponent({
       // Close the dialog immediately to avoid flashing
       onClose();
     } catch(err) {
-      console.error('Failed to process order:', err);
       toast.error('Failed to process order');
     } finally {
       setIsSubmitting(false);
@@ -468,7 +487,9 @@ function CreateOrderDialogComponent({
     user,
     addOrder,
     onCreateOrder,
-    onClose
+    onClose,
+    currentOrderType,
+    generateTokenNumber
   ]);
 
   // Memoize total amount calculation to prevent recalculation on every render
@@ -503,9 +524,40 @@ function CreateOrderDialogComponent({
               >
                 <MenuIcon className="h-5 w-5" />
               </Button>
-              <h2 className="text-lg font-semibold flex-1 text-center">{table_id ? `Table ${table_id}` : 'Takeaway Order'}</h2>
+              <h2 className="text-lg font-semibold flex-1 text-center">{table_id ? `Table ${table_id}` : `${currentOrderType.charAt(0).toUpperCase() + currentOrderType.slice(1)} Order`}</h2>
               <div className="w-10"></div> {/* Spacer to help with centering */}
             </div>
+
+            {/* Order Type Selection - Only show if no table is selected */}
+            {!table_id && (
+              <div className="p-3 border-b shrink-0">
+                <h3 className="text-sm font-semibold mb-2">Order Type</h3>
+                <div className="flex flex-wrap gap-2">
+                  <label className={`flex items-center p-2 rounded-md border cursor-pointer ${currentOrderType === 'takeaway' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-accent'}`}>
+                    <input
+                      type="radio"
+                      name="order-type"
+                      value="takeaway"
+                      checked={currentOrderType === 'takeaway'}
+                      onChange={() => setCurrentOrderType('takeaway')}
+                      className="mr-2"
+                    />
+                    Takeaway
+                  </label>
+                  <label className={`flex items-center p-2 rounded-md border cursor-pointer ${currentOrderType === 'quick-bill' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-accent'}`}>
+                    <input
+                      type="radio"
+                      name="order-type"
+                      value="quick-bill"
+                      checked={currentOrderType === 'quick-bill'}
+                      onChange={() => setCurrentOrderType('quick-bill')}
+                      className="mr-2"
+                    />
+                    Quick Bill
+                  </label>
+                </div>
+              </div>
+            )}
 
             <div className="flex flex-1 flex-col md:flex-row overflow-hidden">
               {/* Categories Sidebar - Collapsible on mobile */}

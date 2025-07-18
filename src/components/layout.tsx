@@ -35,7 +35,6 @@ export default function Layout({ children }: LayoutProps) {
         fetchTables(),
         fetchStaff()
       ]).catch(error => {
-        console.error('Error fetching initial data:', error);
       });
     }
   }, [isAuthenticated, fetchMenuItems, fetchCategories, fetchTables, fetchStaff]);

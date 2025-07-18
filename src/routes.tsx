@@ -3,25 +3,28 @@ import {Navigate, Route, Routes} from 'react-router-dom';
 import {useAuthStore} from '@/lib/store/auth.store';
 import {ProtectedRoute} from '@/components/auth/protected-route';
 
-// Import your pages
+// Import lazy-loaded components
+import {
+    LazyCategories,
+    LazyDashboard,
+    LazyGstSettings,
+    LazyMenu,
+    LazyOrders,
+    LazyOrderTrackingSettings,
+    LazyPayments,
+    LazyProfile,
+    LazyProfileSettings,
+    LazyQuickBill,
+    LazySettings,
+    LazyStaff,
+    LazyTables,
+    LazyTakeaway,
+    LazyUserManagement
+} from '@/routes/lazyRoutes';
+
+// Import non-lazy-loaded pages (login and error pages should load quickly)
 import Login from '@/pages/auth/login';
-import Dashboard from '@/pages/dashboard';
-import Tables from '@/pages/tables';
-import Orders from '@/pages/orders';
-import Takeaway from '@/pages/takeaway';
-import Menu from '@/pages/menu';
-import Categories from '@/pages/categories';
-import Staff from '@/pages/staff';
-import Payments from '@/pages/payments';
-import Profile from '@/pages/profile';
-import UserManagement from './pages/UserManagement';
-import Settings from '@/pages/settings';
-import ProfileSettings from '@/pages/settings/profile-settings';
-import GstSettings from '@/pages/settings/gst-settings';
 import Unauthorized from '@/pages/unauthorized';
-import QuickBill from "@/pages/quick-bill.tsx";
-import CreateOrderPage from '@/pages/create-order';
-import ViewOrdersPage from '@/pages/view-orders';
 
 // Component to handle role-based redirection
 const RoleBasedRedirect = () => {
@@ -66,7 +69,7 @@ const AppRoutes = () => {
         path="/dashboard" 
         element={
           <ProtectedRoute requiredRole="admin">
-            <Dashboard />
+            <LazyDashboard />
           </ProtectedRoute>
         } 
       />
@@ -75,7 +78,7 @@ const AppRoutes = () => {
         path="/takeaway" 
         element={
           <ProtectedRoute requiredRoles={['admin', 'manager', 'server']}>
-            <Takeaway />
+            <LazyTakeaway />
           </ProtectedRoute>
         } 
       />
@@ -83,7 +86,7 @@ const AppRoutes = () => {
             path="/quick-bill"
             element={
                 <ProtectedRoute requiredRoles={['admin', 'manager', 'server']}>
-                    <QuickBill />
+                    <LazyQuickBill />
                 </ProtectedRoute>
             }
         />
@@ -92,25 +95,7 @@ const AppRoutes = () => {
         path="/tables" 
         element={
           <ProtectedRoute requiredRoles={['admin', 'manager', 'server']}>
-            <Tables />
-          </ProtectedRoute>
-        } 
-      />
-
-      <Route 
-        path="/create-order/:tableId" 
-        element={
-          <ProtectedRoute requiredRoles={['admin', 'manager', 'server']}>
-            <CreateOrderPage />
-          </ProtectedRoute>
-        } 
-      />
-
-      <Route 
-        path="/view-orders/:tableId" 
-        element={
-          <ProtectedRoute requiredRoles={['admin', 'manager', 'server']}>
-            <ViewOrdersPage />
+            <LazyTables />
           </ProtectedRoute>
         } 
       />
@@ -119,7 +104,7 @@ const AppRoutes = () => {
         path="/orders" 
         element={
           <ProtectedRoute requiredRoles={['admin', 'manager', 'kitchen', 'server']}>
-            <Orders />
+            <LazyOrders />
           </ProtectedRoute>
         } 
       />
@@ -128,7 +113,7 @@ const AppRoutes = () => {
         path="/menu" 
         element={
           <ProtectedRoute requiredRoles={['admin', 'manager', 'kitchen']}>
-            <Menu />
+            <LazyMenu />
           </ProtectedRoute>
         } 
       />
@@ -137,7 +122,7 @@ const AppRoutes = () => {
         path="/categories" 
         element={
           <ProtectedRoute requiredRoles={['admin', 'manager']}>
-            <Categories />
+            <LazyCategories />
           </ProtectedRoute>
         } 
       />
@@ -147,7 +132,7 @@ const AppRoutes = () => {
         path="/staff" 
         element={
           <ProtectedRoute requiredRole="admin">
-            <Staff />
+            <LazyStaff />
           </ProtectedRoute>
         } 
       />
@@ -156,7 +141,7 @@ const AppRoutes = () => {
         path="/payments" 
         element={
           <ProtectedRoute requiredRoles={['admin', 'manager']}>
-            <Payments />
+            <LazyPayments />
           </ProtectedRoute>
         } 
       />
@@ -165,7 +150,7 @@ const AppRoutes = () => {
         path="/user-management"
         element={
           <ProtectedRoute requiredRole="admin">
-            <UserManagement />
+            <LazyUserManagement />
           </ProtectedRoute>
         }/>
 
@@ -173,7 +158,7 @@ const AppRoutes = () => {
         path="/profile" 
         element={
           <ProtectedRoute requiredRoles={['admin', 'manager', 'kitchen', 'server']}>
-            <Profile />
+            <LazyProfile />
           </ProtectedRoute>
         } 
       />
@@ -182,14 +167,19 @@ const AppRoutes = () => {
         path="/settings" 
         element={
           <ProtectedRoute>
-            <Settings />
+            <LazySettings />
           </ProtectedRoute>
         } 
       >
-        <Route path="profile" element={<ProfileSettings />} />
+        <Route path="profile" element={<LazyProfileSettings />} />
         <Route path="gst" element={
           <ProtectedRoute requiredRole="admin">
-            <GstSettings />
+            <LazyGstSettings />
+          </ProtectedRoute>
+        } />
+        <Route path="order-tracking" element={
+          <ProtectedRoute requiredRole="admin">
+            <LazyOrderTrackingSettings />
           </ProtectedRoute>
         } />
       </Route>

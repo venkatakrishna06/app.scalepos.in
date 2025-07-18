@@ -18,11 +18,12 @@ import {FilterDropdownContainer} from '@/components/FilterDropdownContainer';
 import {useTable} from '@/lib/hooks/useTable';
 import {useMenu} from '@/lib/hooks/useMenu';
 import {useOrder} from '@/lib/hooks/useOrder';
+import {orderService} from "@/lib/api/services";
 
 export default function Tables() {
   // Use both Zustand store and React Query hook
   const { tables, loading, error, fetchTables, deleteTable, updateTableStatus } = useTableStore();
-  const { error: ordersError, getOrdersByTable, fetchOrders } = useOrderStore();
+  const { error: ordersError, fetchOrders } = useOrderStore();
   const { fetchMenuItems, fetchCategories } = useMenuStore();
   const { handleError } = useErrorHandler();
 
@@ -106,12 +107,12 @@ export default function Tables() {
     }
   };
 
-  const handleNewOrder = (tableId: number, isNew: boolean = true) => {
+  const handleNewOrder = async (tableId: number, isNew: boolean = true) => {
     setSelectedTableId(tableId);
     setIsNewOrder(isNew);
     setShowOrderDialog(true);
     if (!isNew) {
-      const tableOrders = getOrdersByTable(tableId);
+      const tableOrders = await orderService.getOrdersByTable(tableId);
       const activeOrder = tableOrders.find(order =>
           order.status !== 'paid' && order.status !== 'cancelled'
       );
@@ -137,8 +138,8 @@ export default function Tables() {
     }
   };
 
-  const handlePayment = (table: Table) => {
-    const tableOrders = getOrdersByTable(table.id);
+  const handlePayment = async (table: Table) => {
+    const tableOrders = await orderService.getOrdersByTable(table.id);
     const activeOrder = tableOrders.find(order =>
         order.status !== 'paid' && order.status !== 'cancelled'
     );
@@ -308,14 +309,17 @@ export default function Tables() {
         />
 
         {selectedOrder && (
-            <PaymentDialog
-                open={showPaymentDialog}
-                onClose={() => {
-                  setShowPaymentDialog(false);
-                  setSelectedOrder(null);
-                }}
-                order={selectedOrder}
-            />
+            <>
+              <PaymentDialog
+                  key={`payment-dialog-${selectedOrder.id}`}
+                  open={showPaymentDialog}
+                  onClose={() => {
+                    setShowPaymentDialog(false);
+                    setSelectedOrder(null);
+                  }}
+                  order={selectedOrder}
+              />
+            </>
         )}
 
         {selectedTableId && (
@@ -325,7 +329,7 @@ export default function Tables() {
                   setShowOrdersDialog(false);
                   setSelectedTableId(null);
                 }}
-                orders={getOrdersByTable(selectedTableId)}
+                tableId={selectedTableId}
                 onPayment={handleOrderPayment}
             />
         )}

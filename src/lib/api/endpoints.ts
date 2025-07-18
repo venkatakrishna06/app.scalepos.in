@@ -26,12 +26,22 @@ export const API_ENDPOINTS = {
     CREATE: '/api/v1/orders',
     UPDATE: (id: number) => `/api/v1/orders/${id}`,
     DELETE: (id: number) => `/api/v1/orders/${id}`,
+    // New endpoints for order status management
+    UPDATE_STATUS: (id: number) => `/api/v1/orders/${id}/status`,
+    STATUS_HISTORY: (id: number) => `/api/v1/orders/${id}/status/history`,
+    CANCEL: (id: number) => `/api/v1/orders/${id}/cancel`,
+    CANCELLATIONS: (id: number) => `/api/v1/orders/${id}/cancellations`,
   },
   ORDER_ITEMS: {
     GET: (id: number) => `/api/v1/order-items/${id}`,
     CREATE: '/api/v1/order-items',
     UPDATE: (id: number) => `/api/v1/order-items/${id}`,
     DELETE: (id: number) => `/api/v1/order-items/${id}`,
+    // New endpoints for order item status management
+    UPDATE_STATUS: (id: number) => `/api/v1/order-items/${id}/status`,
+    STATUS_HISTORY: (id: number) => `/api/v1/order-items/${id}/status/history`,
+    CANCEL: (orderId: number, itemId: number) => `/api/v1/orders/${orderId}/items/${itemId}/cancel`,
+    CANCELLATIONS: (id: number) => `/api/v1/order-items/${id}/cancellations`,
   },
   TABLES: {
     LIST: '/api/v1/tables',

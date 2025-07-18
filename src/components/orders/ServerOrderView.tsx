@@ -1,21 +1,13 @@
-import React, { useState } from 'react';
-import {
-  CreditCard,
-  FileText,
-  Printer,
-  Search,
-  User,
-  Check,
-  Coffee
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { format, isToday, isYesterday } from 'date-fns';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { Order } from '@/types';
+import React, {useState} from 'react';
+import {Check, CreditCard, FileText, Printer, Search, User} from 'lucide-react';
+import {Button} from '@/components/ui/button';
+import {format, isToday, isYesterday} from 'date-fns';
+import {Input} from '@/components/ui/input';
+import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
+import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
+import {Badge} from '@/components/ui/badge';
+import {cn} from '@/lib/utils';
+import {Order} from '@/types';
 
 interface ServerOrderViewProps {
   orders: Order[];
@@ -138,7 +130,7 @@ export const ServerOrderView: React.FC<ServerOrderViewProps> = ({
           </div>
         </div>
 
-        <TabsContent value="active" className="mt-6">
+        <TabsContent value="active" className="mt-4">
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {filteredOrders.map((order) => (
               <Card key={order.id} className="overflow-hidden border-green-200 hover:shadow-md">
@@ -166,16 +158,8 @@ export const ServerOrderView: React.FC<ServerOrderViewProps> = ({
                 </CardHeader>
 
                 <CardContent className="pb-3">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm">
-                      <User className="h-4 w-4 text-green-600" />
-                      <span>Customer: {order.customer || 'Walk-in'}</span>
-                    </div>
+                  <div className="space-y-1">
 
-                    <div className="flex items-center gap-2 text-sm">
-                      <Coffee className="h-4 w-4 text-green-600" />
-                      <span>Server: {order.server || 'Unknown'}</span>
-                    </div>
 
                     {order.payment_method && (
                       <div className="flex items-center gap-2 text-sm">
@@ -199,7 +183,7 @@ export const ServerOrderView: React.FC<ServerOrderViewProps> = ({
                           <th className="p-2 text-green-800">Item</th>
                           <th className="p-2 text-green-800">Qty</th>
                           <th className="p-2 text-green-800">Status</th>
-                          <th className="p-2 text-green-800">Action</th>
+                          {/*<th className="p-2 text-green-800">Action</th>*/}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-green-100 text-xs">
@@ -220,6 +204,7 @@ export const ServerOrderView: React.FC<ServerOrderViewProps> = ({
                                     size="sm" 
                                     className="h-6 px-2 text-xs text-green-700 hover:bg-green-100"
                                     onClick={() => onMarkItemAsServed(order.id, item.id)}
+                                    disabled={item.allowed_next_states && !item.allowed_next_states.includes('served')}
                                   >
                                     <Check className="mr-1 h-3 w-3" /> Mark Served
                                   </Button>
@@ -241,25 +226,26 @@ export const ServerOrderView: React.FC<ServerOrderViewProps> = ({
 
                 <CardFooter className="flex items-center justify-between border-t border-green-100 bg-green-50/50 dark:bg-green-950/50 pt-3">
                   <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onMarkOrderAsPaid(order.id)}
-                      disabled={order.status === 'paid' || order.status === 'cancelled'}
-                      className="border-green-300 hover:bg-green-100 text-green-700"
-                    >
-                      <Check className="mr-2 h-4 w-4" />
-                      Mark as Paid
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onPrintBill(order.id)}
-                      className="border-green-300 hover:bg-green-100 text-green-700"
-                    >
-                      <Printer className="mr-2 h-4 w-4" />
-                      Print Bill
-                    </Button>
+                    {/*<Button*/}
+                    {/*  variant="outline"*/}
+                    {/*  size="sm"*/}
+                    {/*  onClick={() => onMarkOrderAsPaid(order.id)}*/}
+                    {/*  disabled={(order.status === 'paid' || order.status === 'cancelled') || */}
+                    {/*            (order.allowed_next_states && !order.allowed_next_states.includes('paid'))}*/}
+                    {/*  className="border-green-300 hover:bg-green-100 text-green-700"*/}
+                    {/*>*/}
+                    {/*  <Check className="mr-2 h-4 w-4" />*/}
+                    {/*  Mark as Paid*/}
+                    {/*</Button>*/}
+                    {/*<Button*/}
+                    {/*  variant="outline"*/}
+                    {/*  size="sm"*/}
+                    {/*  onClick={() => onPrintBill(order.id)}*/}
+                    {/*  className="border-green-300 hover:bg-green-100 text-green-700"*/}
+                    {/*>*/}
+                    {/*  <Printer className="mr-2 h-4 w-4" />*/}
+                    {/*  Print Bill*/}
+                    {/*</Button>*/}
                   </div>
 
                   <div className="text-right">
