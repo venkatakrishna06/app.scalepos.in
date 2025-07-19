@@ -50,15 +50,15 @@ export const TableCard = React.memo(({
     const getStatusIcon = (status: Table['status']) => {
         switch (status) {
             case 'available':
-                return <CheckCircle className="h-4 w-4 text-green-500" />;
+                return <CheckCircle className="h-4 w-4 text-green-500"/>;
             case 'occupied':
-                return <Coffee className="h-4 w-4 text-orange-500" />;
+                return <Coffee className="h-4 w-4 text-orange-500"/>;
             case 'reserved':
-                return <Calendar className="h-4 w-4 text-blue-500" />;
+                return <Calendar className="h-4 w-4 text-blue-500"/>;
             case 'cleaning':
-                return <RefreshCw className="h-4 w-4 text-yellow-500" />;
+                return <RefreshCw className="h-4 w-4 text-yellow-500"/>;
             default:
-                return <AlertCircle className="h-4 w-4 text-gray-500" />;
+                return <AlertCircle className="h-4 w-4 text-gray-500"/>;
         }
     };
 
@@ -88,33 +88,33 @@ export const TableCard = React.memo(({
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <Settings2 className="h-4 w-4" />
+                                <Settings2 className="h-4 w-4"/>
                             </Button>
                         </DropdownMenuTrigger>
                         {/*{table.status !== 'occupied' &&*/}
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => onStatusChange(table.id, 'available')}>
-                                <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                                <CheckCircle className="mr-2 h-4 w-4 text-green-500"/>
                                 Mark Available
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => onStatusChange(table.id, 'reserved')}>
-                                <Calendar className="mr-2 h-4 w-4 text-blue-500" />
+                                <Calendar className="mr-2 h-4 w-4 text-blue-500"/>
                                 Mark Reserved
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => onStatusChange(table.id, 'cleaning')}>
-                                <RefreshCw className="mr-2 h-4 w-4 text-yellow-500" />
+                                <RefreshCw className="mr-2 h-4 w-4 text-yellow-500"/>
                                 Mark Cleaning
                             </DropdownMenuItem>
-                            <DropdownMenuSeparator />
+                            <DropdownMenuSeparator/>
                             {table.status === 'available' && (
                                 <DropdownMenuItem onClick={onSplit}>
-                                    <Split className="mr-2 h-4 w-4" />
+                                    <Split className="mr-2 h-4 w-4"/>
                                     Split Table
                                 </DropdownMenuItem>
                             )}
                             {table.status === 'available' && (
                                 <DropdownMenuItem onClick={() => onDelete(table.id)}>
-                                    <Trash2 className="mr-2 h-4 w-4 text-red-500" />
+                                    <Trash2 className="mr-2 h-4 w-4 text-red-500"/>
                                     Delete Table
                                 </DropdownMenuItem>
                             )}
@@ -126,7 +126,7 @@ export const TableCard = React.memo(({
                 {/* Info section */}
                 <div className="mt-2 flex flex-col gap-1">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Users className="h-4 w-4" />
+                        <Users className="h-4 w-4"/>
                         <span>Capacity: {table.capacity} seats</span>
                     </div>
 
@@ -169,14 +169,15 @@ export const TableCard = React.memo(({
                     {table.status === 'occupied' && (
                         <>
                             <Button variant="outline" size="sm" className="h-8" onClick={() => onViewOrders(table.id)}>
-                                <ClipboardList className="h-3.5 w-3.5" />
+                                <ClipboardList className="h-3.5 w-3.5"/>
                                 View
                             </Button>
-                            <Button variant="outline" size="sm" className="h-8" onClick={() => onNewOrder(table.id, false)}>
+                            <Button variant="outline" size="sm" className="h-8"
+                                    onClick={() => onNewOrder(table.id, false)}>
                                 Add Items
                             </Button>
                             <Button size="sm" className="h-8" onClick={() => onPayment(table)}>
-                                <CreditCard className="mr-1.5 h-3.5 w-3.5" />
+                                <CreditCard className="mr-1.5 h-3.5 w-3.5"/>
                                 Pay
                             </Button>
                         </>

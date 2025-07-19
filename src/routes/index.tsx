@@ -12,29 +12,29 @@ import {ProtectedRoute} from '@/components/auth/protected-route';
 
 
 interface AppRoutesProps {
-  orderType: 'dine-in' | 'takeaway' | 'orders';
+    orderType: 'dine-in' | 'takeaway' | 'orders';
 }
 
-export default function AppRoutes({ orderType }: AppRoutesProps) {
-  return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/tables" replace />} />
-      <Route path="/tables" element={<Tables />} />
-      <Route path="/dashboard" element={<Dashboard orderType={orderType} />} />
-      <Route path="/orders" element={<Orders />} />
-      <Route path="/menu" element={<Menu />} />
-      <Route path="/categories" element={<Categories />} />
-      <Route path="/staff" element={<Staff />} />
-      <Route path="/payments" element={<Payments />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route 
-        path="/user-management" 
-        element={
-          <ProtectedRoute requiredRole="admin">
-            <UserManagement />
-          </ProtectedRoute>
-        } 
-      />
-    </Routes>
-  );
+export default function AppRoutes({orderType}: AppRoutesProps) {
+    return (
+        <Routes>
+            <Route path="/" element={<Navigate to="/tables" replace/>}/>
+            <Route path="/tables" element={<Tables/>}/>
+            <Route path="/dashboard" element={<Dashboard orderType={orderType}/>}/>
+            <Route path="/orders" element={<Orders/>}/>
+            <Route path="/menu" element={<Menu/>}/>
+            <Route path="/categories" element={<Categories/>}/>
+            <Route path="/staff" element={<Staff/>}/>
+            <Route path="/payments" element={<Payments/>}/>
+            <Route path="/profile" element={<Profile/>}/>
+            <Route
+                path="/user-management"
+                element={
+                    <ProtectedRoute requiredRole="admin">
+                        <UserManagement/>
+                    </ProtectedRoute>
+                }
+            />
+        </Routes>
+    );
 }

@@ -1,7 +1,8 @@
-import { app, ipcMain, BrowserWindow } from "electron";
+import {app, BrowserWindow, ipcMain} from "electron";
 import path from "path";
-import url, { fileURLToPath } from "url";
+import url, {fileURLToPath} from "url";
 import "fs";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 let mainWindow;

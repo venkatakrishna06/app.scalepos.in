@@ -1,154 +1,155 @@
 import {jwtDecode} from 'jwt-decode';
 
 interface DecodedToken {
-  exp: number;
-  sub: string;
-  // Using Record<string, unknown> instead of any for better type safety
-  [key: string]: unknown;
+    exp: number;
+    sub: string;
+
+    // Using Record<string, unknown> instead of any for better type safety
+    [key: string]: unknown;
 }
 
 class TokenService {
-  private readonly TOKEN_KEY = 'auth_token';
-  private readonly REFRESH_TOKEN_KEY = 'refresh_token';
-  private readonly REMEMBER_ME_KEY = 'remember_me';
+    private readonly TOKEN_KEY = 'auth_token';
+    private readonly REFRESH_TOKEN_KEY = 'refresh_token';
+    private readonly REMEMBER_ME_KEY = 'remember_me';
 
-  // Check if user has chosen to be remembered
-  isPersistentSession(): boolean {
+    // Check if user has chosen to be remembered
+    isPersistentSession(): boolean {
 
-    return localStorage.getItem(this.REMEMBER_ME_KEY) === "true";
-  }
-
-  // Set remember me preference
-  setPersistentSession(remember: boolean): void {
-    if (remember) {
-      localStorage.setItem(this.REMEMBER_ME_KEY, 'true');
-    } else {
-      localStorage.removeItem(this.REMEMBER_ME_KEY);
+        return localStorage.getItem(this.REMEMBER_ME_KEY) === "true";
     }
-  }
 
-  // Get token from appropriate storage based on remember me preference
-  getToken(): string | null {
-    return this.isPersistentSession()
-      ? localStorage.getItem(this.TOKEN_KEY)
-      : sessionStorage.getItem(this.TOKEN_KEY);
-  }
-
-  // Set token in appropriate storage based on remember me preference
-  setToken(token: string): void {
-    if (this.isPersistentSession()) {
-      localStorage.setItem(this.TOKEN_KEY, token);
-    } else {
-      sessionStorage.setItem(this.TOKEN_KEY, token);
+    // Set remember me preference
+    setPersistentSession(remember: boolean): void {
+        if (remember) {
+            localStorage.setItem(this.REMEMBER_ME_KEY, 'true');
+        } else {
+            localStorage.removeItem(this.REMEMBER_ME_KEY);
+        }
     }
-  }
 
-  // Remove token from both storages to ensure it's completely cleared
-  removeToken(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
-    sessionStorage.removeItem(this.TOKEN_KEY);
-  }
-
-  // For HttpOnly cookies, we can't access them via JavaScript
-  // This method returns a boolean indicating if we're in a session that should have a refresh token
-  getRefreshToken(): boolean {
-    // We can't access HttpOnly cookies, but we can track if we should have one
-    // This helps with UI state management (e.g., showing login button)
-    // const refreshTokenFlag = this.isPersistentSession()
-    //   ? localStorage.getItem(this.REFRESH_TOKEN_KEY)
-    //   : sessionStorage.getItem(this.REFRESH_TOKEN_KEY);
-    // Return true if the flag exists and is set to 'true'
-    // return refreshTokenFlag === 'true';
-    return true;
-    // The actual token is sent automatically with requests via HttpOnly cookie
-  }
-
-  // Set refresh token - for HttpOnly cookies, this is handled by the server
-  // We just store a flag to indicate that we have a valid refresh token
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  setRefreshToken(): void {
-    // Store a flag indicating we have a refresh token
-    // The actual token is stored as an HttpOnly cookie by the server
-    // refreshToken parameter is ignored as we don't store the actual token
-    if (this.isPersistentSession()) {
-      localStorage.setItem(this.REFRESH_TOKEN_KEY, 'true');
-    } else {
-      sessionStorage.setItem(this.REFRESH_TOKEN_KEY, 'true');
+    // Get token from appropriate storage based on remember me preference
+    getToken(): string | null {
+        return this.isPersistentSession()
+            ? localStorage.getItem(this.TOKEN_KEY)
+            : sessionStorage.getItem(this.TOKEN_KEY);
     }
-  }
 
-  // Remove refresh token flag from storage
-  // The actual HttpOnly cookie needs to be cleared by the server
-  removeRefreshToken(): void {
-    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
-    sessionStorage.removeItem(this.REFRESH_TOKEN_KEY);
-    // The actual cookie will be cleared by the server on logout
-  }
-
-  // Clear all tokens from both storages
-  clearTokens(): void {
-    this.removeToken();
-    this.removeRefreshToken();
-  }
-
-  isTokenValid(): boolean {
-    const token = this.getToken();
-    if (!token) return false;
-
-    try {
-      const decoded = jwtDecode<DecodedToken>(token);
-      const currentTime = Date.now() / 1000;
-
-      // Check if token is expired
-      return decoded.exp > currentTime;
-    } catch {
-      // If token can't be decoded, consider it invalid
-      return false;
+    // Set token in appropriate storage based on remember me preference
+    setToken(token: string): void {
+        if (this.isPersistentSession()) {
+            localStorage.setItem(this.TOKEN_KEY, token);
+        } else {
+            sessionStorage.setItem(this.TOKEN_KEY, token);
+        }
     }
-  }
 
-  isTokenExpiringSoon(thresholdMinutes: number = 15): boolean {
-    const token = this.getToken();
-    if (!token) return false;
-
-    try {
-      const decoded = jwtDecode<DecodedToken>(token);
-      const currentTime = Date.now() / 1000;
-      const thresholdSeconds = thresholdMinutes * 60;
-
-      // Check if token will expire within the threshold time
-      return decoded.exp > currentTime && decoded.exp - currentTime < thresholdSeconds;
-    } catch {
-      // If token can't be decoded, consider it invalid
-      return true;
+    // Remove token from both storages to ensure it's completely cleared
+    removeToken(): void {
+        localStorage.removeItem(this.TOKEN_KEY);
+        sessionStorage.removeItem(this.TOKEN_KEY);
     }
-  }
 
-  getTokenExpiryTime(): number | null {
-    const token = this.getToken();
-    if (!token) return null;
-
-    try {
-      const decoded = jwtDecode<DecodedToken>(token);
-      return decoded.exp;
-    } catch {
-      // If token can't be decoded, return null
-      return null;
+    // For HttpOnly cookies, we can't access them via JavaScript
+    // This method returns a boolean indicating if we're in a session that should have a refresh token
+    getRefreshToken(): boolean {
+        // We can't access HttpOnly cookies, but we can track if we should have one
+        // This helps with UI state management (e.g., showing login button)
+        // const refreshTokenFlag = this.isPersistentSession()
+        //   ? localStorage.getItem(this.REFRESH_TOKEN_KEY)
+        //   : sessionStorage.getItem(this.REFRESH_TOKEN_KEY);
+        // Return true if the flag exists and is set to 'true'
+        // return refreshTokenFlag === 'true';
+        return true;
+        // The actual token is sent automatically with requests via HttpOnly cookie
     }
-  }
 
-  getUserIdFromToken(): string | null {
-    const token = this.getToken();
-    if (!token) return null;
-
-    try {
-      const decoded = jwtDecode<DecodedToken>(token);
-      return decoded.sub;
-    } catch {
-      // If token can't be decoded, return null
-      return null;
+    // Set refresh token - for HttpOnly cookies, this is handled by the server
+    // We just store a flag to indicate that we have a valid refresh token
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    setRefreshToken(): void {
+        // Store a flag indicating we have a refresh token
+        // The actual token is stored as an HttpOnly cookie by the server
+        // refreshToken parameter is ignored as we don't store the actual token
+        if (this.isPersistentSession()) {
+            localStorage.setItem(this.REFRESH_TOKEN_KEY, 'true');
+        } else {
+            sessionStorage.setItem(this.REFRESH_TOKEN_KEY, 'true');
+        }
     }
-  }
+
+    // Remove refresh token flag from storage
+    // The actual HttpOnly cookie needs to be cleared by the server
+    removeRefreshToken(): void {
+        localStorage.removeItem(this.REFRESH_TOKEN_KEY);
+        sessionStorage.removeItem(this.REFRESH_TOKEN_KEY);
+        // The actual cookie will be cleared by the server on logout
+    }
+
+    // Clear all tokens from both storages
+    clearTokens(): void {
+        this.removeToken();
+        this.removeRefreshToken();
+    }
+
+    isTokenValid(): boolean {
+        const token = this.getToken();
+        if (!token) return false;
+
+        try {
+            const decoded = jwtDecode<DecodedToken>(token);
+            const currentTime = Date.now() / 1000;
+
+            // Check if token is expired
+            return decoded.exp > currentTime;
+        } catch {
+            // If token can't be decoded, consider it invalid
+            return false;
+        }
+    }
+
+    isTokenExpiringSoon(thresholdMinutes: number = 15): boolean {
+        const token = this.getToken();
+        if (!token) return false;
+
+        try {
+            const decoded = jwtDecode<DecodedToken>(token);
+            const currentTime = Date.now() / 1000;
+            const thresholdSeconds = thresholdMinutes * 60;
+
+            // Check if token will expire within the threshold time
+            return decoded.exp > currentTime && decoded.exp - currentTime < thresholdSeconds;
+        } catch {
+            // If token can't be decoded, consider it invalid
+            return true;
+        }
+    }
+
+    getTokenExpiryTime(): number | null {
+        const token = this.getToken();
+        if (!token) return null;
+
+        try {
+            const decoded = jwtDecode<DecodedToken>(token);
+            return decoded.exp;
+        } catch {
+            // If token can't be decoded, return null
+            return null;
+        }
+    }
+
+    getUserIdFromToken(): string | null {
+        const token = this.getToken();
+        if (!token) return null;
+
+        try {
+            const decoded = jwtDecode<DecodedToken>(token);
+            return decoded.sub;
+        } catch {
+            // If token can't be decoded, return null
+            return null;
+        }
+    }
 }
 
 export const tokenService = new TokenService();

@@ -4,9 +4,11 @@ This document provides an overview of the authentication system implemented in t
 
 ## Overview
 
-The authentication system follows industry best practices for secure user authentication in React/TypeScript applications:
+The authentication system follows industry best practices for secure user authentication in React/TypeScript
+applications:
 
-1. **Secure Token Storage**: Tokens are stored in sessionStorage instead of localStorage for better security against XSS attacks
+1. **Secure Token Storage**: Tokens are stored in sessionStorage instead of localStorage for better security against XSS
+   attacks
 2. **Token Refresh Mechanism**: Automatic token refresh when expired or unauthorized
 3. **Route Protection**: Protected routes that require authentication
 4. **Role-Based Access Control**: Support for role-based access to routes
@@ -19,6 +21,7 @@ The authentication system follows industry best practices for secure user authen
 ### Token Service (`token.service.ts`)
 
 Handles all token-related operations:
+
 - Secure storage of tokens in sessionStorage
 - Token validation and expiry checking
 - JWT decoding for user information
@@ -37,6 +40,7 @@ const userId = tokenService.getUserIdFromToken();
 ### Authentication Store (`auth.store.ts`)
 
 Manages authentication state using Zustand:
+
 - User information
 - Authentication status
 - Login/logout functionality
@@ -59,6 +63,7 @@ await logout();
 ### Protected Route Component (`protected-route.tsx`)
 
 Protects routes that require authentication:
+
 - Redirects unauthenticated users to login
 - Supports role-based access control
 - Shows loading state during authentication checks
@@ -88,31 +93,31 @@ Protects routes that require authentication:
 ## Authentication Flow
 
 1. **Initial Load**:
-   - Application checks for existing valid tokens
-   - If valid, user is authenticated automatically
-   - If invalid, user is redirected to login
+    - Application checks for existing valid tokens
+    - If valid, user is authenticated automatically
+    - If invalid, user is redirected to login
 
 2. **Login**:
-   - User submits credentials
-   - Server validates and returns tokens
-   - Tokens are securely stored
-   - User is redirected to the requested page
+    - User submits credentials
+    - Server validates and returns tokens
+    - Tokens are securely stored
+    - User is redirected to the requested page
 
 3. **Protected Routes**:
-   - Authentication is verified before rendering
-   - Unauthenticated users are redirected to login
-   - Role requirements are checked if specified
+    - Authentication is verified before rendering
+    - Unauthenticated users are redirected to login
+    - Role requirements are checked if specified
 
 4. **Token Refresh**:
-   - When a request returns 401 Unauthorized
-   - System attempts to refresh the token
-   - If successful, the original request is retried
-   - If unsuccessful, user is logged out
+    - When a request returns 401 Unauthorized
+    - System attempts to refresh the token
+    - If successful, the original request is retried
+    - If unsuccessful, user is logged out
 
 5. **Logout**:
-   - Tokens are removed from storage
-   - Server is notified
-   - User is redirected to login
+    - Tokens are removed from storage
+    - Server is notified
+    - User is redirected to login
 
 ## Best Practices
 

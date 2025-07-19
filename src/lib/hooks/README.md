@@ -1,6 +1,7 @@
 # React Query Hooks
 
-This directory contains React Query hooks for data fetching and state management. These hooks replace the Zustand stores and provide a more declarative and efficient way to manage server state.
+This directory contains React Query hooks for data fetching and state management. These hooks replace the Zustand stores
+and provide a more declarative and efficient way to manage server state.
 
 ## Features
 

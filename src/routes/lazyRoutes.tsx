@@ -28,121 +28,121 @@ const QuickBill = React.lazy(() => import('@/pages/quick-bill'));
 
 // Error handler for lazy-loaded components
 const handleLazyLoadError = (error: Error, info: React.ErrorInfo) => {
-  errorService.logError(
-    error, 
-    ErrorCategory.UNEXPECTED, 
-    { componentStack: info.componentStack }
-  );
+    errorService.logError(
+        error,
+        ErrorCategory.UNEXPECTED,
+        {componentStack: info.componentStack}
+    );
 };
 
 // Wrap lazy-loaded components with SuspenseWrapper
 export const LazyDashboard = () => (
-  <SuspenseWrapper onError={handleLazyLoadError}>
-    <Dashboard />
-  </SuspenseWrapper>
+    <SuspenseWrapper onError={handleLazyLoadError}>
+        <Dashboard/>
+    </SuspenseWrapper>
 );
 
 export const LazyTables = () => (
-  <SuspenseWrapper 
-    onError={handleLazyLoadError}
-    fallback={<TablesSkeleton />}
-  >
-    <Tables />
-  </SuspenseWrapper>
+    <SuspenseWrapper
+        onError={handleLazyLoadError}
+        fallback={<TablesSkeleton/>}
+    >
+        <Tables/>
+    </SuspenseWrapper>
 );
 
 export const LazyOrders = () => (
-  <SuspenseWrapper 
-    onError={handleLazyLoadError}
-    fallback={<OrdersSkeleton />}
-  >
-    <Orders />
-  </SuspenseWrapper>
+    <SuspenseWrapper
+        onError={handleLazyLoadError}
+        fallback={<OrdersSkeleton/>}
+    >
+        <Orders/>
+    </SuspenseWrapper>
 );
 
 export const LazyTakeaway = () => (
-  <SuspenseWrapper onError={handleLazyLoadError}>
-    <Takeaway />
-  </SuspenseWrapper>
+    <SuspenseWrapper onError={handleLazyLoadError}>
+        <Takeaway/>
+    </SuspenseWrapper>
 );
 
 export const LazyMenu = () => (
-  <SuspenseWrapper 
-    onError={handleLazyLoadError}
-    fallback={<MenuSkeleton />}
-  >
-    <Menu />
-  </SuspenseWrapper>
+    <SuspenseWrapper
+        onError={handleLazyLoadError}
+        fallback={<MenuSkeleton/>}
+    >
+        <Menu/>
+    </SuspenseWrapper>
 );
 
 export const LazyCategories = () => (
-  <SuspenseWrapper 
-    onError={handleLazyLoadError}
-    fallback={<CategoriesSkeleton />}
-  >
-    <Categories />
-  </SuspenseWrapper>
+    <SuspenseWrapper
+        onError={handleLazyLoadError}
+        fallback={<CategoriesSkeleton/>}
+    >
+        <Categories/>
+    </SuspenseWrapper>
 );
 
 export const LazyStaff = () => (
-  <SuspenseWrapper 
-    onError={handleLazyLoadError}
-    fallback={<StaffSkeleton />}
-  >
-    <Staff />
-  </SuspenseWrapper>
+    <SuspenseWrapper
+        onError={handleLazyLoadError}
+        fallback={<StaffSkeleton/>}
+    >
+        <Staff/>
+    </SuspenseWrapper>
 );
 
 export const LazyPayments = () => (
-  <SuspenseWrapper 
-    onError={handleLazyLoadError}
-    fallback={<PaymentsSkeleton />}
-  >
-    <Payments />
-  </SuspenseWrapper>
+    <SuspenseWrapper
+        onError={handleLazyLoadError}
+        fallback={<PaymentsSkeleton/>}
+    >
+        <Payments/>
+    </SuspenseWrapper>
 );
 
 export const LazyProfile = () => (
-  <SuspenseWrapper onError={handleLazyLoadError}>
-    <Profile />
-  </SuspenseWrapper>
+    <SuspenseWrapper onError={handleLazyLoadError}>
+        <Profile/>
+    </SuspenseWrapper>
 );
 
 export const LazyUserManagement = () => (
-  <SuspenseWrapper 
-    onError={handleLazyLoadError}
-    fallback={<UserManagementSkeleton />}
-  >
-    <UserManagement />
-  </SuspenseWrapper>
+    <SuspenseWrapper
+        onError={handleLazyLoadError}
+        fallback={<UserManagementSkeleton/>}
+    >
+        <UserManagement/>
+    </SuspenseWrapper>
 );
 
 export const LazySettings = () => (
-  <SuspenseWrapper onError={handleLazyLoadError}>
-    <Settings />
-  </SuspenseWrapper>
+    <SuspenseWrapper onError={handleLazyLoadError}>
+        <Settings/>
+    </SuspenseWrapper>
 );
 
 export const LazyProfileSettings = () => (
-  <SuspenseWrapper onError={handleLazyLoadError}>
-    <ProfileSettings />
-  </SuspenseWrapper>
+    <SuspenseWrapper onError={handleLazyLoadError}>
+        <ProfileSettings/>
+    </SuspenseWrapper>
 );
 
 export const LazyGstSettings = () => (
-  <SuspenseWrapper onError={handleLazyLoadError}>
-    <GstSettings />
-  </SuspenseWrapper>
+    <SuspenseWrapper onError={handleLazyLoadError}>
+        <GstSettings/>
+    </SuspenseWrapper>
 );
 
 export const LazyOrderTrackingSettings = () => (
-  <SuspenseWrapper onError={handleLazyLoadError}>
-    <OrderTrackingSettings />
-  </SuspenseWrapper>
+    <SuspenseWrapper onError={handleLazyLoadError}>
+        <OrderTrackingSettings/>
+    </SuspenseWrapper>
 );
 
 export const LazyQuickBill = () => (
-  <SuspenseWrapper onError={handleLazyLoadError}>
-    <QuickBill />
-  </SuspenseWrapper>
+    <SuspenseWrapper onError={handleLazyLoadError}>
+        <QuickBill/>
+    </SuspenseWrapper>
 );
