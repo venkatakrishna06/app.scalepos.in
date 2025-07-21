@@ -24,6 +24,7 @@ const Settings = React.lazy(() => import('@/pages/settings'));
 const ProfileSettings = React.lazy(() => import('@/pages/settings/profile-settings'));
 const GstSettings = React.lazy(() => import('@/pages/settings/gst-settings'));
 const OrderTrackingSettings = React.lazy(() => import('@/pages/settings/order-tracking-settings'));
+const PrinterSettings = React.lazy(() => import('@/pages/settings/printer-settings'));
 const QuickBill = React.lazy(() => import('@/pages/quick-bill'));
 
 // Error handler for lazy-loaded components
@@ -138,6 +139,12 @@ export const LazyGstSettings = () => (
 export const LazyOrderTrackingSettings = () => (
     <SuspenseWrapper onError={handleLazyLoadError}>
         <OrderTrackingSettings/>
+    </SuspenseWrapper>
+);
+
+export const LazyPrinterSettings = () => (
+    <SuspenseWrapper onError={handleLazyLoadError}>
+        <PrinterSettings/>
     </SuspenseWrapper>
 );
 

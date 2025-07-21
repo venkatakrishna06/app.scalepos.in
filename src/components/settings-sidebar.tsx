@@ -1,5 +1,5 @@
 import {Link, useLocation} from 'react-router-dom';
-import {ChevronRight, ClipboardList, Percent, User} from 'lucide-react';
+import {ChevronRight, ClipboardList, Percent, Printer, User} from 'lucide-react';
 import {cn} from '@/lib/utils';
 import {useAuthStore} from '@/lib/store/auth.store';
 
@@ -23,6 +23,13 @@ const settingsNavigation = [
         href: '/settings/order-tracking',
         icon: ClipboardList,
         description: 'Configure order status tracking',
+        roles: ['admin']
+    },
+    {
+        name: 'Printer Settings',
+        href: '/settings/printer',
+        icon: Printer,
+        description: 'Configure printers for bills, KOT, and bar',
         roles: ['admin']
     },
     // These are placeholder items that could be implemented in the future

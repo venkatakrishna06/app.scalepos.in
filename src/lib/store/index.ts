@@ -10,3 +10,4 @@ export {useUserStore} from './user.store';
 export {useRestaurantStore} from './restaurant.store';
 export {useRootStore} from './root.store';
 export {useAuthStore} from './auth.store';
+export {usePrinterStore} from './printer.store';

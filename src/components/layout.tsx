@@ -8,6 +8,7 @@ import {useAuthStore} from '@/lib/store/auth.store';
 import {useMenuStore} from '@/lib/store/menu.store';
 import {useTableStore} from '@/lib/store/table.store';
 import {useStaffStore} from '@/lib/store/staff.store';
+import {usePrinterStore} from "@/lib/store";
 
 interface LayoutProps {
     children: ReactNode;
@@ -20,6 +21,7 @@ export default function Layout({children}: LayoutProps) {
     const {fetchMenuItems, fetchCategories} = useMenuStore();
     const {fetchTables} = useTableStore();
     const {fetchStaff} = useStaffStore();
+    const {fetchPrinterConfig} = usePrinterStore();
 
     // Initialize WebSocket connection
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -33,7 +35,8 @@ export default function Layout({children}: LayoutProps) {
                 fetchMenuItems(),
                 fetchCategories(),
                 fetchTables(),
-                fetchStaff()
+                fetchStaff(),
+                fetchPrinterConfig()
             ]).catch(() => {
                 // Handle fetch errors silently
             });

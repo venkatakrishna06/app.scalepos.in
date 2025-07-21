@@ -12,6 +12,7 @@ import {
     LazyOrders,
     LazyOrderTrackingSettings,
     LazyPayments,
+    LazyPrinterSettings,
     LazyProfile,
     LazyProfileSettings,
     LazyQuickBill,
@@ -180,6 +181,11 @@ const AppRoutes = () => {
                 <Route path="order-tracking" element={
                     <ProtectedRoute requiredRole="admin">
                         <LazyOrderTrackingSettings/>
+                    </ProtectedRoute>
+                }/>
+                <Route path="printer" element={
+                    <ProtectedRoute requiredRole="admin">
+                        <LazyPrinterSettings/>
                     </ProtectedRoute>
                 }/>
             </Route>

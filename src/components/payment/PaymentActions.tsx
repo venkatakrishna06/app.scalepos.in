@@ -8,7 +8,6 @@ interface PaymentActionsProps {
     onPrintBillAndPayment: () => Promise<void>;
     onPayment: () => Promise<void>;
 }
-
 /**
  * Component for payment action buttons
  */

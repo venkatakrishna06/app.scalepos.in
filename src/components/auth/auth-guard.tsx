@@ -67,25 +67,15 @@ export function AuthGuard({children}: AuthGuardProps) {
             const currentTime = Math.floor(Date.now() / 1000);
             const timeUntilExpiry = (expiryTime - currentTime) * 1000;
 
-            // Format time until expiry for logging
-            const minutesUntilExpiry = Math.floor(timeUntilExpiry / 60000);
-            const secondsUntilExpiry = Math.floor((timeUntilExpiry % 60000) / 1000);
-
             // Refresh 5 minutes (300,000 ms) before expiry, or halfway to expiry if less than 10 minutes remain
             const refreshBuffer = Math.min(300000, timeUntilExpiry / 2);
             const refreshDelay = Math.max(0, timeUntilExpiry - refreshBuffer);
-
-            // Format refresh delay for logging
-            const minutesUntilRefresh = Math.floor(refreshDelay / 60000);
-            const secondsUntilRefresh = Math.floor((refreshDelay % 60000) / 1000);
-
             // Schedule refresh
             refreshTimerRef.current = window.setTimeout(refreshToken, refreshDelay);
         };
 
         // Initialize token refresh schedule if authenticated
         if (isAuthenticated && token) {
-
             scheduleTokenRefresh();
         } else {
 

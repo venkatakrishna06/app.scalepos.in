@@ -10,6 +10,10 @@ export const API_ENDPOINTS = {
     ANALYTICS: {
         MENU_ITEMS: '/api/v1/analytics/menu-items',
     },
+    PRINTER_CONFIG: {
+        GET: '/printer-config',
+        UPDATE: '/admin/printer-config',
+    },
     RESTAURANT: {
         GET: '/restaurants',
         UPDATE: (id: number) => `/admin/restaurants/${id}`,

@@ -3,11 +3,10 @@ import {AlertCircle, CheckCircle, Loader2} from 'lucide-react';
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from './ui/dialog';
 import {Button} from './ui/button';
 import {Input} from './ui/input';
-import {usePaymentStore, useRestaurantStore} from '@/lib/store';
+import {usePaymentStore, useRestaurantStore, usePrinterStore} from '@/lib/store';
 import {useOrder} from '@/lib/hooks/useOrder';
 import {showToast} from '@/lib/toast';
 import {Order, Payment} from '@/types';
-import printJS from 'print-js';
 import {orderService} from "@/lib/api/services";
 
 interface PaymentDialogProps {
@@ -20,6 +19,38 @@ interface PaymentDialogProps {
 
 type PaymentStep = 'method' | 'processing' | 'complete';
 
+// ESC/POS command constants
+const ESC = '\x1b';
+const GS = '\x1d';
+
+// ESC/POS Commands
+const ESCPOS = {
+    // Initialize printer
+    INIT: ESC + '@',
+    // Text formatting
+    BOLD_ON: ESC + 'E' + '\x01',
+    BOLD_OFF: ESC + 'E' + '\x00',
+    UNDERLINE_ON: ESC + '-' + '\x01',
+    UNDERLINE_OFF: ESC + '-' + '\x00',
+    // Text alignment
+    ALIGN_LEFT: ESC + 'a' + '\x00',
+    ALIGN_CENTER: ESC + 'a' + '\x01',
+    ALIGN_RIGHT: ESC + 'a' + '\x02',
+    // Font sizes
+    FONT_SIZE_NORMAL: GS + '!' + '\x00',
+    FONT_SIZE_DOUBLE_HEIGHT: GS + '!' + '\x01',
+    FONT_SIZE_DOUBLE_WIDTH: GS + '!' + '\x10',
+    FONT_SIZE_DOUBLE: GS + '!' + '\x11',
+    // Line feeds
+    LF: '\n',
+    CR: '\r',
+    CRLF: '\r\n',
+    // Paper cutting
+    CUT_PAPER: GS + 'V' + '\x41' + '\x03',
+    // Drawer kick
+    DRAWER_KICK: ESC + 'p' + '\x00' + '\x19' + '\xfa',
+};
+
 export function PaymentDialog({open, onClose, order, draftOrder, onPaymentComplete}: PaymentDialogProps) {
     const [paymentMethod, setPaymentMethod] = useState<Payment['payment_method'] | ''>('');
     const [currentStep, setCurrentStep] = useState<PaymentStep>('method');
@@ -30,6 +61,7 @@ export function PaymentDialog({open, onClose, order, draftOrder, onPaymentComple
     const {addPayment} = usePaymentStore();
     const {updateOrderStatus} = useOrder();
     const {restaurant} = useRestaurantStore();
+    const {printerConfig} = usePrinterStore();
 
     // Store the order in a ref to track if it changes
     const orderRef = useRef(order);
@@ -55,6 +87,233 @@ export function PaymentDialog({open, onClose, order, draftOrder, onPaymentComple
         }
     }, [open, order]);
 
+    // Helper function to pad string to specific width
+    const padString = (str: string, width: number, padChar: string = ' '): string => {
+        if (str.length >= width) return str.substring(0, width);
+        return str + padChar.repeat(width - str.length);
+    };
+
+    // Helper function to create a line separator
+    const createSeparatorLine = (char: string = '-', width: number = 32): string => {
+        return char.repeat(width);
+    };
+
+    // Helper function to format currency
+    const formatCurrency = (amount: number): string => {
+        return `₹${amount.toFixed(2)}`;
+    };
+
+    // Helper function to split long text into multiple lines
+    const wrapText = (text: string, maxWidth: number): string[] => {
+        if (text.length <= maxWidth) return [text];
+
+        const words = text.split(' ');
+        const lines: string[] = [];
+        let currentLine = '';
+
+        for (const word of words) {
+            if ((currentLine + ' ' + word).trim().length <= maxWidth) {
+                currentLine = currentLine ? currentLine + ' ' + word : word;
+            } else {
+                if (currentLine) {
+                    lines.push(currentLine);
+                    currentLine = word;
+                } else {
+                    // Word is longer than max width, force break it
+                    lines.push(word.substring(0, maxWidth));
+                    currentLine = word.substring(maxWidth);
+                }
+            }
+        }
+        if (currentLine) {
+            lines.push(currentLine);
+        }
+
+        return lines;
+    };
+
+    // Function to generate ESC/POS receipt content
+    const generateReceiptContent = (orderForBill: Order): string => {
+        const now = new Date();
+        const dateFormatted = now.toLocaleDateString('en-IN');
+        const timeFormatted = now.toLocaleTimeString('en-IN');
+        const orderType = orderForBill?.order_type === 'takeaway' ? 'Takeaway' :
+            orderForBill?.order_type === 'quick-bill' ? 'Quick Bill' : 'Dine-in';
+
+        let receipt = '';
+
+        // Initialize printer
+        receipt += ESCPOS.INIT;
+
+        // Header with restaurant name
+        receipt += ESCPOS.ALIGN_CENTER;
+        receipt += ESCPOS.FONT_SIZE_DOUBLE;
+        receipt += ESCPOS.BOLD_ON;
+        receipt += (restaurant?.name || 'Restaurant Name').toUpperCase();
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.BOLD_OFF;
+        receipt += ESCPOS.FONT_SIZE_NORMAL;
+
+        // Restaurant details
+        const restaurantAddress = restaurant?.address || 'Restaurant Address';
+        const addressLines = wrapText(restaurantAddress, 32);
+        addressLines.forEach(line => {
+            receipt += line;
+            receipt += ESCPOS.LF;
+        });
+
+        receipt += `Phone: ${restaurant?.phone || 'Phone Number'}`;
+        receipt += ESCPOS.LF;
+        receipt += `GST No: ${restaurant?.gst_number || 'GST Number'}`;
+        receipt += ESCPOS.LF;
+
+        // Separator
+        receipt += ESCPOS.ALIGN_LEFT;
+        receipt += createSeparatorLine('=', 32);
+        receipt += ESCPOS.LF;
+
+        // Bill information
+        receipt += ESCPOS.BOLD_ON;
+        receipt += padString(`Bill No: ${orderForBill?.id}`, 16) + padString(`Date: ${dateFormatted}`, 16);
+        receipt += ESCPOS.LF;
+        receipt += padString(`Time: ${timeFormatted}`, 16) + padString(`Type: ${orderType}`, 16);
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.BOLD_OFF;
+
+        // Table info for dine-in orders
+        if (orderForBill?.order_type === 'dine-in') {
+            receipt += padString(`Table: ${orderForBill?.table_id || 'N/A'}`, 16);
+            receipt += padString(`Server: ${orderForBill?.server || 'N/A'}`, 16);
+            receipt += ESCPOS.LF;
+        }
+
+        // Token number if available
+        if (orderForBill?.token_number) {
+            receipt += ESCPOS.ALIGN_CENTER;
+            receipt += ESCPOS.BOLD_ON;
+            receipt += ESCPOS.FONT_SIZE_DOUBLE_HEIGHT;
+            receipt += `TOKEN NO: ${orderForBill.token_number}`;
+            receipt += ESCPOS.LF;
+            receipt += ESCPOS.FONT_SIZE_NORMAL;
+            receipt += ESCPOS.BOLD_OFF;
+            receipt += ESCPOS.ALIGN_LEFT;
+        }
+
+        // Separator
+        receipt += createSeparatorLine('=', 32);
+        receipt += ESCPOS.LF;
+
+        // Items header
+        receipt += ESCPOS.BOLD_ON;
+        receipt += padString('Item', 16) + padString('Qty', 4) + padString('Rate', 6) + padString('Amount', 6);
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.BOLD_OFF;
+        receipt += createSeparatorLine('-', 32);
+        receipt += ESCPOS.LF;
+
+        // Order items
+        const orderItems = orderForBill?.items || [];
+        orderItems
+            .filter(item => item.status !== 'cancelled')
+            .forEach(item => {
+                // Item name (wrap if too long)
+                const itemNameLines = wrapText(item.name, 32);
+                itemNameLines.forEach((line, index) => {
+                    if (index === 0) {
+                        // First line with quantity, rate, and amount
+                        receipt += padString(line, 16) +
+                            padString(item.quantity.toString(), 4) +
+                            padString(formatCurrency(item.price), 6) +
+                            padString(formatCurrency(item.quantity * item.price), 6);
+                    } else {
+                        // Continuation lines
+                        receipt += line;
+                    }
+                    receipt += ESCPOS.LF;
+                });
+            });
+
+        // Separator
+        receipt += createSeparatorLine('-', 32);
+        receipt += ESCPOS.LF;
+
+        // Totals section
+        const gstDetails = {
+            subTotal: orderForBill.sub_total || 0,
+            sgstAmount: orderForBill.sgst_amount || 0,
+            cgstAmount: orderForBill.cgst_amount || 0,
+            sgstRate: orderForBill.sgst_rate || 0,
+            cgstRate: orderForBill.cgst_rate || 0,
+        };
+
+        const totalAmount = orderForBill?.total_amount || 0;
+        const roundedAmount = Math.ceil(totalAmount);
+        const roundingDifference = roundedAmount - totalAmount;
+
+        // Subtotal
+        receipt += padString('Subtotal:', 24) + padString(formatCurrency(gstDetails.subTotal), 8);
+        receipt += ESCPOS.LF;
+
+        // GST details
+        if (gstDetails.sgstAmount > 0) {
+            receipt += padString(`SGST (${gstDetails.sgstRate}%):`, 24) + padString(formatCurrency(gstDetails.sgstAmount), 8);
+            receipt += ESCPOS.LF;
+        }
+
+        if (gstDetails.cgstAmount > 0) {
+            receipt += padString(`CGST (${gstDetails.cgstRate}%):`, 24) + padString(formatCurrency(gstDetails.cgstAmount), 8);
+            receipt += ESCPOS.LF;
+        }
+
+        // Rounding adjustment
+        receipt += padString('Rounding Adj:', 24) + padString(formatCurrency(roundingDifference), 8);
+        receipt += ESCPOS.LF;
+
+        // Total amount
+        receipt += createSeparatorLine('-', 32);
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.BOLD_ON;
+        receipt += ESCPOS.FONT_SIZE_DOUBLE_HEIGHT;
+        receipt += padString('TOTAL:', 16) + padString(formatCurrency(roundedAmount), 16);
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.FONT_SIZE_NORMAL;
+        receipt += ESCPOS.BOLD_OFF;
+
+        // Payment method
+        if (paymentMethod) {
+            receipt += createSeparatorLine('-', 32);
+            receipt += ESCPOS.LF;
+            receipt += padString('Payment Method:', 24) + padString(paymentMethod.replace('_', ' ').toUpperCase(), 8);
+            receipt += ESCPOS.LF;
+
+            // Cash payment details
+            if (paymentMethod === 'cash' && cashGiven) {
+                const cashGivenNumber = parseFloat(cashGiven);
+                const changeAmount = cashGivenNumber > roundedAmount ? cashGivenNumber - roundedAmount : 0;
+
+                receipt += padString('Cash Given:', 24) + padString(formatCurrency(cashGivenNumber), 8);
+                receipt += ESCPOS.LF;
+                receipt += padString('Change:', 24) + padString(formatCurrency(changeAmount), 8);
+                receipt += ESCPOS.LF;
+            }
+        }
+
+        // Footer
+        receipt += ESCPOS.LF;
+        receipt += createSeparatorLine('=', 32);
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.ALIGN_CENTER;
+        receipt += 'Thank you for your visit!';
+        receipt += ESCPOS.LF;
+        receipt += 'Please visit again';
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.LF;
+
+        // Cut paper
+        receipt += ESCPOS.CUT_PAPER;
+
+        return receipt;
+    };
 
     const handlePrintBill = async () => {
         // Check if we have an order to print
@@ -64,7 +323,6 @@ export function PaymentDialog({open, onClose, order, draftOrder, onPaymentComple
         }
 
         // If we have a draft order but no actual order yet, create it first
-        // First check if we already have a created order
         let orderForBill = currentOrder || createdOrder;
         if (!orderForBill && draftOrder) {
             try {
@@ -73,7 +331,6 @@ export function PaymentDialog({open, onClose, order, draftOrder, onPaymentComple
                     showToast('error', 'Failed to create order');
                     return null;
                 }
-                // Note: createOrderFromDraft already sets the createdOrder state
             } catch (err) {
                 const errorMessage = err instanceof Error ? err.message : 'Failed to create order';
                 showToast('error', errorMessage);
@@ -81,229 +338,44 @@ export function PaymentDialog({open, onClose, order, draftOrder, onPaymentComple
             }
         }
 
-        // Get current date and time
-        const now = new Date();
-        const dateFormatted = now.toLocaleDateString();
-        const timeFormatted = now.toLocaleTimeString();
-
-        // Use the created order for bill generation
-        const orderId = orderForBill?.id || 'Draft';
-        const orderItems = orderForBill?.items || [];
-
-        const orderType = orderForBill?.order_type === 'takeaway' ? 'Takeaway' : orderForBill?.order_type === 'quick-bill' ? 'Quick Bill' : 'Dine-in';
-
-        // Generate bill HTML content
-        const billContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Bill Receipt - Order #${orderId}</title>
-        <style>
-          body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 20px;
-            max-width: 80mm; /* Standard receipt width */
-            margin: 0 auto;
-          }
-          .receipt {
-            padding: 10px;
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 10px;
-            border-bottom: 1px dashed #ccc;
-            padding-bottom: 8px;
-          }
-          .restaurant-name {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 4px;
-          }
-          .restaurant-details {
-            font-size: 11px;
-            margin-bottom: 3px;
-            line-height: 1.2;
-          }
-          .bill-info {
-            margin-bottom: 12px;
-            font-size: 12px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: repeat(3, auto);
-            gap: 4px 8px;
-          }
-          .bill-info div {
-            margin-bottom: 2px;
-          }
-          .items-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 10px;
-            font-size: 11px;
-          }
-          .items-table th {
-            text-align: left;
-            padding: 3px 0;
-            border-bottom: 1px solid #ddd;
-          }
-          .items-table td {
-            padding: 3px 0;
-            border-bottom: 1px dashed #eee;
-          }
-          .amount-details {
-            margin-top: 8px;
-            font-size: 11px;
-          }
-          .amount-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 3px;
-          }
-          .total-amount {
-            font-weight: bold;
-            font-size: 13px;
-            margin-top: 4px;
-            border-top: 1px solid #ddd;
-            padding-top: 4px;
-          }
-          .footer {
-            margin-top: 12px;
-            text-align: center;
-            font-size: 11px;
-            border-top: 1px dashed #ccc;
-            padding-top: 8px;
-          }
-          .footer p {
-            margin: 2px 0;
-          }
-          .token-no-center {
-            text-align: center;
-            font-size: 18px;
-            font-weight: bold;
-            background: #fff;
-            padding: 2px 10px;
-            border: 2px dashed #222;
-            border-radius: 6px;
-            letter-spacing: 2px;
-            display: block;
-            margin: 10px auto 8px auto;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="receipt">
-          <div class="header">
-            <div class="restaurant-name">${restaurant?.name || 'Restaurant Name'}</div>
-            <div class="restaurant-details">${restaurant?.address || 'Restaurant Address'}</div>
-            <div class="restaurant-details">Phone: ${restaurant?.phone || 'Phone Number'}</div>
-            <div class="restaurant-details">GST No: ${restaurant?.gst_number || 'GST Number'}</div>
-          </div>
-
-          <div class="bill-info">
-            <div><strong>Bill No:</strong> ${orderId}</div>
-            <div><strong>Date:</strong> ${dateFormatted}</div>
-            <div><strong>Time:</strong> ${timeFormatted}</div>
-            ${
-            orderForBill?.order_type === 'dine-in'
-                ? `<div><strong>Table:</strong> ${orderForBill?.table_id || 'N/A'}</div>
-                   <div><strong>Server:</strong> ${orderForBill?.server || 'N/A'}</div>`
-                : ''
-        }
-            <div><strong>Type:</strong> ${orderType}</div>
-          </div>
-
-          ${
-            orderForBill?.token_number
-                ? `<div class="token-no-center">Token No: ${orderForBill.token_number}</div>`
-                : ''
-        }
-
-          <table class="items-table">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Qty</th>
-                <th>Price</th>
-                <th>Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${orderItems
-            .filter(item => item.status !== 'cancelled')
-            .map(item => `
-                  <tr>
-                    <td>${item.name}</td>
-                    <td>${item.quantity}</td>
-                    <td>₹${item.price.toFixed(2)}</td>
-                    <td>₹${(item.quantity * item.price).toFixed(2)}</td>
-                  </tr>
-                `).join('')}
-            </tbody>
-          </table>
-
-          <div class="amount-details">
-            <div class="amount-row">
-              <span>Subtotal:</span>
-              <span>₹${gstDetails.subTotal.toFixed(2)}</span>
-            </div>
-
-            ${gstDetails.sgstAmount > 0 ? `
-            <div class="amount-row">
-              <span>SGST (${gstDetails.sgstRate}%):</span>
-              <span>₹${gstDetails.sgstAmount.toFixed(2)}</span>
-            </div>
-            ` : ''}
-
-            ${gstDetails.cgstAmount > 0 ? `
-            <div class="amount-row">
-              <span>CGST (${gstDetails.cgstRate}%):</span>
-              <span>₹${gstDetails.cgstAmount.toFixed(2)}</span>
-            </div>
-            ` : ''}
-
-            <div class="amount-row">
-              <span>Rounding Adjustment:</span>
-              <span>₹${roundingDifference.toFixed(2)}</span>
-            </div>
-
-            <div class="amount-row total-amount">
-              <span>Total Amount:</span>
-              <span>₹${roundedAmount.toFixed(2)}</span>
-            </div>
-
-            ${paymentMethod && paymentMethod !== '' ? `
-            <div class="amount-row" style="margin-top: 10px;">
-              <span>Payment Method:</span>
-              <span>${paymentMethod.replace('_', ' ').toUpperCase()}</span>
-            </div>
-            ` : ''}
-          </div>
-
-          <div class="footer">
-            <p>Thank you for your visit!</p>
-            <p>Please visit again</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
-
-        // Use print-js to print directly without showing dialog
-        printJS({
-            printable: billContent,
-            type: 'raw-html',
-            documentTitle: `Bill Receipt - Order #${orderId}`,
-            targetStyles: ['*'],
-            style: '@page { size: 80mm auto; margin: 0mm; }',
-            onPrintDialogClose: () => {
-                // Optional: Handle any post-print actions here
-                showToast('success', 'Bill printed successfully');
+        try {
+            // Check if QZ Tray is available
+            if (typeof window.qz === 'undefined') {
+                throw new Error('QZ Tray not available. Please ensure QZ Tray is installed and running.');
             }
-        });
 
-        // Return the order that was used for the bill
-        return orderForBill;
+            // Connect to QZ Tray if not already connected
+            if (!window.qz.websocket.isActive()) {
+                await window.qz.websocket.connect();
+            }
+
+            // Get bill printers from configuration
+            const billPrinters = printerConfig?.bill_printers || [];
+            if (billPrinters.length === 0) {
+                throw new Error('No bill printers configured. Please configure printers in settings.');
+            }
+
+            // Generate ESC/POS receipt content
+            const receiptContent = generateReceiptContent(orderForBill!);
+
+            // Print to all configured bill printers
+
+            for (const printer of billPrinters) {
+                const config = window.qz.configs.create(printer);
+
+                // Convert string to bytes for raw printing
+                const data = [receiptContent];
+                await window.qz.print(config, data);
+            }
+
+            showToast('success', 'Bill printed successfully');
+            return orderForBill;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to print bill';
+            showToast('error', errorMessage);
+            console.error('Print error:', error);
+            throw error;
+        }
     };
 
     const handlePrintBillAndPayment = async () => {
@@ -316,16 +388,12 @@ export function PaymentDialog({open, onClose, order, draftOrder, onPaymentComple
 
         try {
             // First print the bill (which now creates the order if it's a draft)
-            // Modify handlePrintBill to return the created order
             const orderFromPrintBill = await handlePrintBill();
 
             // If we have an order from handlePrintBill, use it directly in handlePayment
-            // This avoids relying on React state updates which might not be immediate
             if (orderFromPrintBill) {
-                // Use a direct reference to the order instead of relying on state
                 await handlePayment(orderFromPrintBill);
             } else {
-                // If no order was created/returned, just call handlePayment normally
                 await handlePayment();
             }
         } catch (err) {
@@ -361,11 +429,8 @@ export function PaymentDialog({open, onClose, order, draftOrder, onPaymentComple
 
         setIsSubmitting(true);
         setError(null);
-        //setCurrentStep('processing');
 
         try {
-            // If an order is passed directly, use it instead of looking up state
-            // This prevents duplicate order creation when called from handlePrintBillAndPayment
             let orderToProcess = currentOrder || passedOrder || createdOrder;
 
             if (!orderToProcess && draftOrder) {
@@ -378,6 +443,10 @@ export function PaymentDialog({open, onClose, order, draftOrder, onPaymentComple
             if (!orderToProcess) {
                 throw new Error('No order to process');
             }
+
+            // Calculate rounded amount
+            const totalAmount = orderToProcess?.total_amount || 0;
+            const roundedAmount = Math.ceil(totalAmount);
 
             // Create payment object according to the new API structure
             const payment = {
@@ -451,22 +520,6 @@ export function PaymentDialog({open, onClose, order, draftOrder, onPaymentComple
 
     const renderStep = () => {
         switch (currentStep) {
-            // Processing case removed - now using inline spinner in buttons
-            /*case 'processing':
-              return (
-                  <div className="flex flex-col items-center justify-center py-6">
-                    <div className="relative mb-2">
-                      <div className="absolute -inset-3 rounded-full bg-primary/15 animate-pulse"></div>
-                      <div className="absolute -inset-6 rounded-full bg-primary/5 animate-pulse animation-delay-200"></div>
-                      <Loader2 className="h-12 w-12 animate-spin text-primary relative" />
-                    </div>
-                    <p className="mt-4 text-base font-semibold text-center">Processing Payment...</p>
-                    <p className="mt-2 text-xs text-muted-foreground text-center max-w-md">
-                      Please wait while we process your payment. This may take a few moments.
-                    </p>
-                  </div>
-              );*/
-
             case 'complete':
                 return (
                     <div className="flex flex-col items-center justify-center py-6">
@@ -604,7 +657,6 @@ export function PaymentDialog({open, onClose, order, draftOrder, onPaymentComple
                                         <label htmlFor="card-payment" className="flex-1 text-sm">Card (Pay with
                                             Credit/Debit Card)</label>
                                     </div>
-
 
                                     {/* Cash Option */}
                                     <div className="flex items-center p-2 rounded-lg">
