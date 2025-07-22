@@ -14,13 +14,16 @@ import {
 } from 'lucide-react';
 import {Dialog, DialogContent,} from './ui/dialog';
 import {Button} from './ui/button';
-import {useMenuStore, useOrderStore} from '@/lib/store';
+import {useMenuStore, useOrderStore, useRestaurantStore} from '@/lib/store';
 import {MenuItem, Order, OrderItem} from '@/types';
-import {toast} from '@/lib/toast';
+import {toast, showToast} from '@/lib/toast';
 import {useAuthStore} from "@/lib/store/auth.store.ts";
 import {cn, generateTokenNumber} from '@/lib/utils';
 import {analyticsService} from '@/lib/api/services/analytics.service';
 import {MenuItemAnalytics} from '@/types/analytics';
+import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
+import {printingService} from '@/lib/services/printing.service';
+import {usePrinterStore} from '@/lib/store/printer.store';
 
 interface CreateOrderDialogProps {
     open: boolean;
@@ -42,11 +45,13 @@ function CreateOrderDialogComponent({
     const {addOrder, addItemsToOrder} = useOrderStore();
     const {menuItems, categories} = useMenuStore();
     const {user} = useAuthStore();
+    const {restaurant} = useRestaurantStore();
+    const {printerConfig} = usePrinterStore();
+    // Initialize the error handler hook
+    const { handleError, createErrorHandler } = useErrorHandler();
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState('');
-    const [orderItems, setOrderItems] = useState<OrderItem[]>(
-        existingOrder?.items || []
-    );
+    const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [favouriteItems, setFavouriteItems] = useState<MenuItemAnalytics[]>([]);
     const [isLoadingFavourites, setIsLoadingFavourites] = useState(false);
@@ -76,6 +81,9 @@ function CreateOrderDialogComponent({
         return () => window.removeEventListener('resize', checkIfMobile);
     }, []);
 
+    // Create a reusable error handler for fetching favorite items
+    const handleFavoritesError = createErrorHandler('Failed to load favourite items');
+
     // Effect to fetch most ordered items when dialog opens
     useEffect(() => {
         if (open) {
@@ -91,7 +99,8 @@ function CreateOrderDialogComponent({
                     const menuItemAnalytics = await analyticsService.getMenuItemAnalytics(params);
                     setFavouriteItems(menuItemAnalytics);
                 } catch (err) {
-                    toast.error('Failed to load favourite items');
+                    // Use the centralized error handler
+                    handleFavoritesError(err);
                 } finally {
                     setIsLoadingFavourites(false);
                 }
@@ -99,7 +108,7 @@ function CreateOrderDialogComponent({
 
             fetchFavouriteItems();
         }
-    }, [open]);
+    }, [open, handleFavoritesError]);
 
     // Group categories by parent/child relationship - memoized to prevent recalculation on every render
     const mainCategories = useMemo(() =>
@@ -163,11 +172,15 @@ function CreateOrderDialogComponent({
         });
     }, [menuItems, selectedCategory, searchQuery, favouriteItems]);
 
+    // Create a reusable error handler for unavailable items
+    const handleUnavailableItemError = createErrorHandler('This item is currently unavailable');
+
     // Memoize quantity change handler to prevent recreation on every render
     const handleQuantityChange = useCallback((item: MenuItem, delta: number) => {
         // Don't allow adding unavailable items
         if (!item.available && delta > 0) {
-            toast.error("This item is currently unavailable");
+            // Use the centralized error handler
+            handleUnavailableItemError(new Error('Item not available'));
             return;
         }
 
@@ -194,7 +207,7 @@ function CreateOrderDialogComponent({
             }
             return current;
         });
-    }, [existingOrder]);
+    }, [existingOrder, handleUnavailableItemError]);
 
     // Handle note editing for an item
     const handleEditNote = useCallback((itemId: number, currentNote: string) => {
@@ -222,199 +235,72 @@ function CreateOrderDialogComponent({
         return orderItems.find(item => item.menu_item_id === itemId)?.quantity || 0;
     }, [orderItems]);
 
+    // Create reusable error handlers for KOT printing
+    const handleNoItemsError = createErrorHandler('No items to print');
+    const handlePopupBlockedError = createErrorHandler('Please allow pop-ups to print the KOT');
+
     // Function to print KOT (Kitchen Order Ticket)
-    const handlePrintKOT = useCallback(() => {
+    const handlePrintKOT = useCallback(async () => {
         // Check if we have items to print
         if (orderItems.length === 0) {
-            toast.error('No items to print');
+            handleNoItemsError(new Error('Empty order'));
             return;
         }
 
-        // Create a new window for the KOT
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) {
-            toast.error('Please allow pop-ups to print the KOT');
-            return;
+        try {
+            // Prepare order items with names from menuItems
+            const itemsWithNames = orderItems.map(item => {
+                const menuItem = menuItems.find(m => m.id === item.menu_item_id);
+                return {
+                    ...item,
+                    name: menuItem?.name || 'Unknown Item'
+                };
+            });
+
+            // Generate token number for takeaway and quick-bill orders
+            const tokenNumber = !table_id ? generateTokenNumber() : undefined;
+
+            // Prepare order info for KOT
+            const orderInfo = {
+                table_id,
+                server: user?.name,
+                orderType: table_id ? 'Dine-in' : currentOrderType.charAt(0).toUpperCase() + currentOrderType.slice(1),
+                tokenNumber
+            };
+
+            // Use the printing service to print the KOT
+            const success = await printingService.printKOT(
+                itemsWithNames,
+                orderInfo,
+                restaurant
+            );
+
+            if (success) {
+                // Use showToast for success messages to ensure deduplication
+                showToast('success', 'KOT printed successfully');
+            }
+        } catch (error) {
+            // Handle any errors that weren't caught by the printing service
+            handleError(error, {
+                defaultMessage: 'Failed to print KOT',
+                showToast: true
+            });
         }
+    }, [
+        orderItems, 
+        menuItems, 
+        table_id, 
+        user, 
+        currentOrderType, 
+        generateTokenNumber, 
+        handleNoItemsError, 
+        restaurant, 
+        handleError, 
+        showToast
+    ]);
 
-        // Get current date and time
-        const now = new Date();
-        const dateFormatted = now.toLocaleDateString();
-        const timeFormatted = now.toLocaleTimeString();
-
-        // Generate KOT HTML content
-        const kotContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Kitchen Order Ticket</title>
-        <style>
-          body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 20px;
-            max-width: 80mm; /* Standard receipt width */
-            margin: 0 auto;
-          }
-          .receipt {
-            border: 1px solid #ddd;
-            padding: 10px;
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 10px;
-            border-bottom: 1px dashed #ccc;
-            padding-bottom: 8px;
-          }
-          .restaurant-name {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 4px;
-          }
-          .restaurant-details {
-            font-size: 11px;
-            margin-bottom: 3px;
-            line-height: 1.2;
-          }
-          .bill-info {
-            margin-bottom: 12px;
-            font-size: 12px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: repeat(3, auto);
-            gap: 4px 8px;
-          }
-          .bill-info div {
-            margin-bottom: 2px;
-          }
-          .items-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 10px;
-            font-size: 11px;
-          }
-          .items-table th {
-            text-align: left;
-            padding: 3px 0;
-            border-bottom: 1px solid #ddd;
-          }
-          .items-table td {
-            padding: 3px 0;
-            border-bottom: 1px dashed #eee;
-          }
-          .amount-details {
-            margin-top: 8px;
-            font-size: 11px;
-          }
-          .amount-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 3px;
-          }
-          .total-amount {
-            font-weight: bold;
-            font-size: 13px;
-            margin-top: 4px;
-            border-top: 1px solid #ddd;
-            padding-top: 4px;
-          }
-          .footer {
-            margin-top: 12px;
-            text-align: center;
-            font-size: 11px;
-            border-top: 1px dashed #ccc;
-            padding-top: 8px;
-          }
-          .footer p {
-            margin: 2px 0;
-          }
-          @media print {
-            body {
-              width: 80mm;
-              margin: 0;
-              padding: 0;
-            }
-            .receipt {
-              border: none;
-            }
-            .no-print {
-              display: none;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="receipt">
-          <div class="header">
-            <div class="restaurant-name">KITCHEN ORDER TICKET</div>
-            <div class="restaurant-details">Date: ${dateFormatted} Time: ${timeFormatted}</div>
-          </div>
-
-          <div class="bill-info">
-            <div><strong>KOT No:</strong> ${Date.now().toString().slice(-6)}</div>
-            <div><strong>Table:</strong> ${table_id || 'N/A'}</div>
-            <div><strong>Server:</strong> ${user?.name || 'N/A'}</div>
-            <div><strong>Type:</strong> ${table_id ? 'Dine-in' : currentOrderType.charAt(0).toUpperCase() + currentOrderType.slice(1)}</div>
-          </div>
-
-          ${!table_id ? `
-          <div style="text-align: center; font-size: 16px; font-weight: bold; margin: 10px 0; padding: 5px; border: 2px dashed #000; border-radius: 5px;">
-            Token No: ${generateTokenNumber()}
-          </div>
-          ` : ''}
-
-          <table class="items-table">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Qty</th>
-                <th>Notes</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${orderItems.map(item => {
-            const menuItem = menuItems.find(m => m.id === item.menu_item_id);
-            return `
-                  <tr>
-                    <td>${menuItem?.name || 'Unknown Item'}</td>
-                    <td>${item.quantity}</td>
-                    <td>${item.notes || '-'}</td>
-                  </tr>
-                `;
-        }).join('')}
-            </tbody>
-          </table>
-
-          <div class="footer">
-            <p>*** Kitchen Copy ***</p>
-          </div>
-        </div>
-
-        <div class="no-print" style="text-align: center; margin-top: 20px;">
-          <button onclick="window.print();" style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            Print KOT
-          </button>
-          <button onclick="window.close();" style="padding: 10px 20px; background: #f44336; color: white; border: none; border-radius: 4px; margin-left: 10px; cursor: pointer;">
-            Close
-          </button>
-        </div>
-      </body>
-      </html>
-    `;
-
-        // Write the content to the new window
-        printWindow.document.open();
-        printWindow.document.write(kotContent);
-        printWindow.document.close();
-
-        // Trigger print when content is loaded
-        printWindow.onload = function () {
-            // Automatically print on load (optional)
-            // printWindow.print();
-        };
-
-        toast.success('KOT generated successfully');
-    }, [orderItems, menuItems, table_id, user, currentOrderType, generateTokenNumber]);
+    // Create a reusable error handler for order processing
+    const handleOrderProcessingError = createErrorHandler('Failed to process order');
 
     // Memoize submit order handler to prevent recreation on every render
     const handleSubmitOrder = useCallback(async () => {
@@ -460,7 +346,8 @@ function CreateOrderDialogComponent({
                 if (!table_id && (currentOrderType === 'takeaway' || currentOrderType === 'quick-bill')) {
                     // Print KOT automatically
                     handlePrintKOT();
-                    toast.success(`${currentOrderType === 'takeaway' ? 'Takeaway' : 'Quick Bill'} order created with token: ${newOrder.token_number}`);
+                    // Use showToast for success messages to ensure deduplication
+                    showToast('success', `${currentOrderType === 'takeaway' ? 'Takeaway' : 'Quick Bill'} order created with token: ${newOrder.token_number}`);
                 }
             }
 
@@ -474,7 +361,8 @@ function CreateOrderDialogComponent({
             // Close the dialog immediately to avoid flashing
             onClose();
         } catch (err) {
-            toast.error('Failed to process order');
+            // Use the centralized error handler
+            handleOrderProcessingError(err);
         } finally {
             setIsSubmitting(false);
         }
@@ -489,7 +377,10 @@ function CreateOrderDialogComponent({
         onCreateOrder,
         onClose,
         currentOrderType,
-        generateTokenNumber
+        generateTokenNumber,
+        handlePrintKOT,
+        handleOrderProcessingError,
+        showToast
     ]);
 
     // Memoize total amount calculation to prevent recalculation on every render

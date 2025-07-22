@@ -1,5 +1,6 @@
 import {api} from '../axios';
 import {API_ENDPOINTS} from '../endpoints';
+import {setupQZSecurity} from '@/lib/qz/qzSetup';
 
 export interface PrinterConfig {
     bill_printers: string[];
@@ -63,6 +64,9 @@ export const printerService = {
                 throw new Error('QZ Tray not available');
             }
 
+            // Set up security configuration before connecting
+            setupQZSecurity();
+
             // Connect to QZ Tray if not already connected
             if (!window.qz.websocket.isActive()) {
                 await window.qz.websocket.connect();
@@ -89,6 +93,9 @@ export const printerService = {
             if (typeof window.qz === 'undefined') {
                 throw new Error('QZ Tray not available');
             }
+
+            // Set up security configuration before connecting
+            setupQZSecurity();
 
             // Connect to QZ Tray if not already connected
             if (!window.qz.websocket.isActive()) {
@@ -146,6 +153,11 @@ declare global {
                 create: (printer: string) => any;
             };
             print: (config: any, data: any) => Promise<void>;
+            security: {
+                setCertificatePromise: (promiseFn: () => Promise<string>) => void;
+                setSignaturePromise: (promiseFn: (toSign: string) => Promise<string>) => void;
+                setSitePromise: (promiseFn: (site: string) => Promise<boolean>) => void;
+            };
         };
     }
 }

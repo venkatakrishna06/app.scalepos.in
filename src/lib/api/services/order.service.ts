@@ -2,21 +2,7 @@ import {api} from '../axios';
 import {API_ENDPOINTS} from '../endpoints';
 import {Order, OrderItem} from '@/types';
 import {orderSchema, ordersSchema, validateApiResponse} from '@/lib/validation/apiSchemas';
-
-// Define error type for better type safety
-interface ApiErrorResponse {
-    response?: {
-        data?: {
-            error?: {
-                type?: string;
-                code?: string;
-                message?: string;
-                details?: Record<string, unknown>;
-                request_id?: string;
-            };
-        };
-    };
-}
+import {handleApiError, ApiError} from '@/lib/toast';
 
 // Define types for the new API responses
 interface OrderStatusUpdateResponse {
@@ -52,14 +38,6 @@ interface StatusHistoryRecord {
     created_at: string;
 }
 
-// Helper function to handle API errors
-const handleApiError = (error: ApiErrorResponse | Error, defaultMessage: string) => {
-    if ('response' in error && error.response?.data?.error) {
-        const apiError = error.response.data.error;
-        throw new Error(apiError.message || defaultMessage);
-    }
-    throw new Error(defaultMessage);
-};
 
 export const orderService = {
     getOrders: async (params?: {
@@ -90,8 +68,10 @@ export const orderService = {
             const response = await api.post<Order>(API_ENDPOINTS.ORDERS.CREATE, order);
             return validateApiResponse(response.data, orderSchema);
         } catch (error) {
-            handleApiError(error, 'Failed to create order');
-            throw error;
+            // Use handleApiError to show toast and return the error message
+            handleApiError(error as ApiError, 'Failed to create order');
+            // Return null instead of throwing to prevent duplicate error handling
+            return null;
         }
     },
 
@@ -100,17 +80,22 @@ export const orderService = {
             const response = await api.put<Order>(API_ENDPOINTS.ORDERS.UPDATE(id), order);
             return validateApiResponse(response.data, orderSchema);
         } catch (error) {
-            handleApiError(error, 'Failed to update order');
-            throw error;
+            // Use handleApiError to show toast and return the error message
+            handleApiError(error as ApiError, 'Failed to update order');
+            // Return null instead of throwing to prevent duplicate error handling
+            return null;
         }
     },
 
     deleteOrder: async (id: number) => {
         try {
             await api.delete(API_ENDPOINTS.ORDERS.DELETE(id));
+            return true;
         } catch (error) {
-            handleApiError(error, 'Failed to delete order');
-            throw error;
+            // Use handleApiError to show toast and return the error message
+            handleApiError(error as ApiError, 'Failed to delete order');
+            // Return null instead of throwing to prevent duplicate error handling
+            return null;
         }
     },
 
@@ -133,8 +118,10 @@ export const orderService = {
             );
             return response.data;
         } catch (error) {
-            handleApiError(error, 'Failed to update order status');
-            throw error;
+            // Use handleApiError to show toast and return the error message
+            handleApiError(error as ApiError, 'Failed to update order status');
+            // Return null instead of throwing to prevent duplicate error handling
+            return null;
         }
     },
 
@@ -145,7 +132,7 @@ export const orderService = {
             );
             return response.data;
         } catch (error) {
-            handleApiError(error, 'Failed to fetch order status history');
+            handleApiError(error as ApiError, 'Failed to fetch order status history');
             return [];
         }
     },
@@ -158,8 +145,10 @@ export const orderService = {
             );
             return response.data;
         } catch (error) {
-            handleApiError(error, 'Failed to cancel order');
-            throw error;
+            // Use handleApiError to show toast and return the error message
+            handleApiError(error as ApiError, 'Failed to cancel order');
+            // Return null instead of throwing to prevent duplicate error handling
+            return null;
         }
     },
 
@@ -181,8 +170,10 @@ export const orderService = {
             const response = await api.put<OrderItem>(`${API_ENDPOINTS.ORDER_ITEMS.UPDATE(itemId)}`, updates);
             return response.data;
         } catch (error) {
-            handleApiError(error, 'Failed to update order item');
-            throw error;
+            // Use handleApiError to show toast and return the error message
+            handleApiError(error as ApiError, 'Failed to update order item');
+            // Return null instead of throwing to prevent duplicate error handling
+            return null;
         }
     },
 
@@ -195,8 +186,10 @@ export const orderService = {
             );
             return response.data;
         } catch (error) {
-            handleApiError(error, 'Failed to update order item status');
-            throw error;
+            // Use handleApiError to show toast and return the error message
+            handleApiError(error as ApiError, 'Failed to update order item status');
+            // Return null instead of throwing to prevent duplicate error handling
+            return null;
         }
     },
 
@@ -207,7 +200,7 @@ export const orderService = {
             );
             return response.data;
         } catch (error) {
-            handleApiError(error, 'Failed to fetch order item status history');
+            handleApiError(error as ApiError, 'Failed to fetch order item status history');
             return [];
         }
     },
@@ -220,8 +213,10 @@ export const orderService = {
             );
             return response.data;
         } catch (error) {
-            handleApiError(error, 'Failed to cancel order item');
-            throw error;
+            // Use handleApiError to show toast and return the error message
+            handleApiError(error as ApiError, 'Failed to cancel order item');
+            // Return null instead of throwing to prevent duplicate error handling
+            return null;
         }
     },
 
@@ -232,7 +227,7 @@ export const orderService = {
             );
             return response.data;
         } catch (error) {
-            handleApiError(error, 'Failed to fetch order item cancellations');
+            handleApiError(error as ApiError, 'Failed to fetch order item cancellations');
             return [];
         }
     },
@@ -240,9 +235,12 @@ export const orderService = {
     removeOrderItem: async (orderId: number, itemId: number) => {
         try {
             await api.delete(API_ENDPOINTS.ORDER_ITEMS.DELETE(itemId));
+            return true;
         } catch (error) {
-            handleApiError(error, 'Failed to remove order item');
-            throw error;
+            // Use handleApiError to show toast and return the error message
+            handleApiError(error as ApiError, 'Failed to remove order item');
+            // Return null instead of throwing to prevent duplicate error handling
+            return null;
         }
     },
 };

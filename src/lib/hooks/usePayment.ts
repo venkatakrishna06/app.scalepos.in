@@ -2,9 +2,12 @@ import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {paymentService} from '@/lib/api/services/payment.service';
 import {Payment} from '@/types';
 import {toast} from '@/lib/toast';
+import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
 
 export const usePayment = () => {
     const queryClient = useQueryClient();
+    // Initialize the error handler hook
+    const { handleError } = useErrorHandler();
 
     // Query to get all payments
     const usePaymentsQuery = () => {
@@ -26,31 +29,40 @@ export const usePayment = () => {
 
     // Mutation to create a payment
     const createPaymentMutation = useMutation({
-        mutationFn: (payment: Omit<Payment, 'id'>) => paymentService.createPayment(payment),
+        mutationFn: async (payment: Omit<Payment, 'id'>) => {
+            const result = await paymentService.createPayment(payment);
+            // If result is null, an error occurred and was already handled by the service
+            if (result === null) {
+                throw new Error('Operation failed');
+            }
+            return result;
+        },
         onSuccess: () => {
             // Invalidate payments queries to trigger refetch
             queryClient.invalidateQueries({queryKey: ['payments']});
+            // Still show success toast here as this is a positive outcome
             toast.success('Payment created successfully');
         },
-        onError: (error) => {
-
-            toast.error('Failed to create payment');
-        },
+        // No need for onError as errors are handled in the service layer
     });
 
     // Mutation to update a payment
     const updatePaymentMutation = useMutation({
-        mutationFn: ({id, payment}: { id: number; payment: Partial<Payment> }) =>
-            paymentService.updatePayment(id, payment),
+        mutationFn: async ({id, payment}: { id: number; payment: Partial<Payment> }) => {
+            const result = await paymentService.updatePayment(id, payment);
+            // If result is null, an error occurred and was already handled by the service
+            if (result === null) {
+                throw new Error('Operation failed');
+            }
+            return result;
+        },
         onSuccess: () => {
             // Invalidate payments queries to trigger refetch
             queryClient.invalidateQueries({queryKey: ['payments']});
+            // Still show success toast here as this is a positive outcome
             toast.success('Payment updated successfully');
         },
-        onError: (error) => {
-
-            toast.error('Failed to update payment');
-        },
+        // No need for onError as errors are handled in the service layer
     });
 
     return {

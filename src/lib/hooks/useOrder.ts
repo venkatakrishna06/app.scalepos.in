@@ -2,6 +2,7 @@ import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {orderService} from '@/lib/api/services/order.service';
 import {Order, OrderItem} from '@/types';
 import {toast} from '@/lib/toast';
+import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
 
 // Define types for the new API responses
 interface OrderStatusUpdateResponse {
@@ -18,6 +19,8 @@ interface OrderItemStatusUpdateResponse {
 
 export const useOrder = () => {
     const queryClient = useQueryClient();
+    // Initialize the error handler hook
+    const { handleError } = useErrorHandler();
 
     // Query to get all orders
     const useOrdersQuery = (params?: {
@@ -42,20 +45,31 @@ export const useOrder = () => {
 
     // Mutation to create an order
     const createOrderMutation = useMutation({
-        mutationFn: (order: Omit<Order, 'id'>) => orderService.createOrder(order),
+        mutationFn: async (order: Omit<Order, 'id'>) => {
+            const result = await orderService.createOrder(order);
+            // If result is null, an error occurred and was already handled by the service
+            if (result === null) {
+                throw new Error('Operation failed');
+            }
+            return result;
+        },
         onSuccess: () => {
             // Invalidate orders queries to trigger refetch
             queryClient.invalidateQueries({queryKey: ['orders']});
         },
-        onError: () => {
-            toast.error('Failed to create order');
-        },
+        // No need for onError as errors are handled in the service layer
     });
 
     // Mutation to update an order
     const updateOrderMutation = useMutation({
-        mutationFn: ({id, order}: { id: number; order: Partial<Order> }) =>
-            orderService.updateOrder(id, order),
+        mutationFn: async ({id, order}: { id: number; order: Partial<Order> }) => {
+            const result = await orderService.updateOrder(id, order);
+            // If result is null, an error occurred and was already handled by the service
+            if (result === null) {
+                throw new Error('Operation failed');
+            }
+            return result;
+        },
         onSuccess: (updatedOrder) => {
             // Update the order in the cache
             queryClient.setQueryData(
@@ -66,14 +80,19 @@ export const useOrder = () => {
             // Invalidate orders queries to trigger refetch
             queryClient.invalidateQueries({queryKey: ['orders']});
         },
-        onError: () => {
-            toast.error('Failed to update order');
-        },
+        // No need for onError as errors are handled in the service layer
     });
 
     // Mutation to delete an order
     const deleteOrderMutation = useMutation({
-        mutationFn: (id: number) => orderService.deleteOrder(id),
+        mutationFn: async (id: number) => {
+            const result = await orderService.deleteOrder(id);
+            // If result is null, an error occurred and was already handled by the service
+            if (result === null) {
+                throw new Error('Operation failed');
+            }
+            return result;
+        },
         onSuccess: (_, id) => {
             // Remove the order from the cache
             queryClient.removeQueries({queryKey: ['orders', 'detail', id]});
@@ -82,14 +101,12 @@ export const useOrder = () => {
             queryClient.invalidateQueries({queryKey: ['orders']});
             toast.success('Order deleted successfully');
         },
-        onError: () => {
-            toast.error('Failed to delete order');
-        },
+        // No need for onError as errors are handled in the service layer
     });
 
     // Mutation to update an order item
     const updateOrderItemMutation = useMutation({
-        mutationFn: ({
+        mutationFn: async ({
                          orderId,
                          itemId,
                          updates
@@ -97,7 +114,14 @@ export const useOrder = () => {
             orderId: number;
             itemId: number;
             updates: Partial<OrderItem>
-        }) => orderService.updateOrderItem(orderId, itemId, updates),
+        }) => {
+            const result = await orderService.updateOrderItem(orderId, itemId, updates);
+            // If result is null, an error occurred and was already handled by the service
+            if (result === null) {
+                throw new Error('Operation failed');
+            }
+            return result;
+        },
         onSuccess: (_, {orderId}) => {
             // Invalidate the specific order query to trigger refetch
             queryClient.invalidateQueries({queryKey: ['orders', 'detail', orderId]});
@@ -106,15 +130,19 @@ export const useOrder = () => {
             queryClient.invalidateQueries({queryKey: ['orders']});
             toast.success('Order item updated successfully');
         },
-        onError: () => {
-            toast.error('Failed to update order item');
-        },
+        // No need for onError as errors are handled in the service layer
     });
 
     // Mutation to remove an order item
     const removeOrderItemMutation = useMutation({
-        mutationFn: ({orderId, itemId}: { orderId: number; itemId: number }) =>
-            orderService.removeOrderItem(orderId, itemId),
+        mutationFn: async ({orderId, itemId}: { orderId: number; itemId: number }) => {
+            const result = await orderService.removeOrderItem(orderId, itemId);
+            // If result is null, an error occurred and was already handled by the service
+            if (result === null) {
+                throw new Error('Operation failed');
+            }
+            return result;
+        },
         onSuccess: (_, {orderId}) => {
             // Invalidate the specific order query to trigger refetch
             queryClient.invalidateQueries({queryKey: ['orders', 'detail', orderId]});
@@ -123,15 +151,19 @@ export const useOrder = () => {
             queryClient.invalidateQueries({queryKey: ['orders']});
             toast.success('Item removed from order');
         },
-        onError: () => {
-            toast.error('Failed to remove order item');
-        },
+        // No need for onError as errors are handled in the service layer
     });
 
     // New mutations for order status management
     const updateOrderStatusMutation = useMutation({
-        mutationFn: ({id, status}: { id: number; status: string }) =>
-            orderService.updateOrderStatus(id, status),
+        mutationFn: async ({id, status}: { id: number; status: string }) => {
+            const result = await orderService.updateOrderStatus(id, status);
+            // If result is null, an error occurred and was already handled by the service
+            if (result === null) {
+                throw new Error('Operation failed');
+            }
+            return result;
+        },
         onSuccess: (response: OrderStatusUpdateResponse) => {
             // Update the order in the cache
             queryClient.setQueryData(
@@ -142,9 +174,7 @@ export const useOrder = () => {
             // Invalidate orders queries to trigger refetch
             queryClient.invalidateQueries({queryKey: ['orders']});
         },
-        onError: () => {
-            toast.error('Failed to update order status');
-        },
+        // No need for onError as errors are handled in the service layer
     });
 
     // Query to get order status history
@@ -158,8 +188,14 @@ export const useOrder = () => {
 
     // Mutation to cancel an order
     const cancelOrderMutation = useMutation({
-        mutationFn: ({id, reason}: { id: number; reason: string }) =>
-            orderService.cancelOrder(id, reason),
+        mutationFn: async ({id, reason}: { id: number; reason: string }) => {
+            const result = await orderService.cancelOrder(id, reason);
+            // If result is null, an error occurred and was already handled by the service
+            if (result === null) {
+                throw new Error('Operation failed');
+            }
+            return result;
+        },
         onSuccess: (updatedOrder) => {
             // Update the order in the cache
             queryClient.setQueryData(
@@ -171,9 +207,7 @@ export const useOrder = () => {
             queryClient.invalidateQueries({queryKey: ['orders']});
             toast.success('Order cancelled successfully');
         },
-        onError: () => {
-            toast.error('Failed to cancel order');
-        },
+        // No need for onError as errors are handled in the service layer
     });
 
     // Query to get order cancellations
@@ -187,8 +221,14 @@ export const useOrder = () => {
 
     // New mutations for order item status management
     const updateOrderItemStatusMutation = useMutation({
-        mutationFn: ({itemId, status}: { itemId: number; status: string }) =>
-            orderService.updateOrderItemStatus(itemId, status),
+        mutationFn: async ({itemId, status}: { itemId: number; status: string }) => {
+            const result = await orderService.updateOrderItemStatus(itemId, status);
+            // If result is null, an error occurred and was already handled by the service
+            if (result === null) {
+                throw new Error('Operation failed');
+            }
+            return result;
+        },
         onSuccess: (response: OrderItemStatusUpdateResponse) => {
             // Update the order in the cache
             queryClient.setQueryData(
@@ -200,9 +240,7 @@ export const useOrder = () => {
             queryClient.invalidateQueries({queryKey: ['orders']});
             toast.success(`Item status updated to ${response.item.status}`);
         },
-        onError: () => {
-            toast.error('Failed to update item status');
-        },
+        // No need for onError as errors are handled in the service layer
     });
 
     // Query to get order item status history
@@ -216,8 +254,14 @@ export const useOrder = () => {
 
     // Mutation to cancel an order item
     const cancelOrderItemMutation = useMutation({
-        mutationFn: ({orderId, itemId, reason}: { orderId: number; itemId: number; reason: string }) =>
-            orderService.cancelOrderItem(orderId, itemId, reason),
+        mutationFn: async ({orderId, itemId, reason}: { orderId: number; itemId: number; reason: string }) => {
+            const result = await orderService.cancelOrderItem(orderId, itemId, reason);
+            // If result is null, an error occurred and was already handled by the service
+            if (result === null) {
+                throw new Error('Operation failed');
+            }
+            return result;
+        },
         onSuccess: (updatedOrder) => {
             // Update the order in the cache
             queryClient.setQueryData(
@@ -229,9 +273,7 @@ export const useOrder = () => {
             queryClient.invalidateQueries({queryKey: ['orders']});
             toast.success('Item cancelled successfully');
         },
-        onError: () => {
-            toast.error('Failed to cancel item');
-        },
+        // No need for onError as errors are handled in the service layer
     });
 
     // Helper function to calculate order totals

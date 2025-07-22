@@ -8,6 +8,7 @@ import {useOrder} from '@/lib/hooks/useOrder';
 import {showToast} from '@/lib/toast';
 import {Order, Payment} from '@/types';
 import {orderService} from "@/lib/api/services";
+import {setupQZSecurity} from '@/lib/qz/qzSetup';
 
 interface PaymentDialogProps {
     open: boolean;
@@ -343,6 +344,9 @@ export function PaymentDialog({open, onClose, order, draftOrder, onPaymentComple
             if (typeof window.qz === 'undefined') {
                 throw new Error('QZ Tray not available. Please ensure QZ Tray is installed and running.');
             }
+
+            // Set up security configuration before connecting
+            setupQZSecurity();
 
             // Connect to QZ Tray if not already connected
             if (!window.qz.websocket.isActive()) {
