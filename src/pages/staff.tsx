@@ -255,30 +255,28 @@ export default function Staff() {
                 open={showDialog}
             >
                 <DialogContent
-                    className="w-[95vw] max-w-[95vw] sm:max-w-[90vw] md:max-w-[550px] p-4 sm:p-6"
+                    size="lg"
                     onClose={() => {
                         if (isSubmitting) return;
                         setShowDialog(false);
                         setEditingStaff(null);
                     }}
                 >
-                    <DialogHeader className="mb-1 sm:mb-2">
-                        <DialogTitle className="text-xl">
+                    <DialogHeader className="mb-1">
+                        <DialogTitle className="text-lg">
                             {editingStaff ? 'Edit Staff Member' : 'Add Staff Member'}
                         </DialogTitle>
-                        <DialogDescription className="mt-1.5">
+                        <DialogDescription className="mt-1">
                             {editingStaff
                                 ? 'Update the staff member\'s information below.'
                                 : 'Fill in the details to add a new staff member.'}
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="max-h-[70vh] overflow-y-auto pr-1 custom-scrollbar">
-                        <StaffForm
-                            onSubmit={handleSubmit}
-                            initialData={editingStaff || undefined}
-                            isSubmitting={isSubmitting}
-                        />
-                    </div>
+                    <StaffForm
+                        onSubmit={handleSubmit}
+                        initialData={editingStaff || undefined}
+                        isSubmitting={isSubmitting}
+                    />
                 </DialogContent>
             </Dialog>
         </div>

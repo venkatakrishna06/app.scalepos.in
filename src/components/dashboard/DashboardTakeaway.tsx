@@ -1,4 +1,4 @@
-import {memo, useCallback, useEffect, useMemo, useState} from 'react';
+import {memo, useCallback, useEffect, useMemo, useState, useRef} from 'react';
 import {
     AlertCircle,
     ChevronDown,
@@ -15,9 +15,9 @@ import {
     X
 } from 'lucide-react';
 import {Button} from '@/components/ui/button';
-import {useMenuStore, useOrderStore, usePaymentStore, useRestaurantStore} from '@/lib/store';
+import {useMenuStore, useOrderStore, usePaymentStore, useRestaurantStore, usePrinterStore} from '@/lib/store';
 import {MenuItem, Order, OrderItem} from '@/types';
-import {cn} from '@/lib/utils';
+import {cn, debounce} from '@/lib/utils';
 import {useAuthStore} from "@/lib/store/auth.store";
 import {useOrder} from '@/lib/hooks/useOrder';
 import {orderService} from "@/lib/api/services";
@@ -26,6 +26,83 @@ import {Card} from '@/components/ui/card';
 import {motion} from 'framer-motion';
 import {analyticsService} from '@/lib/api/services/analytics.service';
 import {MenuItemAnalytics} from '@/types/analytics';
+
+// ESC/POS command constants
+const ESC = '\x1b';
+const GS = '\x1d';
+
+// ESC/POS Commands
+const ESCPOS = {
+    // Initialize printer
+    INIT: ESC + '@',
+    // Text formatting
+    BOLD_ON: ESC + 'E' + '\x01',
+    BOLD_OFF: ESC + 'E' + '\x00',
+    UNDERLINE_ON: ESC + '-' + '\x01',
+    UNDERLINE_OFF: ESC + '-' + '\x00',
+    // Text alignment
+    ALIGN_LEFT: ESC + 'a' + '\x00',
+    ALIGN_CENTER: ESC + 'a' + '\x01',
+    ALIGN_RIGHT: ESC + 'a' + '\x02',
+    // Font sizes
+    FONT_SIZE_NORMAL: GS + '!' + '\x00',
+    FONT_SIZE_DOUBLE_HEIGHT: GS + '!' + '\x01',
+    FONT_SIZE_DOUBLE_WIDTH: GS + '!' + '\x10',
+    FONT_SIZE_DOUBLE: GS + '!' + '\x11',
+    // Line feeds
+    LF: '\n',
+    CR: '\r',
+    CRLF: '\r\n',
+    // Paper cutting
+    CUT_PAPER: GS + 'V' + '\x41' + '\x03',
+    // Drawer kick
+    DRAWER_KICK: ESC + 'p' + '\x00' + '\x19' + '\xfa',
+};
+
+// Helper function to pad string to specific width
+const padString = (str: string, width: number, padChar: string = ' '): string => {
+    if (str.length >= width) return str.substring(0, width);
+    return str + padChar.repeat(width - str.length);
+};
+
+// Helper function to create a line separator
+const createSeparatorLine = (char: string = '-', width: number = 32): string => {
+    return char.repeat(width);
+};
+
+// Helper function to format currency
+const formatCurrency = (amount: number): string => {
+    return `₹${amount.toFixed(2)}`;
+};
+
+// Helper function to split long text into multiple lines
+const wrapText = (text: string, maxWidth: number): string[] => {
+    if (text.length <= maxWidth) return [text];
+
+    const words = text.split(' ');
+    const lines: string[] = [];
+    let currentLine = '';
+
+    for (const word of words) {
+        if ((currentLine + ' ' + word).trim().length <= maxWidth) {
+            currentLine = currentLine ? currentLine + ' ' + word : word;
+        } else {
+            if (currentLine) {
+                lines.push(currentLine);
+                currentLine = word;
+            } else {
+                // Word is longer than max width, force break it
+                lines.push(word.substring(0, maxWidth));
+                currentLine = word.substring(maxWidth);
+            }
+        }
+    }
+    if (currentLine) {
+        lines.push(currentLine);
+    }
+
+    return lines;
+};
 
 interface DashboardTakeawayProps {
     /** Optional callback when an order is created */
@@ -276,244 +353,311 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
     const cashGivenNumber = cashGiven ? parseFloat(cashGiven) : 0;
     const changeAmount = cashGivenNumber > gstDetails.roundedAmount ? cashGivenNumber - gstDetails.roundedAmount : 0;
 
-    // Function to print bill
-    const handlePrintBill = useCallback((order: Order) => {
-        // Create a new window for the bill
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) {
-            toast.error('Please allow pop-ups to print the bill');
-            return;
-        }
-
-        // Get current date and time
+    // Function to generate ESC/POS receipt content
+    const generateReceiptContent = (order: Order): string => {
         const now = new Date();
-        const dateFormatted = now.toLocaleDateString();
-        const timeFormatted = now.toLocaleTimeString();
+        const dateFormatted = now.toLocaleDateString('en-IN');
+        const timeFormatted = now.toLocaleTimeString('en-IN');
+        const orderType = order.order_type === 'takeaway' ? 'Takeaway' :
+            order.order_type === 'quick-bill' ? 'Quick Bill' : 'Dine-in';
 
-        // Generate bill HTML content
-        const billContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Bill Receipt - Order #${order.id}</title>
-        <style>
-          body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 20px;
-            max-width: 80mm; /* Standard receipt width */
-            margin: 0 auto;
-          }
-          .receipt {
-            border: 1px solid #ddd;
-            padding: 10px;
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 10px;
-            border-bottom: 1px dashed #ccc;
-            padding-bottom: 8px;
-          }
-          .restaurant-name {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 4px;
-          }
-          .restaurant-details {
-            font-size: 11px;
-            margin-bottom: 3px;
-            line-height: 1.2;
-          }
-          .bill-info {
-            margin-bottom: 12px;
-            font-size: 12px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: repeat(3, auto);
-            gap: 4px 8px;
-          }
-          .bill-info div {
-            margin-bottom: 2px;
-          }
-          .items-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 10px;
-            font-size: 11px;
-          }
-          .items-table th {
-            text-align: left;
-            padding: 3px 0;
-            border-bottom: 1px solid #ddd;
-          }
-          .items-table td {
-            padding: 3px 0;
-            border-bottom: 1px dashed #eee;
-          }
-          .amount-details {
-            margin-top: 8px;
-            font-size: 11px;
-          }
-          .amount-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 3px;
-          }
-          .total-amount {
-            font-weight: bold;
-            font-size: 13px;
-            margin-top: 4px;
-            border-top: 1px solid #ddd;
-            padding-top: 4px;
-          }
-          .footer {
-            margin-top: 12px;
-            text-align: center;
-            font-size: 11px;
-            border-top: 1px dashed #ccc;
-            padding-top: 8px;
-          }
-          .footer p {
-            margin: 2px 0;
-          }
-          .token-no-center {
-            text-align: center;
-            font-size: 18px;
-            font-weight: bold;
-            background: #fff;
-            padding: 2px 10px;
-            border: 2px dashed #222;
-            border-radius: 6px;
-            letter-spacing: 2px;
-            display: block;
-            margin: 10px auto 8px auto;
-          }
-          @media print {
-            body {
-              width: 80mm;
-              margin: 0;
-              padding: 0;
-            }
-            .receipt {
-              border: none;
-            }
-            .no-print {
-              display: none;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="receipt">
-          <div class="header">
-            <div class="restaurant-name">${restaurant?.name || 'Restaurant Name'}</div>
-            <div class="restaurant-details">${restaurant?.address || 'Restaurant Address'}</div>
-            <div class="restaurant-details">Phone: ${restaurant?.phone || 'Phone Number'}</div>
-            <div class="restaurant-details">GST No: ${restaurant?.gst_number || 'GST Number'}</div>
-          </div>
+        let receipt = '';
 
-          <div class="bill-info">
-            <div><strong>Bill No:</strong> ${order.id}</div>
-            <div><strong>Date:</strong> ${dateFormatted}</div>
-            <div><strong>Time:</strong> ${timeFormatted}</div>
-            <div><strong>Type:</strong> ${order.order_type.charAt(0).toUpperCase() + order.order_type.slice(1)}</div>
-          </div>
+        // Initialize printer
+        receipt += ESCPOS.INIT;
 
-          ${
-            order.token_number
-                ? `<div class="token-no-center">Token No: ${order.token_number}</div>`
-                : ''
+        // Header with restaurant name
+        receipt += ESCPOS.ALIGN_CENTER;
+        receipt += ESCPOS.FONT_SIZE_DOUBLE;
+        receipt += ESCPOS.BOLD_ON;
+        receipt += (restaurant?.name || 'Restaurant Name').toUpperCase();
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.BOLD_OFF;
+        receipt += ESCPOS.FONT_SIZE_NORMAL;
+
+        // Restaurant details
+        const restaurantAddress = restaurant?.address || 'Restaurant Address';
+        const addressLines = wrapText(restaurantAddress, 32);
+        addressLines.forEach(line => {
+            receipt += line;
+            receipt += ESCPOS.LF;
+        });
+
+        receipt += `Phone: ${restaurant?.phone || 'Phone Number'}`;
+        receipt += ESCPOS.LF;
+        receipt += `GST No: ${restaurant?.gst_number || 'GST Number'}`;
+        receipt += ESCPOS.LF;
+
+        // Separator
+        receipt += ESCPOS.ALIGN_LEFT;
+        receipt += createSeparatorLine('=', 32);
+        receipt += ESCPOS.LF;
+
+        // Bill information
+        receipt += ESCPOS.BOLD_ON;
+        receipt += padString(`Bill No: ${order.id}`, 16) + padString(`Date: ${dateFormatted}`, 16);
+        receipt += ESCPOS.LF;
+        receipt += padString(`Time: ${timeFormatted}`, 16) + padString(`Type: ${orderType}`, 16);
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.BOLD_OFF;
+
+        // Table info for dine-in orders
+        if (order.order_type === 'dine-in') {
+            receipt += padString(`Table: ${order.table_id || 'N/A'}`, 16);
+            receipt += padString(`Server: ${order.server || 'N/A'}`, 16);
+            receipt += ESCPOS.LF;
         }
 
-          <table class="items-table">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Qty</th>
-                <th>Price</th>
-                <th>Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${order.items
+        // Token number if available
+        if (order.token_number) {
+            receipt += ESCPOS.ALIGN_CENTER;
+            receipt += ESCPOS.BOLD_ON;
+            receipt += ESCPOS.FONT_SIZE_DOUBLE_HEIGHT;
+            receipt += `TOKEN NO: ${order.token_number}`;
+            receipt += ESCPOS.LF;
+            receipt += ESCPOS.FONT_SIZE_NORMAL;
+            receipt += ESCPOS.BOLD_OFF;
+            receipt += ESCPOS.ALIGN_LEFT;
+        }
+
+        // Separator
+        receipt += createSeparatorLine('=', 32);
+        receipt += ESCPOS.LF;
+
+        // Items header
+        receipt += ESCPOS.BOLD_ON;
+        receipt += padString('Item', 16) + padString('Qty', 4) + padString('Rate', 6) + padString('Amount', 6);
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.BOLD_OFF;
+        receipt += createSeparatorLine('-', 32);
+        receipt += ESCPOS.LF;
+
+        // Order items
+        const orderItems = order.items || [];
+        orderItems
             .filter(item => item.status !== 'cancelled')
-            .map(item => `
-                  <tr>
-                    <td>${item.name}</td>
-                    <td>${item.quantity}</td>
-                    <td>₹${item.price.toFixed(2)}</td>
-                    <td>₹${(item.quantity * item.price).toFixed(2)}</td>
-                  </tr>
-                `).join('')}
-            </tbody>
-          </table>
+            .forEach(item => {
+                // Item name (wrap if too long)
+                const itemNameLines = wrapText(item.name, 32);
+                itemNameLines.forEach((line, index) => {
+                    if (index === 0) {
+                        // First line with quantity, rate, and amount
+                        receipt += padString(line, 16) +
+                            padString(item.quantity.toString(), 4) +
+                            padString(formatCurrency(item.price), 6) +
+                            padString(formatCurrency(item.quantity * item.price), 6);
+                    } else {
+                        // Continuation lines
+                        receipt += line;
+                    }
+                    receipt += ESCPOS.LF;
+                });
+            });
 
-          <div class="amount-details">
-            <div class="amount-row">
-              <span>Subtotal:</span>
-              <span>₹${order.sub_total.toFixed(2)}</span>
-            </div>
+        // Separator
+        receipt += createSeparatorLine('-', 32);
+        receipt += ESCPOS.LF;
 
-            ${order.sgst_amount > 0 ? `
-            <div class="amount-row">
-              <span>SGST (${order.sgst_rate}%):</span>
-              <span>₹${order.sgst_amount.toFixed(2)}</span>
-            </div>
-            ` : ''}
+        // Totals section
+        const subTotal = order.sub_total || 0;
+        const sgstAmount = order.sgst_amount || 0;
+        const cgstAmount = order.cgst_amount || 0;
+        const sgstRate = order.sgst_rate || 0;
+        const cgstRate = order.cgst_rate || 0;
 
-            ${order.cgst_amount > 0 ? `
-            <div class="amount-row">
-              <span>CGST (${order.cgst_rate}%):</span>
-              <span>₹${order.cgst_amount.toFixed(2)}</span>
-            </div>
-            ` : ''}
+        const totalAmount = order.total_amount || 0;
+        const roundedAmount = Math.ceil(totalAmount);
+        const roundingDifference = roundedAmount - totalAmount;
 
-            <div class="amount-row">
-              <span>Rounding Adjustment:</span>
-              <span>₹${(Math.ceil(order.total_amount) - order.total_amount).toFixed(2)}</span>
-            </div>
+        // Subtotal
+        receipt += padString('Subtotal:', 24) + padString(formatCurrency(subTotal), 8);
+        receipt += ESCPOS.LF;
 
-            <div class="amount-row total-amount">
-              <span>Total Amount:</span>
-              <span>₹${Math.ceil(order.total_amount).toFixed(2)}</span>
-            </div>
+        // GST details
+        if (sgstAmount > 0) {
+            receipt += padString(`SGST (${sgstRate}%):`, 24) + padString(formatCurrency(sgstAmount), 8);
+            receipt += ESCPOS.LF;
+        }
 
-            <div class="amount-row" style="margin-top: 10px;">
-              <span>Payment Method:</span>
-              <span>${paymentMethod.toUpperCase()}</span>
-            </div>
-          </div>
+        if (cgstAmount > 0) {
+            receipt += padString(`CGST (${cgstRate}%):`, 24) + padString(formatCurrency(cgstAmount), 8);
+            receipt += ESCPOS.LF;
+        }
 
-          <div class="footer">
-            <p>Thank you for your visit!</p>
-            <p>Please visit again</p>
-          </div>
-        </div>
+        // Rounding adjustment
+        receipt += padString('Rounding Adj:', 24) + padString(formatCurrency(roundingDifference), 8);
+        receipt += ESCPOS.LF;
 
-        <div class="no-print" style="text-align: center; margin-top: 20px;">
-          <button onclick="window.print();" style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            Print Bill
-          </button>
-          <button onclick="window.close();" style="padding: 10px 20px; background: #f44336; color: white; border: none; border-radius: 4px; margin-left: 10px; cursor: pointer;">
-            Close
-          </button>
-        </div>
-      </body>
-      </html>
-    `;
+        // Total amount
+        receipt += createSeparatorLine('-', 32);
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.BOLD_ON;
+        receipt += ESCPOS.FONT_SIZE_DOUBLE_HEIGHT;
+        receipt += padString('TOTAL:', 16) + padString(formatCurrency(roundedAmount), 16);
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.FONT_SIZE_NORMAL;
+        receipt += ESCPOS.BOLD_OFF;
 
-        // Write the content to the new window
-        printWindow.document.open();
-        printWindow.document.write(billContent);
-        printWindow.document.close();
+        // Payment method
+        if (paymentMethod) {
+            receipt += createSeparatorLine('-', 32);
+            receipt += ESCPOS.LF;
+            receipt += padString('Payment Method:', 24) + padString(paymentMethod.replace('_', ' ').toUpperCase(), 8);
+            receipt += ESCPOS.LF;
 
-        // Trigger print when content is loaded
-        printWindow.onload = function () {
-            // Automatically print on load (optional)
-            // printWindow.print();
-        };
-    }, [restaurant, paymentMethod]);
+            // Cash payment details
+            if (paymentMethod === 'cash' && cashGiven) {
+                const cashGivenNumber = parseFloat(cashGiven);
+                const changeAmount = cashGivenNumber > roundedAmount ? cashGivenNumber - roundedAmount : 0;
 
+                receipt += padString('Cash Given:', 24) + padString(formatCurrency(cashGivenNumber), 8);
+                receipt += ESCPOS.LF;
+                receipt += padString('Change:', 24) + padString(formatCurrency(changeAmount), 8);
+                receipt += ESCPOS.LF;
+            }
+        }
+
+        // Footer
+        receipt += ESCPOS.LF;
+        receipt += createSeparatorLine('=', 32);
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.ALIGN_CENTER;
+        receipt += 'Thank you for your visit!';
+        receipt += ESCPOS.LF;
+        receipt += 'Please visit again';
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.LF;
+
+        // Cut paper
+        receipt += ESCPOS.CUT_PAPER;
+
+        return receipt;
+    };
+
+    // Get printer configuration from store
+    const { printerConfig } = usePrinterStore();
+
+    // Function to print bill using QZ Tray
+    const handlePrintBill = useCallback(async (order: Order) => {
+        try {
+            // Check if QZ Tray is available
+            if (typeof window.qz === 'undefined') {
+                throw new Error('QZ Tray not available. Please ensure QZ Tray is installed and running.');
+            }
+
+            // Connect to QZ Tray if not already connected
+            if (!window.qz.websocket.isActive()) {
+                await window.qz.websocket.connect();
+            }
+
+            // Get bill printers from configuration
+            const billPrinters = printerConfig?.bill_printers || [];
+            if (billPrinters.length === 0) {
+                throw new Error('No bill printers configured. Please configure printers in settings.');
+            }
+
+            // Generate ESC/POS receipt content
+            const receiptContent = generateReceiptContent(order);
+
+            // Print to all configured bill printers
+            for (const printer of billPrinters) {
+                const config = window.qz.configs.create(printer);
+                // Convert string to bytes for raw printing
+                const data = [receiptContent];
+                await window.qz.print(config, data);
+            }
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to print bill';
+            toast.error(errorMessage);
+            console.error('Print error:', error);
+            
+        }
+    }, [restaurant, paymentMethod, cashGiven, printerConfig]);
+    
+
+    // Function to generate ESC/POS content for KOT
+    const generateKOTContent = (tokenNumber: string): string => {
+        const now = new Date();
+        const dateFormatted = now.toLocaleDateString('en-IN');
+        const timeFormatted = now.toLocaleTimeString('en-IN');
+
+        let receipt = '';
+
+        // Initialize printer
+        receipt += ESCPOS.INIT;
+
+        // Header with KOT title
+        receipt += ESCPOS.ALIGN_CENTER;
+        receipt += ESCPOS.FONT_SIZE_DOUBLE;
+        receipt += ESCPOS.BOLD_ON;
+        receipt += 'KITCHEN ORDER TICKET';
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.BOLD_OFF;
+        receipt += ESCPOS.FONT_SIZE_NORMAL;
+        receipt += `Date: ${dateFormatted} Time: ${timeFormatted}`;
+        receipt += ESCPOS.LF;
+
+        // Separator
+        receipt += ESCPOS.ALIGN_LEFT;
+        receipt += createSeparatorLine('=', 32);
+        receipt += ESCPOS.LF;
+
+        // KOT information
+        receipt += ESCPOS.BOLD_ON;
+        receipt += padString(`KOT No: ${tokenNumber.slice(-6)}`, 16) + padString(`Type: ${type}`, 16);
+        receipt += ESCPOS.LF;
+        receipt += padString(`Table: Takeaway`, 16) + padString(`Server: ${user?.name || 'N/A'}`, 16);
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.BOLD_OFF;
+
+        // Separator
+        receipt += createSeparatorLine('-', 32);
+        receipt += ESCPOS.LF;
+
+        // Items header
+        receipt += ESCPOS.BOLD_ON;
+        receipt += padString('Item', 20) + padString('Qty', 4) + padString('Notes', 8);
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.BOLD_OFF;
+        receipt += createSeparatorLine('-', 32);
+        receipt += ESCPOS.LF;
+
+        // Order items
+        orderItems.forEach(item => {
+            // Item name (wrap if too long)
+            const itemNameLines = wrapText(item.name || 'Unknown Item', 20);
+            itemNameLines.forEach((line, index) => {
+                if (index === 0) {
+                    // First line with quantity and notes
+                    receipt += padString(line, 20) +
+                        padString(item.quantity.toString(), 4) +
+                        padString(item.notes || '-', 8);
+                } else {
+                    // Continuation lines
+                    receipt += line;
+                }
+                receipt += ESCPOS.LF;
+            });
+        });
+
+        // Footer
+        receipt += ESCPOS.LF;
+        receipt += createSeparatorLine('=', 32);
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.ALIGN_CENTER;
+        receipt += '*** Kitchen Copy ***';
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.LF;
+
+        // Cut paper
+        receipt += ESCPOS.CUT_PAPER;
+
+        return receipt;
+    };
+
+    // Create a ref to store the debounced function
+    const debouncedPrintKOTRef = useRef<any>(null);
+    
     // Function to print KOT (Kitchen Order Ticket)
     const handlePrintKOT = useCallback(async () => {
         // Check if we have items to print
@@ -533,185 +677,44 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
             setIsSubmitting(true);
             setError(null);
 
-            // First print the KOT
-            // Create a new window for the KOT
-            const printWindow = window.open('', '_blank');
-            if (!printWindow) {
-                toast.error('Please allow pop-ups to print the KOT');
-                return;
-            }
-
-            // Get current date and time
-            const now = new Date();
-            const dateFormatted = now.toLocaleDateString();
-            const timeFormatted = now.toLocaleTimeString();
-
             // Generate a token number for the order
             const tokenNumber = `${type.charAt(0).toUpperCase()}${Date.now().toString().slice(-6)}`;
 
-            // Generate KOT HTML content
-            const kotContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Kitchen Order Ticket</title>
-          <style>
-            body {
-              font-family: 'Arial', sans-serif;
-              margin: 0;
-              padding: 20px;
-              max-width: 80mm; /* Standard receipt width */
-              margin: 0 auto;
-            }
-            .receipt {
-              border: 1px solid #ddd;
-              padding: 10px;
-            }
-            .header {
-              text-align: center;
-              margin-bottom: 10px;
-              border-bottom: 1px dashed #ccc;
-              padding-bottom: 8px;
-            }
-            .restaurant-name {
-              font-size: 16px;
-              font-weight: bold;
-              margin-bottom: 4px;
-            }
-            .restaurant-details {
-              font-size: 11px;
-              margin-bottom: 3px;
-              line-height: 1.2;
-            }
-            .bill-info {
-              margin-bottom: 12px;
-              font-size: 12px;
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              grid-template-rows: repeat(3, auto);
-              gap: 4px 8px;
-            }
-            .bill-info div {
-              margin-bottom: 2px;
-            }
-            .items-table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 10px;
-              font-size: 11px;
-            }
-            .items-table th {
-              text-align: left;
-              padding: 3px 0;
-              border-bottom: 1px solid #ddd;
-            }
-            .items-table td {
-              padding: 3px 0;
-              border-bottom: 1px dashed #eee;
-            }
-            .amount-details {
-              margin-top: 8px;
-              font-size: 11px;
-            }
-            .amount-row {
-              display: flex;
-              justify-content: space-between;
-              margin-bottom: 3px;
-            }
-            .total-amount {
-              font-weight: bold;
-              font-size: 13px;
-              margin-top: 4px;
-              border-top: 1px solid #ddd;
-              padding-top: 4px;
-            }
-            .footer {
-              margin-top: 12px;
-              text-align: center;
-              font-size: 11px;
-              border-top: 1px dashed #ccc;
-              padding-top: 8px;
-            }
-            .footer p {
-              margin: 2px 0;
-            }
-            @media print {
-              body {
-                width: 80mm;
-                margin: 0;
-                padding: 0;
-              }
-              .receipt {
-                border: none;
-              }
-              .no-print {
-                display: none;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="receipt">
-            <div class="header">
-              <div class="restaurant-name">KITCHEN ORDER TICKET</div>
-              <div class="restaurant-details">Date: ${dateFormatted} Time: ${timeFormatted}</div>
-            </div>
+            // Print KOT using QZ Tray
+            try {
+                // Check if QZ Tray is available
+                if (typeof window.qz === 'undefined') {
+                    throw new Error('QZ Tray not available. Please ensure QZ Tray is installed and running.');
+                }
 
-            <div class="bill-info">
-              <div><strong>KOT No:</strong> ${tokenNumber.slice(-6)}</div>
-              <div><strong>Table:</strong> Takeaway</div>
-              <div><strong>Server:</strong> ${user?.name || 'N/A'}</div>
-              <div><strong>Type:</strong> ${type}</div>
-            </div>
+                // Connect to QZ Tray if not already connected
+                if (!window.qz.websocket.isActive()) {
+                    await window.qz.websocket.connect();
+                }
 
-            <table class="items-table">
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Qty</th>
-                  <th>Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${orderItems.map(item => {
-                return `
-                    <tr>
-                      <td>${item.name || 'Unknown Item'}</td>
-                      <td>${item.quantity}</td>
-                      <td>${item.notes || '-'}</td>
-                    </tr>
-                  `;
-            }).join('')}
-              </tbody>
-            </table>
+                // Get KOT printers from configuration
+                const kotPrinters = printerConfig?.kot_printers || [];
+                if (kotPrinters.length === 0) {
+                    throw new Error('No KOT printers configured. Please configure printers in settings.');
+                }
 
-            <div class="footer">
-              <p>*** Kitchen Copy ***</p>
-            </div>
-          </div>
+                // Generate ESC/POS receipt content
+                const kotContent = generateKOTContent(tokenNumber);
 
-          <div class="no-print" style="text-align: center; margin-top: 20px;">
-            <button onclick="window.print();" style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
-              Print KOT
-            </button>
-            <button onclick="window.close();" style="padding: 10px 20px; background: #f44336; color: white; border: none; border-radius: 4px; margin-left: 10px; cursor: pointer;">
-              Close
-            </button>
-          </div>
-        </body>
-        </html>
-      `;
+                // Print to all configured KOT printers
+                for (const printer of kotPrinters) {
+                    const config = window.qz.configs.create(printer);
+                    // Convert string to bytes for raw printing
+                    const data = [kotContent];
+                    await window.qz.print(config, data);
+                }
 
-            // Write the content to the new window
-            printWindow.document.open();
-            printWindow.document.write(kotContent);
-            printWindow.document.close();
-
-            // Trigger print when content is loaded
-            printWindow.onload = function () {
-                // Automatically print on load (optional)
-                // printWindow.print();
-            };
+                toast.success('KOT printed successfully');
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'Failed to print KOT';
+                toast.error(errorMessage);
+                console.error('Print error:', error);
+            }
 
             toast.success('KOT generated successfully');
 
@@ -787,8 +790,24 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
         } finally {
             setIsSubmitting(false);
         }
-    }, [orderItems, user, type, paymentMethod, gstDetails, setError, setIsSubmitting, user?.staff_id, addPayment, updateOrderStatus, handlePrintBill, onOrderCreated]);
+    }, [orderItems, user, type, paymentMethod, gstDetails, setError, setIsSubmitting, user?.staff_id, addPayment, updateOrderStatus, handlePrintBill, onOrderCreated, printerConfig]);
+    
+    // Create a debounced version of handlePrintKOT
+    useEffect(() => {
+        // Create a new debounced function when dependencies change
+        debouncedPrintKOTRef.current = debounce(handlePrintKOT, 500); // 500ms debounce time
+    }, [handlePrintKOT]);
+    
+    // Function to call the debounced version
+    const debouncedHandlePrintKOT = useCallback(() => {
+        if (debouncedPrintKOTRef.current) {
+            debouncedPrintKOTRef.current();
+        }
+    }, []);
 
+    // Create a ref to store the debounced place order function
+    const debouncedPlaceOrderRef = useRef<any>(null);
+    
     // Handle order submission
     const handlePlaceOrder = useCallback(async () => {
         if (orderItems.length === 0) return;
@@ -878,7 +897,20 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
         } finally {
             setIsSubmitting(false);
         }
-    }, [orderItems, user?.staff_id, type, paymentMethod, gstDetails, cashGiven, addPayment, updateOrderStatus, onOrderCreated, handlePrintBill]);
+    }, [orderItems, user?.staff_id, type, paymentMethod, gstDetails, cashGiven, addPayment, updateOrderStatus, onOrderCreated, handlePrintBill, setError, setIsSubmitting, setOrderItems, setSearchQuery, setSelectedCategory, setIsCartOpen, setCashGiven, setPaymentMethod]);
+    
+    // Create a debounced version of handlePlaceOrder
+    useEffect(() => {
+        // Create a new debounced function when dependencies change
+        debouncedPlaceOrderRef.current = debounce(handlePlaceOrder, 500); // 500ms debounce time
+    }, [handlePlaceOrder]);
+    
+    // Function to call the debounced version
+    const debouncedHandlePlaceOrder = useCallback(() => {
+        if (debouncedPlaceOrderRef.current) {
+            debouncedPlaceOrderRef.current();
+        }
+    }, []);
 
     return (
         <div className="flex h-[calc(100vh-8rem)] flex-col md:flex-row gap-1">
@@ -1078,14 +1110,6 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
                                     onClick={() => handleQuantityChange(item, 1)}
                                 >
                                     <div className="p-2 sm:p-3">
-                                        {!item.available && (
-                                            <div className="absolute -top-1 -right-1 z-10">
-                                                <div
-                                                    className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md shadow-sm">
-                                                    Unavailable
-                                                </div>
-                                            </div>
-                                        )}
                                         <div className="min-w-0">
                                             <h3 className="font-medium leading-tight text-sm line-clamp-2">{item.name}</h3>
                                             <div className="mt-1 flex items-center justify-between">
@@ -1364,7 +1388,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
                                 <div className="grid grid-cols-2 gap-2">
                                     <Button
                                         className="justify-center py-3 text-sm h-auto"
-                                        onClick={handlePrintKOT}
+                                        onClick={debouncedHandlePrintKOT}
                                         disabled={orderItems.length === 0 || isSubmitting}
                                         variant="outline"
                                     >
@@ -1372,7 +1396,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
                                     </Button>
                                     <Button
                                         className="justify-center py-3 text-sm h-auto"
-                                        onClick={handlePlaceOrder}
+                                        onClick={debouncedHandlePlaceOrder}
                                         disabled={orderItems.length === 0 || isSubmitting || !paymentMethod}
                                     >
                                         {isSubmitting ? (

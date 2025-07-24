@@ -12,6 +12,7 @@ import {
     Search,
     Trash2
 } from 'lucide-react';
+import {format as formatDate} from 'date-fns';
 import {Button} from '@/components/ui/button';
 import {format, isToday, isYesterday, subDays} from 'date-fns';
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
@@ -87,6 +88,71 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
     const formatCurrency = (amount: number | undefined) => {
         if (amount === undefined) return '₹0.00';
         return `₹${amount.toFixed(2)}`;
+    };
+
+    // Export orders to CSV
+    const exportOrdersToCSV = () => {
+        // Define CSV headers
+        const headers = [
+            'Order ID',
+            'Order Type',
+            'Table/Token',
+            'Status',
+            'Order Time',
+            'Customer',
+            'Server',
+            'Payment Method',
+            'Total Amount',
+            'Items'
+        ];
+
+        // Convert orders to CSV rows
+        const csvRows = filteredOrders.map(order => {
+            // Format items as a comma-separated list
+            const itemsList = (order.items || [])
+                .map(item => `${item.name || 'Unknown Item'} (${item.quantity || 0}x₹${(item.price !== undefined && item.price !== null) ? item.price.toFixed(2) : '0.00'})`)
+                .join('; ');
+
+            // Create row data
+            return [
+                order.id,
+                order.order_type,
+                order.order_type === 'dine-in' ? `Table ${order.table_id || 'Unknown'}` : `Token ${order.token_number || 'N/A'}`,
+                order.status,
+                formatDate(new Date(order.order_time), 'yyyy-MM-dd HH:mm:ss'),
+                order.customer || 'N/A',
+                order.server || 'N/A',
+                order.payment_method || 'N/A',
+                (order.total_amount || 0).toFixed(2),
+                itemsList
+            ];
+        });
+
+        // Combine headers and rows
+        const csvContent = [
+            headers.join(','),
+            ...csvRows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        ].join('\n');
+
+        // Create a Blob with the CSV content
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        
+        // Create a download link
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        
+        // Set link properties
+        link.setAttribute('href', url);
+        link.setAttribute('download', `orders_export_${formatDate(new Date(), 'yyyy-MM-dd_HH-mm')}.csv`);
+        link.style.visibility = 'hidden';
+        
+        // Add link to document, click it, and remove it
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Show success toast
+        toast.success("CSV export completed successfully");
     };
 
     // Get order date display
@@ -166,37 +232,22 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
 
             return matchesStatus && matchesTimeframe && matchesPaymentMethod && matchesOrderType && matchesTab && matchesSearch;
         })
+        // Apply sorting based on selected sort option
         .sort((a, b) => {
-            // For orders with status "placed", "preparing", "served", "paid",
-            // reverse the order so newest orders appear at the bottom
-            const statusesToReverse = ['placed', 'preparing', 'served', 'paid'];
-            const shouldReverseOrder = statusesToReverse.includes(a.status) && statusesToReverse.includes(b.status);
-
             switch (sortBy) {
                 case 'newest':
-                    if (shouldReverseOrder) {
-                        // Reverse the order for specified statuses
-                        return new Date(b.order_time).getTime() - new Date(a.order_time).getTime();
-                    }
-                    return new Date(a.order_time).getTime() - new Date(b.order_time).getTime();
-                case 'oldest':
-                    if (shouldReverseOrder) {
-                        // Reverse the order for specified statuses
-                        return new Date(a.order_time).getTime() - new Date(b.order_time).getTime();
-                    }
                     return new Date(b.order_time).getTime() - new Date(a.order_time).getTime();
+                case 'oldest':
+                    return new Date(a.order_time).getTime() - new Date(b.order_time).getTime();
                 case 'highest':
                     return (b.total_amount || 0) - (a.total_amount || 0);
                 case 'lowest':
                     return (a.total_amount || 0) - (b.total_amount || 0);
                 default:
-                    if (shouldReverseOrder) {
-                        // Reverse the order for specified statuses
-                        return new Date(a.order_time).getTime() - new Date(b.order_time).getTime();
-                    }
-                    return new Date(b.order_time).getTime() - new Date(a.order_time).getTime();
+                    // Default sorting by ID in descending order (as it comes from API)
+                    return b.id - a.id;
             }
-        });
+        })
 
     return (
         <div className="space-y-6">
@@ -234,11 +285,8 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => toast.success("CSV export started")}>
+                            <DropdownMenuItem onClick={exportOrdersToCSV}>
                                 Export as CSV
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => toast.success("PDF export started")}>
-                                Export as PDF
                             </DropdownMenuItem>
                             <DropdownMenuSeparator/>
                             <DropdownMenuItem onClick={() => toast.success("Print started")}>
@@ -413,7 +461,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                             )}
                                         </div>
 
-                                        <div className="mt-4 max-h-40 overflow-auto rounded-md border border-blue-100">
+                                        <div className="mt-4 max-h-40 overflow-auto rounded-md border border-blue-100 custom-scrollbar">
                                             <table className="w-full">
                                                 <thead className="bg-blue-50 dark:bg-blue-950 text-xs">
                                                 <tr className="text-left">
@@ -431,7 +479,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                         <tr key={item.id} className="hover:bg-blue-50/50">
                                                             <td className="p-2">{item.name || 'Unknown Item'}</td>
                                                             <td className="p-2">{item.quantity || 0}</td>
-                                                            <td className="p-2">{formatCurrency((item.quantity || 0) * (item.price || 0))}</td>
+                                                            <td className="p-2">{formatCurrency((item.quantity || 0) * (item.price !== undefined ? item.price : 0))}</td>
                                                             <td className="p-2">
                                                                 {(isTrackingEnabled || item.status === 'cancelled') && (
                                                                     <Badge variant="outline"
@@ -478,8 +526,10 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                 onClick={() => onCancelOrder(order)}
                                                 disabled={
                                                     order.status === 'cancelled' ||
+                                                    order.status === 'paid' ||
                                                     (order.order_type === 'dine-in' && order.status !== 'placed') ||
-                                                    (order.status === 'paid' && order.order_type !== 'takeaway' && order.order_type !== 'quick-bill')
+                                                    (order.order_type === 'takeaway' && order.status !== 'preparing') ||
+                                                    order.order_type === 'quick-bill'
                                                 }
                                             >
                                                 <Trash2 className="mr-2 h-4 w-4"/>
@@ -523,7 +573,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                     </h3>
                                 </div>
                                 <div
-                                    className="bg-blue-50 dark:bg-blue-950 p-2 rounded-b-md flex-1 min-h-[70vh] overflow-auto">
+                                    className="bg-blue-50 dark:bg-blue-950 p-2 rounded-b-md flex-1 min-h-[70vh] overflow-auto custom-scrollbar">
                                     {filteredOrders
                                         .filter(order => order.status === 'placed')
                                         .map(order => (
@@ -557,7 +607,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                 )}
                                       </span>
                                         )
-                                        : `Table ${order.table?.table_number || 'Unknown'}`}
+                                        : `Table ${order.table_id || 'Unknown'}`}
                               </span>
                                                             <Badge variant="outline"
                                                                    className="text-xs border-blue-300 text-blue-700">#{order.id}</Badge>
@@ -586,8 +636,8 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                                                     className="text-blue-600">×{item.quantity}</span>
                                                                                 {(isTrackingEnabled || item.status === 'cancelled') && (
                                                                                     <Badge
-                                                                                        className={cn("px-1 py-0.5 text-xs ml-auto", getStatusBadgeStyles(item.status))}>
-                                                                                        {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                                                                                        className={cn("px-1 py-0.5 text-xs ml-auto", getStatusBadgeStyles(item.status || 'unknown'))}>
+                                                                                        {item.status ? (item.status.charAt(0).toUpperCase() + item.status.slice(1)) : 'Unknown'}
                                                                                     </Badge>
                                                                                 )}
                                                                             </div>
@@ -657,7 +707,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                     </h3>
                                 </div>
                                 <div
-                                    className="bg-yellow-50 dark:bg-yellow-950 p-2 rounded-b-md flex-1 min-h-[70vh] overflow-auto">
+                                    className="bg-yellow-50 dark:bg-yellow-950 p-2 rounded-b-md flex-1 min-h-[70vh] overflow-auto custom-scrollbar">
                                     {/* Similar card structure as placed orders but with preparing status */}
                                     {filteredOrders
                                         .filter(order => order.status === 'preparing')
@@ -693,7 +743,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                 )}
                                       </span>
                                         )
-                                        : `Table ${order.table?.table_number || 'Unknown'}`}
+                                        : `Table ${order.table_id || 'Unknown'}`}
                               </span>
                                                             <Badge variant="outline"
                                                                    className="text-xs border-yellow-300 text-yellow-700">#{order.id}</Badge>
@@ -722,8 +772,8 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                                                     className="text-yellow-600">×{item.quantity}</span>
                                                                                 {(isTrackingEnabled || item.status === 'cancelled') && (
                                                                                     <Badge
-                                                                                        className={cn("px-1 py-0.5 text-xs ml-auto", getStatusBadgeStyles(item.status))}>
-                                                                                        {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                                                                                        className={cn("px-1 py-0.5 text-xs ml-auto", getStatusBadgeStyles(item.status || 'unknown'))}>
+                                                                                        {item.status ? (item.status.charAt(0).toUpperCase() + item.status.slice(1)) : 'Unknown'}
                                                                                     </Badge>
                                                                                 )}
                                                                             </div>
@@ -796,7 +846,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                     </h3>
                                 </div>
                                 <div
-                                    className="bg-green-50 dark:bg-green-950 p-2 rounded-b-md flex-1 min-h-[70vh] overflow-auto">
+                                    className="bg-green-50 dark:bg-green-950 p-2 rounded-b-md flex-1 min-h-[70vh] overflow-auto custom-scrollbar">
                                     {/* Similar card structure as placed orders but with served status */}
                                     {filteredOrders
                                         .filter(order => order.status === 'served')
@@ -832,7 +882,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                 )}
                                       </span>
                                         )
-                                        : `Table ${order.table?.table_number || 'Unknown'}`}
+                                        : `Table ${order.table_id || 'Unknown'}`}
                               </span>
                                                             <Badge variant="outline"
                                                                    className="text-xs border-green-300 text-green-700">#{order.id}</Badge>
@@ -861,8 +911,8 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                                                     className="text-green-600">×{item.quantity}</span>
                                                                                 {(isTrackingEnabled || item.status === 'cancelled') && (
                                                                                     <Badge
-                                                                                        className={cn("px-1 py-0.5 text-xs ml-auto", getStatusBadgeStyles(item.status))}>
-                                                                                        {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                                                                                        className={cn("px-1 py-0.5 text-xs ml-auto", getStatusBadgeStyles(item.status || 'unknown'))}>
+                                                                                        {item.status ? (item.status.charAt(0).toUpperCase() + item.status.slice(1)) : 'Unknown'}
                                                                                     </Badge>
                                                                                 )}
                                                                             </div>
@@ -924,7 +974,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                     </h3>
                                 </div>
                                 <div
-                                    className="bg-purple-50 dark:bg-purple-950 p-2 rounded-b-md flex-1 min-h-[70vh] overflow-auto">
+                                    className="bg-purple-50 dark:bg-purple-950 p-2 rounded-b-md flex-1 min-h-[70vh] overflow-auto custom-scrollbar">
                                     {/* Similar card structure as placed orders but with paid status */}
                                     {filteredOrders
                                         .filter(order => order.status === 'paid')
@@ -960,7 +1010,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                 )}
                                       </span>
                                         )
-                                        : `Table ${order.table?.table_number || 'Unknown'}`}
+                                        : `Table ${order.table_id || 'Unknown'}`}
                               </span>
                                                             <Badge variant="outline"
                                                                    className="text-xs border-purple-300 text-purple-700">#{order.id}</Badge>
@@ -989,8 +1039,8 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                                                     className="text-purple-600">×{item.quantity}</span>
                                                                                 {(isTrackingEnabled || item.status === 'cancelled') && (
                                                                                     <Badge
-                                                                                        className={cn("px-1 py-0.5 text-xs ml-auto", getStatusBadgeStyles(item.status))}>
-                                                                                        {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                                                                                        className={cn("px-1 py-0.5 text-xs ml-auto", getStatusBadgeStyles(item.status || 'unknown'))}>
+                                                                                        {item.status ? (item.status.charAt(0).toUpperCase() + item.status.slice(1)) : 'Unknown'}
                                                                                     </Badge>
                                                                                 )}
                                                                             </div>

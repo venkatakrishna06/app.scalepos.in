@@ -24,3 +24,93 @@ export function generateTokenNumber(): string {
     // Format: YYMMDD-XXX (date-sequential number)
     return `${datePrefix}-${currentCount.toString().padStart(3, '0')}`;
 }
+
+/**
+ * Debounces a function to prevent multiple rapid calls
+ * @param func The function to debounce
+ * @param wait The time to wait in milliseconds
+ * @returns A debounced version of the function
+ */
+export function debounce<T extends (...args: any[]) => any>(
+    func: T,
+    wait: number
+): (...args: Parameters<T>) => void {
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+    
+    return function(...args: Parameters<T>) {
+        const later = () => {
+            timeout = null;
+            func(...args);
+        };
+        
+        if (timeout !== null) {
+            clearTimeout(timeout);
+        }
+        timeout = setTimeout(later, wait);
+    };
+}
+
+/**
+ * In-flight request cache to prevent duplicate API calls
+ */
+const inFlightRequests: Record<string, Promise<any>> = {};
+
+/**
+ * Deduplicates identical API calls that happen concurrently
+ * @param key A unique key for the request
+ * @param requestFn The API request function
+ * @returns The result of the API call
+ */
+export async function deduplicateRequest<T>(
+    key: string,
+    requestFn: () => Promise<T>
+): Promise<T> {
+    // If there's already an in-flight request with this key, return its promise
+    if (inFlightRequests[key]) {
+        return inFlightRequests[key];
+    }
+    
+    // Otherwise, make the request and store its promise
+    try {
+        inFlightRequests[key] = requestFn();
+        const result = await inFlightRequests[key];
+        return result;
+    } finally {
+        // Clean up after the request is complete
+        delete inFlightRequests[key];
+    }
+}
+
+/**
+ * Simple in-memory cache for API responses
+ */
+const apiCache: Record<string, {
+    data: any;
+    timestamp: number;
+}> = {};
+
+/**
+ * Caches API responses to prevent unnecessary network requests
+ * @param key A unique key for the cached data
+ * @param requestFn The API request function
+ * @param ttl Time to live in milliseconds (default: 5 minutes)
+ * @returns The cached or fresh API response
+ */
+export async function cacheApiResponse<T>(
+    key: string,
+    requestFn: () => Promise<T>,
+    ttl: number = 5 * 60 * 1000 // 5 minutes default
+): Promise<T> {
+    const now = Date.now();
+    const cached = apiCache[key];
+    
+    // If we have a valid cached response, return it
+    if (cached && now - cached.timestamp < ttl) {
+        return cached.data;
+    }
+    
+    // Otherwise, make the request and cache the result
+    const data = await requestFn();
+    apiCache[key] = { data, timestamp: now };
+    return data;
+}

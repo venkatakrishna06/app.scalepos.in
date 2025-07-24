@@ -770,7 +770,7 @@ export function PaymentDialog({open, onClose, order, draftOrder, onPaymentComple
         <Dialog open={open}>
             <DialogContent
                 onClose={onClose}
-                className="max-w-[95vw] sm:max-w-[90vw] md:max-w-[800px] max-h-[85vh] md:max-h-[90vh] overflow-y-auto p-2 sm:p-3 md:p-4">
+                className="max-w-[95vw] sm:max-w-[90vw] md:max-w-[800px] max-h-[85vh] md:max-h-[90vh] overflow-y-auto p-2 sm:p-3 md:p-4 custom-scrollbar">
                 <DialogHeader className="pb-1 text-center">
                     <DialogTitle className="text-lg font-bold text-center">Process Payment</DialogTitle>
                     <DialogDescription className="text-xs text-muted-foreground text-center">

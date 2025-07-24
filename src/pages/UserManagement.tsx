@@ -218,22 +218,22 @@ const UserManagement: React.FC = () => {
                         setEditingUser(null);
                     }}
                 >
-                    <DialogHeader className="mb-4 sm:mb-6">
-                        <DialogTitle className="text-xl">
+                    <DialogHeader className="mb-4">
+                        <DialogTitle className="text-lg">
                             {editingUser ? 'Edit User' : 'Add User'}
                         </DialogTitle>
-                        <DialogDescription className="mt-1.5">
+                        <DialogDescription className="mt-1">
                             {editingUser
                                 ? 'Update the user\'s information below.'
                                 : 'Fill in the details to add a new user.'}
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="max-h-[70vh] overflow-y-auto pr-1 custom-scrollbar">
+
                         <UserCreationForm
                             initialData={editingUser || undefined}
                             onSuccess={handleFormSubmit}
                         />
-                    </div>
+
                 </DialogContent>
             </Dialog>
         </div>

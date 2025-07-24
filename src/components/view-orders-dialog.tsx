@@ -170,7 +170,7 @@ export function ViewOrdersDialog({open, onClose, tableId, onPayment}: ViewOrders
             </CardHeader>
 
             <CardContent className="p-0 px-0 space-y-4">
-                <div className="h-[40vh] overflow-y-auto pr-2">
+                <div className="h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
                     {/* Desktop view skeleton */}
                     <div className="hidden md:block">
                         <table className="w-full">
@@ -240,9 +240,9 @@ export function ViewOrdersDialog({open, onClose, tableId, onPayment}: ViewOrders
 
     return (
         <Dialog open={open}>
-            <DialogContent onClose={onClose} className="max-w-4xl">
-                <DialogHeader>
-                    <DialogTitle>Order Details</DialogTitle>
+            <DialogContent size="xl" onClose={onClose}>
+                <DialogHeader className="mb-1">
+                    <DialogTitle className="text-lg">Order Details</DialogTitle>
                 </DialogHeader>
 
                 {isLoading ? (

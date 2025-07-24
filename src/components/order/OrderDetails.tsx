@@ -71,7 +71,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
             </CardHeader>
 
             <CardContent className="p-0 px-0 space-y-4">
-                <div className="h-[40vh] overflow-y-auto pr-2">
+                <div className="h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
                     {/* Desktop view */}
                     <div className="hidden md:block">
                         <table className="w-full">

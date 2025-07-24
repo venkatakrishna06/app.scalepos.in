@@ -1,4 +1,4 @@
-import {memo, useCallback, useEffect, useMemo, useState} from 'react';
+import {memo, useCallback, useEffect, useMemo, useState, useRef} from 'react';
 import {
     ChevronDown,
     ChevronRight,
@@ -14,13 +14,104 @@ import {
 } from 'lucide-react';
 import {Dialog, DialogContent,} from './ui/dialog';
 import {Button} from './ui/button';
-import {useMenuStore, useOrderStore} from '@/lib/store';
+import {useMenuStore, useOrderStore, usePrinterStore} from '@/lib/store';
 import {MenuItem, Order, OrderItem} from '@/types';
 import {toast} from '@/lib/toast';
 import {useAuthStore} from "@/lib/store/auth.store.ts";
-import {cn, generateTokenNumber} from '@/lib/utils';
+import {cn, generateTokenNumber, debounce} from '@/lib/utils';
 import {analyticsService} from '@/lib/api/services/analytics.service';
 import {MenuItemAnalytics} from '@/types/analytics';
+
+// Add QZ Tray type definitions
+declare global {
+    interface Window {
+        qz: {
+            websocket: {
+                connect: () => Promise<void>;
+                isActive: () => boolean;
+            };
+            printers: {
+                find: () => Promise<string[]>;
+            };
+            configs: {
+                create: (printer: string) => any;
+            };
+            print: (config: any, data: any) => Promise<void>;
+        };
+    }
+}
+
+// ESC/POS command constants
+const ESC = '\x1b';
+const GS = '\x1d';
+
+// ESC/POS Commands
+const ESCPOS = {
+    // Initialize printer
+    INIT: ESC + '@',
+    // Text formatting
+    BOLD_ON: ESC + 'E' + '\x01',
+    BOLD_OFF: ESC + 'E' + '\x00',
+    UNDERLINE_ON: ESC + '-' + '\x01',
+    UNDERLINE_OFF: ESC + '-' + '\x00',
+    // Text alignment
+    ALIGN_LEFT: ESC + 'a' + '\x00',
+    ALIGN_CENTER: ESC + 'a' + '\x01',
+    ALIGN_RIGHT: ESC + 'a' + '\x02',
+    // Font sizes
+    FONT_SIZE_NORMAL: GS + '!' + '\x00',
+    FONT_SIZE_DOUBLE_HEIGHT: GS + '!' + '\x01',
+    FONT_SIZE_DOUBLE_WIDTH: GS + '!' + '\x10',
+    FONT_SIZE_DOUBLE: GS + '!' + '\x11',
+    // Line feeds
+    LF: '\n',
+    CR: '\r',
+    CRLF: '\r\n',
+    // Paper cutting
+    CUT_PAPER: GS + 'V' + '\x41' + '\x03',
+    // Drawer kick
+    DRAWER_KICK: ESC + 'p' + '\x00' + '\x19' + '\xfa',
+};
+
+// Helper function to pad string to specific width
+const padString = (str: string, width: number, padChar: string = ' '): string => {
+    if (str.length >= width) return str.substring(0, width);
+    return str + padChar.repeat(width - str.length);
+};
+
+// Helper function to create a line separator
+const createSeparatorLine = (char: string = '-', width: number = 32): string => {
+    return char.repeat(width);
+};
+
+// Helper function to split long text into multiple lines
+const wrapText = (text: string, maxWidth: number): string[] => {
+    if (text.length <= maxWidth) return [text];
+
+    const words = text.split(' ');
+    const lines: string[] = [];
+    let currentLine = '';
+
+    for (const word of words) {
+        if ((currentLine + ' ' + word).trim().length <= maxWidth) {
+            currentLine = currentLine ? currentLine + ' ' + word : word;
+        } else {
+            if (currentLine) {
+                lines.push(currentLine);
+                currentLine = word;
+            } else {
+                // Word is longer than max width, force break it
+                lines.push(word.substring(0, maxWidth));
+                currentLine = word.substring(maxWidth);
+            }
+        }
+    }
+    if (currentLine) {
+        lines.push(currentLine);
+    }
+
+    return lines;
+};
 
 interface CreateOrderDialogProps {
     open: boolean;
@@ -222,200 +313,178 @@ function CreateOrderDialogComponent({
         return orderItems.find(item => item.menu_item_id === itemId)?.quantity || 0;
     }, [orderItems]);
 
+    // Function to generate ESC/POS content for KOT
+    const generateKOTContent = (tokenNumber: string): string => {
+        const now = new Date();
+        const dateFormatted = now.toLocaleDateString('en-IN');
+        const timeFormatted = now.toLocaleTimeString('en-IN');
+        const orderTypeText = table_id ? 'Dine-in' : currentOrderType.charAt(0).toUpperCase() + currentOrderType.slice(1);
+
+        let receipt = '';
+
+        // Initialize printer
+        receipt += ESCPOS.INIT;
+
+        // Header with KOT title
+        receipt += ESCPOS.ALIGN_CENTER;
+        receipt += ESCPOS.FONT_SIZE_DOUBLE;
+        receipt += ESCPOS.BOLD_ON;
+        receipt += 'KITCHEN ORDER TICKET';
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.BOLD_OFF;
+        receipt += ESCPOS.FONT_SIZE_NORMAL;
+        receipt += `Date: ${dateFormatted} Time: ${timeFormatted}`;
+        receipt += ESCPOS.LF;
+
+        // Separator
+        receipt += ESCPOS.ALIGN_LEFT;
+        receipt += createSeparatorLine('=', 32);
+        receipt += ESCPOS.LF;
+
+        // KOT information
+        receipt += ESCPOS.BOLD_ON;
+        receipt += padString(`KOT No: ${tokenNumber.slice(-6)}`, 16) + padString(`Type: ${orderTypeText}`, 16);
+        receipt += ESCPOS.LF;
+        receipt += padString(`Table: ${table_id || 'N/A'}`, 16) + padString(`Server: ${user?.name || 'N/A'}`, 16);
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.BOLD_OFF;
+
+        // Token number for takeaway/quick-bill
+        if (!table_id) {
+            receipt += ESCPOS.ALIGN_CENTER;
+            receipt += ESCPOS.BOLD_ON;
+            receipt += ESCPOS.FONT_SIZE_DOUBLE_HEIGHT;
+            receipt += `TOKEN NO: ${tokenNumber}`;
+            receipt += ESCPOS.LF;
+            receipt += ESCPOS.FONT_SIZE_NORMAL;
+            receipt += ESCPOS.BOLD_OFF;
+            receipt += ESCPOS.ALIGN_LEFT;
+        }
+
+        // Separator
+        receipt += createSeparatorLine('-', 32);
+        receipt += ESCPOS.LF;
+
+        // Items header
+        receipt += ESCPOS.BOLD_ON;
+        receipt += padString('Item', 20) + padString('Qty', 4) + padString('Notes', 8);
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.BOLD_OFF;
+        receipt += createSeparatorLine('-', 32);
+        receipt += ESCPOS.LF;
+
+        // Order items
+        orderItems.forEach(item => {
+            const menuItem = menuItems.find(m => m.id === item.menu_item_id);
+            // Item name (wrap if too long)
+            const itemNameLines = wrapText(menuItem?.name || 'Unknown Item', 20);
+            itemNameLines.forEach((line, index) => {
+                if (index === 0) {
+                    // First line with quantity and notes
+                    receipt += padString(line, 20) +
+                        padString(item.quantity.toString(), 4) +
+                        padString(item.notes || '-', 8);
+                } else {
+                    // Continuation lines
+                    receipt += line;
+                }
+                receipt += ESCPOS.LF;
+            });
+        });
+
+        // Footer
+        receipt += ESCPOS.LF;
+        receipt += createSeparatorLine('=', 32);
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.ALIGN_CENTER;
+        receipt += '*** Kitchen Copy ***';
+        receipt += ESCPOS.LF;
+        receipt += ESCPOS.LF;
+
+        // Cut paper
+        receipt += ESCPOS.CUT_PAPER;
+
+        return receipt;
+    };
+
+    // Get printer configuration from store
+    const { printerConfig } = usePrinterStore();
+
+    // Create a ref to store the debounced function
+    const debouncedPrintKOTRef = useRef<any>(null);
+    
     // Function to print KOT (Kitchen Order Ticket)
-    const handlePrintKOT = useCallback(() => {
+    const handlePrintKOT = useCallback(async () => {
         // Check if we have items to print
         if (orderItems.length === 0) {
             toast.error('No items to print');
             return;
         }
 
-        // Create a new window for the KOT
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) {
-            toast.error('Please allow pop-ups to print the KOT');
-            return;
+        // Generate a token number
+        const tokenNumber = generateTokenNumber();
+
+        try {
+            // Print KOT using QZ Tray
+            try {
+                // Check if QZ Tray is available
+                if (typeof window.qz === 'undefined') {
+                    throw new Error('QZ Tray not available. Please ensure QZ Tray is installed and running.');
+                }
+
+                // Connect to QZ Tray if not already connected
+                if (!window.qz.websocket.isActive()) {
+                    await window.qz.websocket.connect();
+                }
+
+                // Get KOT printers from configuration
+                const kotPrinters = printerConfig?.kot_printers || [];
+                if (kotPrinters.length === 0) {
+                    throw new Error('No KOT printers configured. Please configure printers in settings.');
+                }
+
+                // Generate ESC/POS receipt content
+                const kotContent = generateKOTContent(tokenNumber);
+
+                // Print to all configured KOT printers
+                for (const printer of kotPrinters) {
+                    const config = window.qz.configs.create(printer);
+                    // Convert string to bytes for raw printing
+                    const data = [kotContent];
+                    await window.qz.print(config, data);
+                }
+
+                toast.success('KOT printed successfully');
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'Failed to print KOT';
+                toast.error(errorMessage);
+                console.error('Print error:', error);
+
+            }
+
+            toast.success('KOT generated successfully');
+        } catch (err) {
+            toast.error('Failed to generate KOT');
+            console.error('KOT error:', err);
         }
+    }, [orderItems, menuItems, table_id, user, currentOrderType]);
+    
+    // Create a debounced version of handlePrintKOT
+    useEffect(() => {
+        // Create a new debounced function when dependencies change
+        debouncedPrintKOTRef.current = debounce(handlePrintKOT, 500); // 500ms debounce time
+    }, [handlePrintKOT]);
+    
+    // Function to call the debounced version
+    const debouncedHandlePrintKOT = useCallback(() => {
+        if (debouncedPrintKOTRef.current) {
+            debouncedPrintKOTRef.current();
+        }
+    }, []);
 
-        // Get current date and time
-        const now = new Date();
-        const dateFormatted = now.toLocaleDateString();
-        const timeFormatted = now.toLocaleTimeString();
-
-        // Generate KOT HTML content
-        const kotContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Kitchen Order Ticket</title>
-        <style>
-          body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 20px;
-            max-width: 80mm; /* Standard receipt width */
-            margin: 0 auto;
-          }
-          .receipt {
-            border: 1px solid #ddd;
-            padding: 10px;
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 10px;
-            border-bottom: 1px dashed #ccc;
-            padding-bottom: 8px;
-          }
-          .restaurant-name {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 4px;
-          }
-          .restaurant-details {
-            font-size: 11px;
-            margin-bottom: 3px;
-            line-height: 1.2;
-          }
-          .bill-info {
-            margin-bottom: 12px;
-            font-size: 12px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: repeat(3, auto);
-            gap: 4px 8px;
-          }
-          .bill-info div {
-            margin-bottom: 2px;
-          }
-          .items-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 10px;
-            font-size: 11px;
-          }
-          .items-table th {
-            text-align: left;
-            padding: 3px 0;
-            border-bottom: 1px solid #ddd;
-          }
-          .items-table td {
-            padding: 3px 0;
-            border-bottom: 1px dashed #eee;
-          }
-          .amount-details {
-            margin-top: 8px;
-            font-size: 11px;
-          }
-          .amount-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 3px;
-          }
-          .total-amount {
-            font-weight: bold;
-            font-size: 13px;
-            margin-top: 4px;
-            border-top: 1px solid #ddd;
-            padding-top: 4px;
-          }
-          .footer {
-            margin-top: 12px;
-            text-align: center;
-            font-size: 11px;
-            border-top: 1px dashed #ccc;
-            padding-top: 8px;
-          }
-          .footer p {
-            margin: 2px 0;
-          }
-          @media print {
-            body {
-              width: 80mm;
-              margin: 0;
-              padding: 0;
-            }
-            .receipt {
-              border: none;
-            }
-            .no-print {
-              display: none;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="receipt">
-          <div class="header">
-            <div class="restaurant-name">KITCHEN ORDER TICKET</div>
-            <div class="restaurant-details">Date: ${dateFormatted} Time: ${timeFormatted}</div>
-          </div>
-
-          <div class="bill-info">
-            <div><strong>KOT No:</strong> ${Date.now().toString().slice(-6)}</div>
-            <div><strong>Table:</strong> ${table_id || 'N/A'}</div>
-            <div><strong>Server:</strong> ${user?.name || 'N/A'}</div>
-            <div><strong>Type:</strong> ${table_id ? 'Dine-in' : currentOrderType.charAt(0).toUpperCase() + currentOrderType.slice(1)}</div>
-          </div>
-
-          ${!table_id ? `
-          <div style="text-align: center; font-size: 16px; font-weight: bold; margin: 10px 0; padding: 5px; border: 2px dashed #000; border-radius: 5px;">
-            Token No: ${generateTokenNumber()}
-          </div>
-          ` : ''}
-
-          <table class="items-table">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Qty</th>
-                <th>Notes</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${orderItems.map(item => {
-            const menuItem = menuItems.find(m => m.id === item.menu_item_id);
-            return `
-                  <tr>
-                    <td>${menuItem?.name || 'Unknown Item'}</td>
-                    <td>${item.quantity}</td>
-                    <td>${item.notes || '-'}</td>
-                  </tr>
-                `;
-        }).join('')}
-            </tbody>
-          </table>
-
-          <div class="footer">
-            <p>*** Kitchen Copy ***</p>
-          </div>
-        </div>
-
-        <div class="no-print" style="text-align: center; margin-top: 20px;">
-          <button onclick="window.print();" style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            Print KOT
-          </button>
-          <button onclick="window.close();" style="padding: 10px 20px; background: #f44336; color: white; border: none; border-radius: 4px; margin-left: 10px; cursor: pointer;">
-            Close
-          </button>
-        </div>
-      </body>
-      </html>
-    `;
-
-        // Write the content to the new window
-        printWindow.document.open();
-        printWindow.document.write(kotContent);
-        printWindow.document.close();
-
-        // Trigger print when content is loaded
-        printWindow.onload = function () {
-            // Automatically print on load (optional)
-            // printWindow.print();
-        };
-
-        toast.success('KOT generated successfully');
-    }, [orderItems, menuItems, table_id, user, currentOrderType, generateTokenNumber]);
-
+    // Create a ref to store the debounced submit order function
+    const debouncedSubmitOrderRef = useRef<any>(null);
+    
     // Memoize submit order handler to prevent recreation on every render
     const handleSubmitOrder = useCallback(async () => {
         try {
@@ -491,6 +560,19 @@ function CreateOrderDialogComponent({
         currentOrderType,
         generateTokenNumber
     ]);
+    
+    // Create a debounced version of handleSubmitOrder
+    useEffect(() => {
+        // Create a new debounced function when dependencies change
+        debouncedSubmitOrderRef.current = debounce(handleSubmitOrder, 500); // 500ms debounce time
+    }, [handleSubmitOrder]);
+    
+    // Function to call the debounced version
+    const debouncedHandleSubmitOrder = useCallback(() => {
+        if (debouncedSubmitOrderRef.current) {
+            debouncedSubmitOrderRef.current();
+        }
+    }, []);
 
     // Memoize total amount calculation to prevent recalculation on every render
     const totalAmount = useMemo(() =>
@@ -859,7 +941,7 @@ function CreateOrderDialogComponent({
                                             </div>
                                             <Button
                                                 className="w-full justify-between py-4 text-base"
-                                                onClick={handlePrintKOT}
+                                                onClick={debouncedHandlePrintKOT}
                                                 disabled={orderItems.length === 0 || isSubmitting}
                                                 variant="outline"
                                             >
@@ -868,7 +950,7 @@ function CreateOrderDialogComponent({
                                             </Button>
                                             <Button
                                                 className="w-full justify-between py-4 text-base"
-                                                onClick={handleSubmitOrder}
+                                                onClick={debouncedHandleSubmitOrder}
                                                 disabled={orderItems.length === 0 || isSubmitting}
                                             >
                                                 {isSubmitting ? (

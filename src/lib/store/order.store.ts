@@ -4,6 +4,7 @@ import {orderService} from '@/lib/api/services/order.service';
 import {toast} from '@/lib/toast';
 import {useRestaurantStore} from './restaurant.store';
 import {useAuthStore} from './auth.store';
+import {deduplicateRequest, cacheApiResponse} from '@/lib/utils';
 
 // Default tax rates
 const DEFAULT_SGST_RATE = 2.5;
@@ -120,8 +121,19 @@ export const useOrderStore = create<OrderState>((set, get) => ({
                 return;
             }
 
-            // Fetch from API directly (no caching)
-            const orders = await orderService.getOrders(params);
+            // Generate a cache key based on the params and user
+            const cacheKey = `orders_${user.id}_${JSON.stringify(params || {})}`;
+            
+            // Use deduplication and caching to prevent duplicate API calls
+            const orders = await deduplicateRequest(
+                cacheKey,
+                () => cacheApiResponse(
+                    cacheKey,
+                    () => orderService.getOrders(params),
+                    // Cache for 30 seconds - adjust based on how frequently orders change
+                    30 * 1000
+                )
+            );
 
             // Filter orders based on user role
             let filteredOrders = orders;
@@ -142,7 +154,6 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
             set({orders: filteredOrders});
         } catch (error) {
-
             const errorMessage = 'Failed to fetch orders';
             set({error: errorMessage});
             toast.error(errorMessage);
@@ -176,12 +187,20 @@ export const useOrderStore = create<OrderState>((set, get) => ({
                 };
             }
 
-            const newOrder = await orderService.createOrder(order);
+            // Generate a unique key for this order creation request
+            // Using order properties that uniquely identify this order
+            const requestKey = `create_order_${order.order_type}_${order.staff_id}_${order.order_time}`;
+            
+            // Use deduplication to prevent duplicate API calls
+            const newOrder = await deduplicateRequest(
+                requestKey,
+                () => orderService.createOrder(order)
+            );
+            
             set(state => ({orders: [...state.orders, newOrder]}));
             toast.success('Order created successfully');
             return newOrder; // Explicitly return the created order
         } catch (err) {
-
             const errorMessage = 'Failed to add order';
             set({error: errorMessage});
             toast.error(errorMessage);
@@ -219,12 +238,24 @@ export const useOrderStore = create<OrderState>((set, get) => ({
                 }
             }
 
-            const updatedOrder = await orderService.updateOrder(id, updates);
+            // Generate a unique key for this update request
+            // Using order ID and a hash of the updates to uniquely identify this update
+            const updatesHash = JSON.stringify(updates);
+            const requestKey = `update_order_${id}_${updatesHash}`;
+            
+            // Use deduplication to prevent duplicate API calls
+            const updatedOrder = await deduplicateRequest(
+                requestKey,
+                () => orderService.updateOrder(id, updates)
+            );
+            
+            // Optimistically update the local state
             set(state => ({
                 orders: state.orders.map(order =>
-                    order.id === id ? updatedOrder : order
+                    order.id === id ? {...order, ...updatedOrder} : order
                 ),
             }));
+            
             toast.success('Order updated successfully');
         } catch (error) {
             console.error('Error updating order:', error);
@@ -248,8 +279,35 @@ export const useOrderStore = create<OrderState>((set, get) => ({
                 return;
             }
 
-            await get().updateOrder(id, {status});
+            // Generate a unique key for this status update request
+            const requestKey = `update_order_status_${id}_${status}`;
+            
+            // Optimistically update the local state before the API call completes
+            set(state => ({
+                orders: state.orders.map(order =>
+                    order.id === id ? {...order, status} : order
+                ),
+            }));
+            
+            // Use deduplication to prevent duplicate API calls
+            await deduplicateRequest(
+                requestKey,
+                () => orderService.updateOrder(id, {status})
+            );
+            
+            // No need to update state again as we've already done it optimistically
+            toast.success(`Order status updated to ${status}`);
         } catch (error) {
+            // Revert the optimistic update on error
+            const originalOrder = get().orders.find(o => o.id === id);
+            if (originalOrder) {
+                set(state => ({
+                    orders: state.orders.map(order =>
+                        order.id === id ? originalOrder : order
+                    ),
+                }));
+            }
+            
             console.error(`Error updating order status to ${status}:`, error);
             const errorMessage = `Failed to update order status to ${status}`;
             set({error: errorMessage});
@@ -310,16 +368,47 @@ export const useOrderStore = create<OrderState>((set, get) => ({
                     finalCgstRate
                 );
 
-            await get().updateOrder(orderId, {
+            // Create the updates object
+            const updates = {
                 items: updatedItems,
                 sub_total: subTotal,
                 sgst_amount: sgstAmount,
                 cgst_amount: cgstAmount,
                 total_amount: totalAmount
-            });
+            };
 
+            // Generate a unique key for this request
+            const itemsHash = JSON.stringify(newItems.map(item => ({
+                id: item.menu_item_id,
+                qty: item.quantity
+            })));
+            const requestKey = `add_items_to_order_${orderId}_${itemsHash}`;
+            
+            // Optimistically update the local state
+            set(state => ({
+                orders: state.orders.map(o => 
+                    o.id === orderId ? {...o, ...updates} : o
+                )
+            }));
+            
+            // Use deduplication to prevent duplicate API calls
+            await deduplicateRequest(
+                requestKey,
+                () => orderService.updateOrder(orderId, updates)
+            );
+            
             toast.success('Items added to order');
         } catch (error) {
+            // Revert the optimistic update on error
+            const originalOrder = get().orders.find(o => o.id === orderId);
+            if (originalOrder) {
+                set(state => ({
+                    orders: state.orders.map(o =>
+                        o.id === orderId ? originalOrder : o
+                    ),
+                }));
+            }
+            
             console.error('Error adding items to order:', error);
             const errorMessage = 'Failed to add items to order';
             set({error: errorMessage});
@@ -341,20 +430,18 @@ export const useOrderStore = create<OrderState>((set, get) => ({
                 return;
             }
 
-            // First update the item through the API
-            await orderService.updateOrderItem(orderId, itemId, updates);
-
-            // Then update the local state
+            // Get the current order
             const order = get().orders.find(o => o.id === orderId);
             if (!order) {
                 throw new Error('Order not found');
             }
 
+            // Create updated items array
             const updatedItems = order.items.map(item =>
                 item.id === itemId ? {...item, ...updates} : item
             );
 
-            // Get default tax rates
+            // Calculate new totals
             const {sgstRate, cgstRate} = getDefaultTaxRates();
             const finalSgstRate = order.sgst_rate ?? sgstRate;
             const finalCgstRate = order.cgst_rate ?? cgstRate;
@@ -366,14 +453,50 @@ export const useOrderStore = create<OrderState>((set, get) => ({
                     finalCgstRate
                 );
 
-            await get().updateOrder(orderId, {
+            // Create the full order updates object
+            const orderUpdates = {
                 items: updatedItems,
                 sub_total: subTotal,
                 sgst_amount: sgstAmount,
                 cgst_amount: cgstAmount,
                 total_amount: totalAmount
-            });
+            };
+
+            // Generate a unique key for this request
+            const updatesHash = JSON.stringify(updates);
+            const requestKey = `update_order_item_${orderId}_${itemId}_${updatesHash}`;
+            
+            // Optimistically update the local state
+            set(state => ({
+                orders: state.orders.map(o => 
+                    o.id === orderId ? {...o, ...orderUpdates} : o
+                )
+            }));
+            
+            // Use deduplication to prevent duplicate API calls for the item update
+            await deduplicateRequest(
+                requestKey,
+                async () => {
+                    // First update the item
+                    await orderService.updateOrderItem(orderId, itemId, updates);
+                    
+                    // Then update the order totals
+                    await orderService.updateOrder(orderId, orderUpdates);
+                }
+            );
+            
+            toast.success('Order item updated successfully');
         } catch (err) {
+            // Revert the optimistic update on error
+            const originalOrder = get().orders.find(o => o.id === orderId);
+            if (originalOrder) {
+                set(state => ({
+                    orders: state.orders.map(o =>
+                        o.id === orderId ? originalOrder : o
+                    ),
+                }));
+            }
+            
             const errorMessage = 'Failed to update order item';
             set({error: errorMessage});
             toast.error(errorMessage);
@@ -387,18 +510,16 @@ export const useOrderStore = create<OrderState>((set, get) => ({
         try {
             set({loading: true, error: null});
 
-            // First remove the item through the API
-            await orderService.removeOrderItem(orderId, itemId);
-
-            // Then update the local state
+            // Get the current order
             const order = get().orders.find(o => o.id === orderId);
             if (!order) {
                 throw new Error('Order not found');
             }
 
+            // Create updated items array (removing the specified item)
             const updatedItems = order.items.filter(item => item.id !== itemId);
 
-            // Get default tax rates
+            // Calculate new totals
             const {sgstRate, cgstRate} = getDefaultTaxRates();
             const finalSgstRate = order.sgst_rate ?? sgstRate;
             const finalCgstRate = order.cgst_rate ?? cgstRate;
@@ -410,17 +531,49 @@ export const useOrderStore = create<OrderState>((set, get) => ({
                     finalCgstRate
                 );
 
-            await get().updateOrder(orderId, {
+            // Create the full order updates object
+            const orderUpdates = {
                 items: updatedItems,
                 sub_total: subTotal,
                 sgst_amount: sgstAmount,
                 cgst_amount: cgstAmount,
                 total_amount: totalAmount
-            });
+            };
 
+            // Generate a unique key for this request
+            const requestKey = `remove_order_item_${orderId}_${itemId}`;
+            
+            // Optimistically update the local state
+            set(state => ({
+                orders: state.orders.map(o => 
+                    o.id === orderId ? {...o, ...orderUpdates} : o
+                )
+            }));
+            
+            // Use deduplication to prevent duplicate API calls
+            await deduplicateRequest(
+                requestKey,
+                async () => {
+                    // First remove the item
+                    await orderService.removeOrderItem(orderId, itemId);
+                    
+                    // Then update the order totals
+                    await orderService.updateOrder(orderId, orderUpdates);
+                }
+            );
+            
             toast.success('Item removed from order');
         } catch (err) {
-
+            // Revert the optimistic update on error
+            const originalOrder = get().orders.find(o => o.id === orderId);
+            if (originalOrder) {
+                set(state => ({
+                    orders: state.orders.map(o =>
+                        o.id === orderId ? originalOrder : o
+                    ),
+                }));
+            }
+            
             const errorMessage = 'Failed to remove order item';
             set({error: errorMessage});
             toast.error(errorMessage);

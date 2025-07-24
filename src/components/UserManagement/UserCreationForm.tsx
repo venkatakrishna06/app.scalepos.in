@@ -337,9 +337,6 @@ export default function UserCreationForm({initialData, onSuccess}: UserFormProps
                                                 ))}
                                             </SelectContent>
                                         </Select>
-                                        <FormDescription className="text-xs">
-                                            Role is auto-filled based on staff selection but can be changed
-                                        </FormDescription>
                                         <FormMessage/>
                                     </FormItem>
                                 )}
