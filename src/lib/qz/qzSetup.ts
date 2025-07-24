@@ -34,28 +34,11 @@ YJf2bd6nAOcZoU6WfqPFkMxvppNSRoq6M1RGMcTwBg==
 `);
     });
 
-    // Get the API base URL from environment variables
-    const apiBaseUrl = import.meta.env.VITE_API_URL || '';
-
-    // 2. Set signing function using your backend
+    // 2. Set signing function using your Go backend
     window.qz.security.setSignaturePromise(toSign => {
-        return fetch(`${apiBaseUrl}/sign`, {
+        return fetch("http://localhost:8080/sign", {
             method: "POST",
-            body: toSign,
-            headers: {
-                'Content-Type': 'text/plain'
-            }
-        }).then(res => {
-            if (!res.ok) {
-                throw new Error(`Signing request failed: ${res.status} ${res.statusText}`);
-            }
-            return res.text();
-        });
+            body: toSign
+        }).then(res => res.text());
     });
-
-    // // 3. Set up site promise to automatically trust the site
-    // window.qz.security.setSitePromise(site => {
-    //     // Always return true to automatically trust the site
-    //     return Promise.resolve(true);
-    // });
 };

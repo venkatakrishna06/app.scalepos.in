@@ -318,6 +318,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
                 total_amount: totalAmount
             });
 
+            toast.success('Items added to order');
         } catch (error) {
             console.error('Error adding items to order:', error);
             const errorMessage = 'Failed to add items to order';

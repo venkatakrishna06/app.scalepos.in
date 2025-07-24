@@ -15,7 +15,7 @@ import {
     X
 } from 'lucide-react';
 import {Button} from '@/components/ui/button';
-import {useMenuStore, useOrderStore, usePaymentStore, useRestaurantStore, usePrinterStore} from '@/lib/store';
+import {useMenuStore, useOrderStore, usePaymentStore, useRestaurantStore} from '@/lib/store';
 import {MenuItem, Order, OrderItem} from '@/types';
 import {cn} from '@/lib/utils';
 import {useAuthStore} from "@/lib/store/auth.store";
@@ -26,7 +26,6 @@ import {Card} from '@/components/ui/card';
 import {motion} from 'framer-motion';
 import {analyticsService} from '@/lib/api/services/analytics.service';
 import {MenuItemAnalytics} from '@/types/analytics';
-import {printingService} from '@/lib/services/printing.service';
 
 interface DashboardTakeawayProps {
     /** Optional callback when an order is created */
@@ -78,7 +77,6 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
     const {addPayment} = usePaymentStore();
     const {updateOrderStatus} = useOrder();
     const {restaurant} = useRestaurantStore();
-    const {printerConfig} = usePrinterStore();
 
     // Effect to set initial sidebar state based on screen size
     useEffect(() => {
@@ -278,28 +276,245 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
     const cashGivenNumber = cashGiven ? parseFloat(cashGiven) : 0;
     const changeAmount = cashGivenNumber > gstDetails.roundedAmount ? cashGivenNumber - gstDetails.roundedAmount : 0;
 
-    // Function to print bill using QZ Tray
-    const handlePrintBill = useCallback(async (order: Order) => {
-        try {
-            // Use the printing service to print the bill
-            const success = await printingService.printBill(order, restaurant);
-            
-            if (!success) {
-                // If printing failed but no error was thrown (handled by the service)
-                // We don't need to show another error message
-                return;
-            }
-            
-            // Success message is shown by the printing service
-        } catch (error) {
-            // Handle any unexpected errors not caught by the printing service
-            const errorMessage = error instanceof Error ? error.message : 'Failed to print bill';
-            toast.error(errorMessage);
-            console.error('Bill printing error:', error);
+    // Function to print bill
+    const handlePrintBill = useCallback((order: Order) => {
+        // Create a new window for the bill
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            toast.error('Please allow pop-ups to print the bill');
+            return;
         }
-    }, [restaurant]);
 
-    // Function to print KOT (Kitchen Order Ticket) using QZ Tray
+        // Get current date and time
+        const now = new Date();
+        const dateFormatted = now.toLocaleDateString();
+        const timeFormatted = now.toLocaleTimeString();
+
+        // Generate bill HTML content
+        const billContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Bill Receipt - Order #${order.id}</title>
+        <style>
+          body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            max-width: 80mm; /* Standard receipt width */
+            margin: 0 auto;
+          }
+          .receipt {
+            border: 1px solid #ddd;
+            padding: 10px;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #ccc;
+            padding-bottom: 8px;
+          }
+          .restaurant-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 4px;
+          }
+          .restaurant-details {
+            font-size: 11px;
+            margin-bottom: 3px;
+            line-height: 1.2;
+          }
+          .bill-info {
+            margin-bottom: 12px;
+            font-size: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: repeat(3, auto);
+            gap: 4px 8px;
+          }
+          .bill-info div {
+            margin-bottom: 2px;
+          }
+          .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            font-size: 11px;
+          }
+          .items-table th {
+            text-align: left;
+            padding: 3px 0;
+            border-bottom: 1px solid #ddd;
+          }
+          .items-table td {
+            padding: 3px 0;
+            border-bottom: 1px dashed #eee;
+          }
+          .amount-details {
+            margin-top: 8px;
+            font-size: 11px;
+          }
+          .amount-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+          }
+          .total-amount {
+            font-weight: bold;
+            font-size: 13px;
+            margin-top: 4px;
+            border-top: 1px solid #ddd;
+            padding-top: 4px;
+          }
+          .footer {
+            margin-top: 12px;
+            text-align: center;
+            font-size: 11px;
+            border-top: 1px dashed #ccc;
+            padding-top: 8px;
+          }
+          .footer p {
+            margin: 2px 0;
+          }
+          .token-no-center {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            background: #fff;
+            padding: 2px 10px;
+            border: 2px dashed #222;
+            border-radius: 6px;
+            letter-spacing: 2px;
+            display: block;
+            margin: 10px auto 8px auto;
+          }
+          @media print {
+            body {
+              width: 80mm;
+              margin: 0;
+              padding: 0;
+            }
+            .receipt {
+              border: none;
+            }
+            .no-print {
+              display: none;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="receipt">
+          <div class="header">
+            <div class="restaurant-name">${restaurant?.name || 'Restaurant Name'}</div>
+            <div class="restaurant-details">${restaurant?.address || 'Restaurant Address'}</div>
+            <div class="restaurant-details">Phone: ${restaurant?.phone || 'Phone Number'}</div>
+            <div class="restaurant-details">GST No: ${restaurant?.gst_number || 'GST Number'}</div>
+          </div>
+
+          <div class="bill-info">
+            <div><strong>Bill No:</strong> ${order.id}</div>
+            <div><strong>Date:</strong> ${dateFormatted}</div>
+            <div><strong>Time:</strong> ${timeFormatted}</div>
+            <div><strong>Type:</strong> ${order.order_type.charAt(0).toUpperCase() + order.order_type.slice(1)}</div>
+          </div>
+
+          ${
+            order.token_number
+                ? `<div class="token-no-center">Token No: ${order.token_number}</div>`
+                : ''
+        }
+
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${order.items
+            .filter(item => item.status !== 'cancelled')
+            .map(item => `
+                  <tr>
+                    <td>${item.name}</td>
+                    <td>${item.quantity}</td>
+                    <td>₹${item.price.toFixed(2)}</td>
+                    <td>₹${(item.quantity * item.price).toFixed(2)}</td>
+                  </tr>
+                `).join('')}
+            </tbody>
+          </table>
+
+          <div class="amount-details">
+            <div class="amount-row">
+              <span>Subtotal:</span>
+              <span>₹${order.sub_total.toFixed(2)}</span>
+            </div>
+
+            ${order.sgst_amount > 0 ? `
+            <div class="amount-row">
+              <span>SGST (${order.sgst_rate}%):</span>
+              <span>₹${order.sgst_amount.toFixed(2)}</span>
+            </div>
+            ` : ''}
+
+            ${order.cgst_amount > 0 ? `
+            <div class="amount-row">
+              <span>CGST (${order.cgst_rate}%):</span>
+              <span>₹${order.cgst_amount.toFixed(2)}</span>
+            </div>
+            ` : ''}
+
+            <div class="amount-row">
+              <span>Rounding Adjustment:</span>
+              <span>₹${(Math.ceil(order.total_amount) - order.total_amount).toFixed(2)}</span>
+            </div>
+
+            <div class="amount-row total-amount">
+              <span>Total Amount:</span>
+              <span>₹${Math.ceil(order.total_amount).toFixed(2)}</span>
+            </div>
+
+            <div class="amount-row" style="margin-top: 10px;">
+              <span>Payment Method:</span>
+              <span>${paymentMethod.toUpperCase()}</span>
+            </div>
+          </div>
+
+          <div class="footer">
+            <p>Thank you for your visit!</p>
+            <p>Please visit again</p>
+          </div>
+        </div>
+
+        <div class="no-print" style="text-align: center; margin-top: 20px;">
+          <button onclick="window.print();" style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            Print Bill
+          </button>
+          <button onclick="window.close();" style="padding: 10px 20px; background: #f44336; color: white; border: none; border-radius: 4px; margin-left: 10px; cursor: pointer;">
+            Close
+          </button>
+        </div>
+      </body>
+      </html>
+    `;
+
+        // Write the content to the new window
+        printWindow.document.open();
+        printWindow.document.write(billContent);
+        printWindow.document.close();
+
+        // Trigger print when content is loaded
+        printWindow.onload = function () {
+            // Automatically print on load (optional)
+            // printWindow.print();
+        };
+    }, [restaurant, paymentMethod]);
+
+    // Function to print KOT (Kitchen Order Ticket)
     const handlePrintKOT = useCallback(async () => {
         // Check if we have items to print
         if (orderItems.length === 0) {
@@ -318,25 +533,21 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
             setIsSubmitting(true);
             setError(null);
 
-            // Prepare order items with names from menuItems
-            const itemsWithNames = orderItems.map(item => {
-                const menuItem = menuItems.find(m => m.id === item.menu_item_id);
-                return {
-                    ...item,
-                    name: menuItem?.name || 'Unknown Item'
-                };
-            });
+            // First print the KOT
+            // Create a new window for the KOT
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                toast.error('Please allow pop-ups to print the KOT');
+                return;
+            }
+
+            // Get current date and time
+            const now = new Date();
+            const dateFormatted = now.toLocaleDateString();
+            const timeFormatted = now.toLocaleTimeString();
 
             // Generate a token number for the order
             const tokenNumber = `${type.charAt(0).toUpperCase()}${Date.now().toString().slice(-6)}`;
-
-            // Prepare order info for KOT
-            const orderInfo = {
-                table_id: undefined, // Takeaway/Quick Bill doesn't have a table
-                server: user?.name,
-                orderType: type.charAt(0).toUpperCase() + type.slice(1),
-                tokenNumber
-            };
 
             // Generate KOT HTML content
             const kotContent = `
