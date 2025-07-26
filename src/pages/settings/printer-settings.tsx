@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import {useEffect, useState, useRef} from 'react';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Button} from '@/components/ui/button';
 import {Loader2, Printer} from 'lucide-react';
@@ -6,6 +6,7 @@ import {usePrinterStore} from '@/lib/store';
 import {toast} from '@/lib/toast';
 import {Alert, AlertDescription} from '@/components/ui/alert';
 import {Label} from '@/components/ui/label';
+import {Checkbox} from '@/components/ui/checkbox';
 import {PrinterConfig} from '@/lib/api/services/printer.service';
 
 export default function PrinterSettings() {
@@ -31,6 +32,11 @@ export default function PrinterSettings() {
     const [billDropdownOpen, setBillDropdownOpen] = useState(false);
     const [kotDropdownOpen, setKotDropdownOpen] = useState(false);
     const [barDropdownOpen, setBarDropdownOpen] = useState(false);
+    
+    // Refs for dropdown containers
+    const billDropdownRef = useRef<HTMLDivElement>(null);
+    const kotDropdownRef = useRef<HTMLDivElement>(null);
+    const barDropdownRef = useRef<HTMLDivElement>(null);
 
     // Fetch printer config and available printers on component mount
     useEffect(() => {
@@ -46,6 +52,40 @@ export default function PrinterSettings() {
             setSelectedBarPrinters(printerConfig.bar_printers);
         }
     }, [printerConfig]);
+    
+    // Handle clicks outside the dropdowns
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            // Close bill dropdown if clicked outside
+            if (billDropdownRef.current && 
+                !billDropdownRef.current.contains(event.target as Node) && 
+                billDropdownOpen) {
+                setBillDropdownOpen(false);
+            }
+            
+            // Close kot dropdown if clicked outside
+            if (kotDropdownRef.current && 
+                !kotDropdownRef.current.contains(event.target as Node) && 
+                kotDropdownOpen) {
+                setKotDropdownOpen(false);
+            }
+            
+            // Close bar dropdown if clicked outside
+            if (barDropdownRef.current && 
+                !barDropdownRef.current.contains(event.target as Node) && 
+                barDropdownOpen) {
+                setBarDropdownOpen(false);
+            }
+        };
+        
+        // Add event listener
+        document.addEventListener('mousedown', handleClickOutside);
+        
+        // Clean up
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [billDropdownOpen, kotDropdownOpen, barDropdownOpen]);
 
     // Handle saving printer configuration
     const handleSave = async () => {
@@ -56,7 +96,7 @@ export default function PrinterSettings() {
                 bar_printers: selectedBarPrinters
             };
             await updatePrinterConfig(newConfig);
-        } catch (err) {
+        } catch (_err) {
             toast.error('Failed to save printer configuration');
         }
     };
@@ -64,8 +104,23 @@ export default function PrinterSettings() {
     // Handle test print for a specific printer type
     const handleTestPrint = async (printerType: 'bill' | 'kot' | 'bar') => {
         try {
-            await sendTestPrint(printerType);
-        } catch (err) {
+            // Get the current selection based on printer type
+            let currentSelection: string[] = [];
+            switch (printerType) {
+                case 'bill':
+                    currentSelection = selectedBillPrinters;
+                    break;
+                case 'kot':
+                    currentSelection = selectedKotPrinters;
+                    break;
+                case 'bar':
+                    currentSelection = selectedBarPrinters;
+                    break;
+            }
+            
+            // Pass the current selection to the sendTestPrint function
+            await sendTestPrint(printerType, currentSelection);
+        } catch (_err) {
             // Error is already handled in the store
         }
     };
@@ -150,7 +205,7 @@ export default function PrinterSettings() {
                                     Test Print
                                 </Button>
                             </div>
-                            <div className="relative">
+                            <div className="relative" ref={billDropdownRef}>
                                 <div 
                                     className="flex flex-wrap gap-1 p-2 border rounded-md cursor-pointer min-h-10"
                                     onClick={() => setBillDropdownOpen(!billDropdownOpen)}
@@ -171,12 +226,23 @@ export default function PrinterSettings() {
                                             availablePrinters.map(printer => (
                                                 <div 
                                                     key={printer}
-                                                    className={`px-3 py-2 cursor-pointer hover:bg-muted ${
+                                                    className={`px-3 py-2 cursor-pointer hover:bg-muted flex items-center space-x-2 ${
                                                         selectedBillPrinters.includes(printer) ? 'bg-primary/10' : ''
                                                     }`}
                                                     onClick={() => togglePrinter(printer, 'bill')}
                                                 >
-                                                    {printer}
+                                                    <Checkbox 
+                                                        id={`bill-printer-${printer}`}
+                                                        checked={selectedBillPrinters.includes(printer)}
+                                                        onCheckedChange={() => togglePrinter(printer, 'bill')}
+                                                        className="mr-2"
+                                                    />
+                                                    <label 
+                                                        htmlFor={`bill-printer-${printer}`}
+                                                        className="flex-1 cursor-pointer"
+                                                    >
+                                                        {printer}
+                                                    </label>
                                                 </div>
                                             ))
                                         ) : (
@@ -203,7 +269,7 @@ export default function PrinterSettings() {
                                     Test Print
                                 </Button>
                             </div>
-                            <div className="relative">
+                            <div className="relative" ref={kotDropdownRef}>
                                 <div 
                                     className="flex flex-wrap gap-1 p-2 border rounded-md cursor-pointer min-h-10"
                                     onClick={() => setKotDropdownOpen(!kotDropdownOpen)}
@@ -224,12 +290,23 @@ export default function PrinterSettings() {
                                             availablePrinters.map(printer => (
                                                 <div 
                                                     key={printer}
-                                                    className={`px-3 py-2 cursor-pointer hover:bg-muted ${
+                                                    className={`px-3 py-2 cursor-pointer hover:bg-muted flex items-center space-x-2 ${
                                                         selectedKotPrinters.includes(printer) ? 'bg-primary/10' : ''
                                                     }`}
                                                     onClick={() => togglePrinter(printer, 'kot')}
                                                 >
-                                                    {printer}
+                                                    <Checkbox 
+                                                        id={`kot-printer-${printer}`}
+                                                        checked={selectedKotPrinters.includes(printer)}
+                                                        onCheckedChange={() => togglePrinter(printer, 'kot')}
+                                                        className="mr-2"
+                                                    />
+                                                    <label 
+                                                        htmlFor={`kot-printer-${printer}`}
+                                                        className="flex-1 cursor-pointer"
+                                                    >
+                                                        {printer}
+                                                    </label>
                                                 </div>
                                             ))
                                         ) : (
@@ -256,7 +333,7 @@ export default function PrinterSettings() {
                                     Test Print
                                 </Button>
                             </div>
-                            <div className="relative">
+                            <div className="relative" ref={barDropdownRef}>
                                 <div 
                                     className="flex flex-wrap gap-1 p-2 border rounded-md cursor-pointer min-h-10"
                                     onClick={() => setBarDropdownOpen(!barDropdownOpen)}
@@ -277,12 +354,23 @@ export default function PrinterSettings() {
                                             availablePrinters.map(printer => (
                                                 <div 
                                                     key={printer}
-                                                    className={`px-3 py-2 cursor-pointer hover:bg-muted ${
+                                                    className={`px-3 py-2 cursor-pointer hover:bg-muted flex items-center space-x-2 ${
                                                         selectedBarPrinters.includes(printer) ? 'bg-primary/10' : ''
                                                     }`}
                                                     onClick={() => togglePrinter(printer, 'bar')}
                                                 >
-                                                    {printer}
+                                                    <Checkbox 
+                                                        id={`bar-printer-${printer}`}
+                                                        checked={selectedBarPrinters.includes(printer)}
+                                                        onCheckedChange={() => togglePrinter(printer, 'bar')}
+                                                        className="mr-2"
+                                                    />
+                                                    <label 
+                                                        htmlFor={`bar-printer-${printer}`}
+                                                        className="flex-1 cursor-pointer"
+                                                    >
+                                                        {printer}
+                                                    </label>
                                                 </div>
                                             ))
                                         ) : (

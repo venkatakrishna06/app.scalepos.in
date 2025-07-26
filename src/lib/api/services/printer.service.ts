@@ -84,49 +84,72 @@ export const printerService = {
      * @returns Promise that resolves when the print is complete
      */
     sendTestPrint: async (printers: string[], printerType: 'bill' | 'kot' | 'bar'): Promise<void> => {
-        try {
-            // Check if qz object is available
-            if (typeof window.qz === 'undefined') {
-                throw new Error('QZ Tray not available');
-            }
+        // Check if qz object is available
+        if (typeof window.qz === 'undefined') {
+            throw new Error('QZ Tray not available');
+        }
 
-            // Connect to QZ Tray if not already connected
-            if (!window.qz.websocket.isActive()) {
+        // Connect to QZ Tray if not already connected
+        if (!window.qz.websocket.isActive()) {
+            try {
                 await window.qz.websocket.connect();
+            } catch (error) {
+                console.error('Error connecting to QZ Tray:', error);
+                throw new Error('Failed to connect to QZ Tray');
             }
+        }
 
-            // Create test print content based on printer type
-            let testContent = '';
-            switch (printerType) {
-                case 'bill':
-                    testContent = 'TEST PRINT - BILL PRINTER\n\n' +
-                        'Restaurant: Test Restaurant\n' +
-                        'Date: ' + new Date().toLocaleString() + '\n\n' +
-                        'This is a test print for the bill printer.\n\n';
-                    break;
-                case 'kot':
-                    testContent = 'TEST PRINT - KOT PRINTER\n\n' +
-                        'Restaurant: Test Restaurant\n' +
-                        'Date: ' + new Date().toLocaleString() + '\n\n' +
-                        'This is a test print for the KOT printer.\n\n';
-                    break;
-                case 'bar':
-                    testContent = 'TEST PRINT - BAR PRINTER\n\n' +
-                        'Restaurant: Test Restaurant\n' +
-                        'Date: ' + new Date().toLocaleString() + '\n\n' +
-                        'This is a test print for the bar printer.\n\n';
-                    break;
-            }
+        // Create test print content based on printer type
+        let testContent = '';
+        switch (printerType) {
+            case 'bill':
+                testContent = 'TEST PRINT - BILL PRINTER\n\n' +
+                    'Restaurant: Test Restaurant\n' +
+                    'Date: ' + new Date().toLocaleString() + '\n\n' +
+                    'This is a test print for the bill printer.\n\n';
+                break;
+            case 'kot':
+                testContent = 'TEST PRINT - KOT PRINTER\n\n' +
+                    'Restaurant: Test Restaurant\n' +
+                    'Date: ' + new Date().toLocaleString() + '\n\n' +
+                    'This is a test print for the KOT printer.\n\n';
+                break;
+            case 'bar':
+                testContent = 'TEST PRINT - BAR PRINTER\n\n' +
+                    'Restaurant: Test Restaurant\n' +
+                    'Date: ' + new Date().toLocaleString() + '\n\n' +
+                    'This is a test print for the bar printer.\n\n';
+                break;
+        }
 
-            // Send test print to each printer
-            for (const printer of printers) {
+        // Track failed printers
+        const failedPrinters: { name: string; error: string }[] = [];
+        
+        // Send test print to each printer, continuing even if some fail
+        for (const printer of printers) {
+            try {
                 const config = window.qz.configs.create(printer);
                 const data = [testContent];
                 await window.qz.print(config, data);
+            } catch (error) {
+                console.error(`Error printing to ${printer}:`, error);
+                failedPrinters.push({ 
+                    name: printer, 
+                    error: error instanceof Error ? error.message : 'Unknown error' 
+                });
+                // Continue with next printer instead of stopping
             }
-        } catch (error) {
-            console.error('Error sending test print:', error);
-            throw error;
+        }
+        
+        // If any printers failed, throw an error with details
+        if (failedPrinters.length > 0) {
+            if (failedPrinters.length === printers.length) {
+                // All printers failed
+                throw new Error(`Failed to print to all printers: ${failedPrinters.map(p => p.name).join(', ')}`);
+            } else {
+                // Some printers failed, but others succeeded
+                throw new Error(`Printed successfully to some printers, but failed for: ${failedPrinters.map(p => p.name).join(', ')}`);
+            }
         }
     }
 };

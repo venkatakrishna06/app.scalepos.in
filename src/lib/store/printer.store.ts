@@ -17,7 +17,7 @@ interface PrinterState {
     fetchPrinterConfig: () => Promise<void>;
     fetchAvailablePrinters: () => Promise<void>;
     updatePrinterConfig: (config: PrinterConfig) => Promise<void>;
-    sendTestPrint: (printerType: 'bill' | 'kot' | 'bar') => Promise<void>;
+    sendTestPrint: (printerType: 'bill' | 'kot' | 'bar', customPrinters?: string[]) => Promise<void>;
 }
 
 /**
@@ -94,28 +94,35 @@ export const usePrinterStore = create<PrinterState>((set, get) => ({
     /**
      * Send a test print to the selected printers of the specified type
      * @param printerType The type of printer to test (bill, kot, or bar)
+     * @param customPrinters Optional custom list of printers to use instead of the saved configuration
      */
-    sendTestPrint: async (printerType: 'bill' | 'kot' | 'bar') => {
+    sendTestPrint: async (printerType: 'bill' | 'kot' | 'bar', customPrinters?: string[]) => {
         try {
             set({testingPrint: true, error: null});
-            const {printerConfig} = get();
             
-            if (!printerConfig) {
-                debugger;
-                throw new Error('No printer configuration found');
-            }
-
             let printers: string[] = [];
-            switch (printerType) {
-                case 'bill':
-                    printers = printerConfig.bill_printers;
-                    break;
-                case 'kot':
-                    printers = printerConfig.kot_printers;
-                    break;
-                case 'bar':
-                    printers = printerConfig.bar_printers;
-                    break;
+            
+            // Use custom printers if provided, otherwise use the saved configuration
+            if (customPrinters) {
+                printers = customPrinters;
+            } else {
+                const {printerConfig} = get();
+                
+                if (!printerConfig) {
+                    throw new Error('No printer configuration found');
+                }
+
+                switch (printerType) {
+                    case 'bill':
+                        printers = printerConfig.bill_printers;
+                        break;
+                    case 'kot':
+                        printers = printerConfig.kot_printers;
+                        break;
+                    case 'bar':
+                        printers = printerConfig.bar_printers;
+                        break;
+                }
             }
 
             if (printers.length === 0) {
