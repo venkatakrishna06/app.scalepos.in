@@ -1,0 +1,16 @@
+            KITCHEN ORDER TICKET
+       Date: 2025-07-27 Time: 14:30:45
+================================
+KOT No: 001001          Type: Dine-in
+Table: 5                Server: John Doe
+--------------------------------
+
+Item                    Qty  Notes
+--------------------------------
+Butter Chicken          2    Extra spicy
+Garlic Naan             4    -
+Jeera Rice              1    Less oil
+Paneer Tikka            1    -
+================================
+
+           *** Kitchen Copy ***

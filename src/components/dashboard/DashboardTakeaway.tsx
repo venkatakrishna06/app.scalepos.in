@@ -851,6 +851,17 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
                 total_amount: gstDetails.totalAmount
             };
 
+            // Print KOT slip before creating the order
+            try {
+                // Print KOT automatically
+                handlePrintKOT();
+                toast.success('KOT printed successfully');
+            } catch (printError) {
+                // Log the error but continue with order creation
+                console.error('KOT printing error:', printError);
+                toast.error('Failed to print KOT, but order will still be created');
+            }
+
             // Create the order
             const createdOrder = await orderService.createOrder(newOrder);
 
@@ -873,7 +884,14 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
             });
 
             // Print the bill
-            handlePrintBill(createdOrder);
+            try {
+                handlePrintBill(createdOrder);
+                toast.success('Bill printed successfully');
+            } catch (printError) {
+                // Log the error but continue with order processing
+                console.error('Bill printing error:', printError);
+                toast.error('Failed to print bill, but order was created successfully');
+            }
 
             toast.success('Order placed and payment completed successfully');
 
@@ -1385,15 +1403,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
                                 )}
 
                                 {/* Action buttons in a single row */}
-                                <div className="grid grid-cols-2 gap-2">
-                                    <Button
-                                        className="justify-center py-3 text-sm h-auto"
-                                        onClick={debouncedHandlePrintKOT}
-                                        disabled={orderItems.length === 0 || isSubmitting}
-                                        variant="outline"
-                                    >
-                                        Print KOT
-                                    </Button>
+                                <div className="grid grid-cols-1 gap-2">
                                     <Button
                                         className="justify-center py-3 text-sm h-auto"
                                         onClick={debouncedHandlePlaceOrder}

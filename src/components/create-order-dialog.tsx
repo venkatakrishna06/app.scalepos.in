@@ -415,14 +415,14 @@ function CreateOrderDialogComponent({
     
     // Function to print KOT (Kitchen Order Ticket)
     const handlePrintKOT = useCallback(async () => {
+        // Generate a token number regardless of whether we print or not
+        const tokenNumber = generateTokenNumber();
+
         // Check if we have items to print
         if (orderItems.length === 0) {
-            toast.error('No items to print');
-            return;
+            console.warn('No items to print for KOT');
+            return tokenNumber;
         }
-
-        // Generate a token number
-        const tokenNumber = generateTokenNumber();
 
         try {
             // Print KOT using QZ Tray
@@ -457,16 +457,18 @@ function CreateOrderDialogComponent({
                 toast.success('KOT printed successfully');
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : 'Failed to print KOT';
-                toast.error(errorMessage);
                 console.error('Print error:', error);
-
+                // Show error but continue execution
+                toast.error(errorMessage);
             }
-
-            toast.success('KOT generated successfully');
         } catch (err) {
-            toast.error('Failed to generate KOT');
             console.error('KOT error:', err);
+            // Show error but continue execution
+            toast.error('Failed to generate KOT');
         }
+
+        // Return the token number regardless of whether printing succeeded
+        return tokenNumber;
     }, [orderItems, menuItems, table_id, user, currentOrderType]);
     
     // Create a debounced version of handlePrintKOT
@@ -525,11 +527,20 @@ function CreateOrderDialogComponent({
                 };
                 await addOrder(newOrder);
 
-                // Automatically print KOT for takeaway and quick-bill orders
-                if (!table_id && (currentOrderType === 'takeaway' || currentOrderType === 'quick-bill')) {
+                // Automatically print KOT for all order types
+                try {
                     // Print KOT automatically
                     handlePrintKOT();
-                    toast.success(`${currentOrderType === 'takeaway' ? 'Takeaway' : 'Quick Bill'} order created with token: ${newOrder.token_number}`);
+                    
+                    if (!table_id) {
+                        toast.success(`${currentOrderType === 'takeaway' ? 'Takeaway' : 'Quick Bill'} order created with token: ${newOrder.token_number}`);
+                    } else {
+                        toast.success('Dine-in order created successfully');
+                    }
+                } catch (printError) {
+                    // Log the error but continue with order creation
+                    console.error('KOT printing error:', printError);
+                    toast.error('Failed to print KOT, but order was created successfully');
                 }
             }
 
@@ -939,15 +950,6 @@ function CreateOrderDialogComponent({
                                                 <span
                                                     className="text-lg font-semibold text-primary">₹{totalAmount.toFixed(2)}</span>
                                             </div>
-                                            <Button
-                                                className="w-full justify-between py-4 text-base"
-                                                onClick={debouncedHandlePrintKOT}
-                                                disabled={orderItems.length === 0 || isSubmitting}
-                                                variant="outline"
-                                            >
-                                                <span>Kitchen Order Ticket (KOT)</span>
-                                                <ChevronRight className="h-5 w-5"/>
-                                            </Button>
                                             <Button
                                                 className="w-full justify-between py-4 text-base"
                                                 onClick={debouncedHandleSubmitOrder}

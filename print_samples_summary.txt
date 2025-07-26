@@ -1,0 +1,63 @@
+# ScalePOS Print Samples Summary
+
+This document provides an overview of the different types of printed documents in the ScalePOS system.
+
+## Types of Printed Documents
+
+### 1. Kitchen Order Tickets (KOT)
+
+KOT slips are printed and sent to the kitchen when an order is placed. They contain:
+- Order details (date, time, KOT number)
+- Order type (Dine-in, Takeaway, or Quick Bill)
+- Table information (table number for dine-in, or "Takeaway"/"Quick Bill" for those types)
+- Server name
+- Token number (for Takeaway and Quick Bill orders)
+- List of items with quantities and special notes/instructions
+
+Key differences between KOT types:
+- Dine-in KOTs include table number but no token number
+- Takeaway KOTs include "T" prefixed token number
+- Quick Bill KOTs include "Q" prefixed token number
+
+### 2. Invoices/Bills
+
+Invoices are printed for the customer when payment is processed. They contain:
+- Restaurant details (name, address, phone, GST number)
+- Bill information (number, date, time, type)
+- Table and server information (for dine-in orders)
+- Token number (for Takeaway and Quick Bill orders)
+- Itemized list with quantities, rates, and amounts
+- Subtotal, tax details (SGST and CGST), and rounding adjustment
+- Total amount
+- Payment method and details (cash given and change for cash payments)
+- Thank you message
+
+Key differences between invoice types:
+- Dine-in invoices include table and server information but no token number
+- Takeaway invoices include "T" prefixed token number
+- Quick Bill invoices include "Q" prefixed token number
+
+## Printing Workflow
+
+### Dine-in Orders:
+1. When "Place Order" is clicked, the KOT slip is printed in the configured KOT printers
+2. When payment is processed, the invoice is printed in the configured bill printers
+
+### Takeaway Orders:
+1. When "Place Order" is clicked:
+   - KOT slip is printed in the configured KOT printers
+   - Invoice is printed in the configured bill printers
+
+### Quick Bill Orders:
+1. When "Place Order" is clicked:
+   - KOT slip with token number is printed in the configured KOT printers
+   - Invoice with token number is printed in the configured bill printers
+
+## Error Handling
+
+The system is designed to continue processing orders even if printing fails. If a printer is unavailable or there's an issue with printing:
+- The order is still created and processed
+- Error messages are displayed to the user
+- The system continues to function normally
+
+This ensures that business operations can continue even if there are temporary issues with printers.
