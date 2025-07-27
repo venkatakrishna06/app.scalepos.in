@@ -393,6 +393,9 @@ class WebSocketService {
             // Update cache
             cacheService.setCache(CACHE_KEYS.MENU_ITEMS, menuItems);
 
+            // Invalidate React Query cache for menu items
+            queryClient.invalidateQueries({queryKey: ['menu', 'items']});
+
             // Add notification
             useNotificationStore.getState().addNotification({
                 type: 'menu_item_update',
@@ -417,6 +420,9 @@ class WebSocketService {
                 // Update cache
                 cacheService.setCache(CACHE_KEYS.MENU_ITEMS, updatedMenuItems);
 
+                // Invalidate React Query cache for menu items
+                queryClient.invalidateQueries({queryKey: ['menu', 'items']});
+
                 // Add notification
                 useNotificationStore.getState().addNotification({
                     type: 'menu_item_update',
@@ -440,6 +446,9 @@ class WebSocketService {
 
                 // Update cache
                 cacheService.setCache(CACHE_KEYS.MENU_ITEMS, newMenuItems);
+
+                // Invalidate React Query cache for menu items
+                queryClient.invalidateQueries({queryKey: ['menu', 'items']});
 
                 // Add notification
                 useNotificationStore.getState().addNotification({
