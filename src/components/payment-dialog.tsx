@@ -368,7 +368,7 @@ export function PaymentDialog({open, onClose, order, draftOrder, onPaymentComple
                 await window.qz.print(config, data);
             }
 
-            showToast('success', 'Bill printed successfully');
+
             return orderForBill;
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Failed to print bill';

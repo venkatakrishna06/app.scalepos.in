@@ -14,17 +14,18 @@ import {
     Star,
     X
 } from 'lucide-react';
+import { TakeawaySkeleton } from '@/components/skeletons/takeaway-skeleton';
 import {Button} from '@/components/ui/button';
 import {useMenuStore, useOrderStore, usePaymentStore, useRestaurantStore, usePrinterStore} from '@/lib/store';
 import {MenuItem, Order, OrderItem} from '@/types';
 import {cn, debounce} from '@/lib/utils';
 import {useAuthStore} from "@/lib/store/auth.store";
+import {useMenuAnalyticsStore} from "@/lib/store/menuAnalytics.store";
 import {useOrder} from '@/lib/hooks/useOrder';
 import {orderService} from "@/lib/api/services";
 import {toast} from '@/lib/toast';
 import {Card} from '@/components/ui/card';
 import {motion} from 'framer-motion';
-import {analyticsService} from '@/lib/api/services/analytics.service';
 import {MenuItemAnalytics} from '@/types/analytics';
 
 // ESC/POS command constants
@@ -137,6 +138,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
     const [error, setError] = useState<string | null>(null);
     const [favouriteItems, setFavouriteItems] = useState<MenuItemAnalytics[]>([]);
     const [isLoadingFavourites, setIsLoadingFavourites] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     // Note editing state
     const [editingItemId, setEditingItemId] = useState<number | null>(null);
@@ -171,20 +173,19 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
         return () => window.removeEventListener('resize', checkIfMobile);
     }, []);
 
+    // Get favorites from the analytics store with caching
+    const { getFavoriteItems, isLoading: isLoadingAnalytics } = useMenuAnalyticsStore();
+    
     // Effect to fetch most ordered items when page loads
     useEffect(() => {
         const fetchFavouriteItems = async () => {
             try {
                 setIsLoadingFavourites(true);
-                // Fetch the most ordered items, limit to 10, sort by quantity_sold in descending order
-                const params = {
-                    limit: 10,
-                    sort_by: 'quantity_sold',
-                    order: 'desc' as const
-                };
-                const menuItemAnalytics = await analyticsService.getMenuItemAnalytics(params);
+                // Use the store to get favorites (with caching)
+                const menuItemAnalytics = await getFavoriteItems();
                 setFavouriteItems(menuItemAnalytics);
-            } catch {
+            } catch (error) {
+                console.error('Failed to load favourite items:', error);
                 toast.error('Failed to load favourite items');
             } finally {
                 setIsLoadingFavourites(false);
@@ -192,7 +193,14 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
         };
 
         fetchFavouriteItems();
-    }, []);
+    }, [getFavoriteItems]);
+
+    // Effect to set loading state to false when data is available
+    useEffect(() => {
+        if (menuItems.length > 0){
+                setIsLoading(false);
+        }
+    }, [menuItems]);
 
     // Group categories by parent/child relationship
     const mainCategories = useMemo(() =>
@@ -260,6 +268,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
     const handleQuantityChange = useCallback((item: MenuItem, delta: number) => {
         // Don't allow adding unavailable items
         if (!item.available && delta > 0) {
+            toast.error("This item is currently unavailable");
             return;
         }
 
@@ -694,9 +703,9 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
 
                 // Get KOT printers from configuration
                 const kotPrinters = printerConfig?.kot_printers || [];
-                if (kotPrinters.length === 0) {
-                    throw new Error('No KOT printers configured. Please configure printers in settings.');
-                }
+                // if (kotPrinters.length === 0) {
+                //     throw new Error('No KOT printers configured. Please configure printers in settings.');
+                // }
 
                 // Generate ESC/POS receipt content
                 const kotContent = generateKOTContent(tokenNumber);
@@ -708,8 +717,6 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
                     const data = [kotContent];
                     await window.qz.print(config, data);
                 }
-
-                toast.success('KOT printed successfully');
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : 'Failed to print KOT';
                 toast.error(errorMessage);
@@ -855,7 +862,6 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
             try {
                 // Print KOT automatically
                 handlePrintKOT();
-                toast.success('KOT printed successfully');
             } catch (printError) {
                 // Log the error but continue with order creation
                 console.error('KOT printing error:', printError);
@@ -886,7 +892,6 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
             // Print the bill
             try {
                 handlePrintBill(createdOrder);
-                toast.success('Bill printed successfully');
             } catch (printError) {
                 // Log the error but continue with order processing
                 console.error('Bill printing error:', printError);
@@ -929,6 +934,11 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
             debouncedPlaceOrderRef.current();
         }
     }, []);
+
+    // Show skeleton loading when data is being loaded
+    if (isLoading) {
+        return <TakeawaySkeleton type={type as 'takeaway' | 'quick-bill'} />;
+    }
 
     return (
         <div className="flex h-[calc(100vh-8rem)] flex-col md:flex-row gap-1">
@@ -1014,7 +1024,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
                         <Star className="h-4 w-4 mr-2"/>
                         Favourites
                         {isLoadingFavourites && (
-                            <Loader2 className="h-3 w-3 ml-2 animate-spin"/>
+                            <TakeawaySkeleton></TakeawaySkeleton>
                         )}
                     </button>
                 </div>
@@ -1124,9 +1134,17 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
                             {filteredItems.length > 0 ? filteredItems.map(item => (
                                 <Card
                                     key={item.id}
-                                    className={`overflow-hidden ${item.available ? 'cursor-pointer hover:bg-accent/50' : 'cursor-not-allowed opacity-75'} transition-colors border-primary/10`}
+                                    className={`relative overflow-hidden ${item.available ? 'cursor-pointer hover:bg-accent/50' : 'cursor-not-allowed opacity-75'} transition-colors border-primary/10`}
                                     onClick={() => handleQuantityChange(item, 1)}
                                 >
+                                    {!item.available && (
+                                        <div className="absolute -top-1 -right-1 z-10">
+                                            <div
+                                                className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md shadow-sm">
+                                                Unavailable
+                                            </div>
+                                        </div>
+                                    )}
                                     <div className="p-2 sm:p-3">
                                         <div className="min-w-0">
                                             <h3 className="font-medium leading-tight text-sm line-clamp-2">{item.name}</h3>

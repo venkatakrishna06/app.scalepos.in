@@ -1,6 +1,6 @@
 import {Navigate, useLocation, useNavigate} from 'react-router-dom';
 import {useAuthStore} from '@/lib/store/auth.store';
-import {useEffect, useRef} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {tokenService} from '@/lib/services/token.service';
 import {authService} from '@/lib/api/services/auth.service';
 
@@ -13,18 +13,39 @@ export function AuthGuard({children}: AuthGuardProps) {
     const location = useLocation();
     const navigate = useNavigate();
     const refreshTimerRef = useRef<number | null>(null);
+    const [refreshAttempts, setRefreshAttempts] = useState(0);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const MAX_REFRESH_ATTEMPTS = 3;
+    const RETRY_DELAY = 5000; // 5 seconds
 
     useEffect(() => {
         // Function to refresh token
         const refreshToken = async () => {
             if (!token) return;
-
+            
+            // If already refreshing, don't start another refresh
+            if (isRefreshing) return;
+            
+            setIsRefreshing(true);
+            
             try {
                 // Only attempt to refresh if we have a valid token and refresh token
                 if (tokenService.isTokenValid() && tokenService.getRefreshToken()) {
+                    
+                    // Set a timeout to prevent hanging indefinitely
+                    const timeoutPromise = new Promise((_, reject) => {
+                        setTimeout(() => reject(new Error('Token refresh timeout')), 15000); // 15 seconds timeout
+                    });
+                    
+                    // Race between the refresh request and the timeout
+                    const response = await Promise.race([
+                        authService.refreshToken(),
+                        timeoutPromise
+                    ]) as { token: string; refreshToken?: string };
 
-                    const response = await authService.refreshToken();
-
+                    // Reset refresh attempts on success
+                    setRefreshAttempts(0);
+                    
                     // Update tokens in storage and state
                     tokenService.setToken(response.token);
                     if (response.refreshToken) {
@@ -38,13 +59,30 @@ export function AuthGuard({children}: AuthGuardProps) {
 
                     // Schedule next refresh
                     scheduleTokenRefresh();
-
                 }
             } catch (error) {
-
-                // If refresh fails, log the user out
-                await logout();
-                navigate('/login', {state: {from: location}, replace: true});
+                console.error('Token refresh error:', error);
+                
+                // Check if we should retry
+                if (refreshAttempts < MAX_REFRESH_ATTEMPTS) {
+                    // Increment attempts and retry after delay
+                    setRefreshAttempts(prev => prev + 1);
+                    
+                    // Schedule retry
+                    window.setTimeout(() => {
+                        setIsRefreshing(false);
+                        refreshToken();
+                    }, RETRY_DELAY);
+                } else {
+                    // If all retries fail, log the user out
+                    await logout();
+                    navigate('/login', {state: {from: location}, replace: true});
+                }
+            } finally {
+                // Only set isRefreshing to false if we're not scheduling a retry
+                if (refreshAttempts >= MAX_REFRESH_ATTEMPTS) {
+                    setIsRefreshing(false);
+                }
             }
         };
 
@@ -75,10 +113,8 @@ export function AuthGuard({children}: AuthGuardProps) {
         };
 
         // Initialize token refresh schedule if authenticated
-        if (isAuthenticated && token) {
+        if (isAuthenticated) {
             scheduleTokenRefresh();
-        } else {
-
         }
 
         // Cleanup function

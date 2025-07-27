@@ -44,7 +44,6 @@ export const useOrdersData = (params?: {
         onSuccess: (newOrder) => {
             queryClient.invalidateQueries({queryKey: ['orders']});
             setSelectedOrderId(newOrder.id);
-            toast.success('Order created successfully');
         },
         onError: (error) => {
             toast.error('Failed to create order', {

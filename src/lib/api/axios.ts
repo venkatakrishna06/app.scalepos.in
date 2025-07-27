@@ -7,6 +7,10 @@ import {createApiClient} from './apiClient';
 let isRefreshing = false;
 // Queue of requests to be executed after token refresh
 let refreshSubscribers: Array<(token: string) => void> = [];
+// Track refresh token attempts
+let refreshAttempts = 0;
+const MAX_REFRESH_ATTEMPTS = 3;
+const RETRY_DELAY = 5000; // 5 seconds
 
 // Create API client with enhanced error handling and request cancellation
 export const api = createApiClient({
@@ -92,9 +96,19 @@ api.interceptors.response.use(
                     throw new Error('No refresh token available');
                 }
 
-                // Try to refresh the token using authService
+                // Set a timeout to prevent hanging indefinitely
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('Token refresh timeout')), 15000); // 15 seconds timeout
+                });
+                
+                // Try to refresh the token using authService with timeout
+                const response = await Promise.race([
+                    authService.refreshToken(),
+                    timeoutPromise
+                ]) as { token: string; refreshToken?: string };
 
-                const response = await authService.refreshToken();
+                // Reset refresh attempts on success
+                refreshAttempts = 0;
 
                 // Extract token and refreshToken from response data
                 const token = response.token;
@@ -115,18 +129,41 @@ api.interceptors.response.use(
                 // Retry the original request
                 return api(originalRequest);
             } catch (refreshError) {
-                // If refresh fails, clear tokens and redirect to login
-                tokenService.clearTokens();
-                refreshSubscribers = []; // Clear the queue
+                console.error('Token refresh error in axios interceptor:', refreshError);
+                
+                // Check if we should retry
+                if (refreshAttempts < MAX_REFRESH_ATTEMPTS) {
+                    // Increment attempts
+                    refreshAttempts++;
+                    
+                    // Reset refreshing flag to allow another attempt
+                    isRefreshing = false;
+                    
+                    // Schedule retry after delay
+                    return new Promise(resolve => {
+                        setTimeout(() => {
+                            // Retry the original request
+                            resolve(api(originalRequest));
+                        }, RETRY_DELAY);
+                    });
+                } else {
+                    // If all retries fail, clear tokens and redirect to login
+                    tokenService.clearTokens();
+                    refreshSubscribers = []; // Clear the queue
+                    refreshAttempts = 0; // Reset attempts for next session
 
-                // Show error toast for authentication failure
-                showToast('error', 'Your session has expired. Please log in again.');
+                    // Show error toast for authentication failure
+                    showToast('error', 'Your session has expired. Please log in again.');
 
-                // Redirect to login page
-                window.location.href = '/login';
-                return Promise.reject(refreshError);
+                    // Redirect to login page
+                    window.location.href = '/login';
+                    return Promise.reject(refreshError);
+                }
             } finally {
-                isRefreshing = false;
+                // Only reset isRefreshing if we're not retrying
+                if (refreshAttempts >= MAX_REFRESH_ATTEMPTS) {
+                    isRefreshing = false;
+                }
             }
         }
         // Handle other error types (400, 500, etc.)

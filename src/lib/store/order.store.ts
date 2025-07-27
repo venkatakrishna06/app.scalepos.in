@@ -198,7 +198,6 @@ export const useOrderStore = create<OrderState>((set, get) => ({
             );
             
             set(state => ({orders: [...state.orders, newOrder]}));
-            toast.success('Order created successfully');
             return newOrder; // Explicitly return the created order
         } catch (err) {
             const errorMessage = 'Failed to add order';

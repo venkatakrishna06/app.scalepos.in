@@ -97,7 +97,7 @@ export default function Sidebar({closeSidebar}: SidebarProps) {
             <div className="py-2 px-4">
                 {/* Restaurant logo or name could go here */}
                 <div className="mb-6 px-2">
-                    <h2 className="text-lg font-semibold text-foreground">Quick Quick</h2>
+                    <h2 className="text-lg font-semibold text-foreground">ScalePOS</h2>
                     <p className="text-xs text-muted-foreground">Restaurant Management</p>
                 </div>
 

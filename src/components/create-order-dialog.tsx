@@ -18,8 +18,9 @@ import {useMenuStore, useOrderStore, usePrinterStore} from '@/lib/store';
 import {MenuItem, Order, OrderItem} from '@/types';
 import {toast} from '@/lib/toast';
 import {useAuthStore} from "@/lib/store/auth.store.ts";
+import {useOrderUIStore} from "@/lib/store/orderUI.store";
+import {useMenuAnalyticsStore} from "@/lib/store/menuAnalytics.store";
 import {cn, generateTokenNumber, debounce} from '@/lib/utils';
-import {analyticsService} from '@/lib/api/services/analytics.service';
 import {MenuItemAnalytics} from '@/types/analytics';
 
 // Add QZ Tray type definitions
@@ -133,10 +134,22 @@ function CreateOrderDialogComponent({
     const {addOrder, addItemsToOrder} = useOrderStore();
     const {menuItems, categories} = useMenuStore();
     const {user} = useAuthStore();
+    const {
+        processingOrderItems, 
+        processingOrderType, 
+        processingTableId, 
+        processingOrderError,
+        setProcessingOrder,
+        clearProcessingOrder,
+        setProcessingOrderError
+    } = useOrderUIStore();
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [orderItems, setOrderItems] = useState<OrderItem[]>(
-        existingOrder?.items || []
+        // If we have processing items and there was an error, use those
+        (processingOrderError && processingOrderItems && processingTableId === table_id) 
+            ? processingOrderItems 
+            : existingOrder?.items || []
     );
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [favouriteItems, setFavouriteItems] = useState<MenuItemAnalytics[]>([]);
@@ -148,7 +161,10 @@ function CreateOrderDialogComponent({
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [currentOrderType, setCurrentOrderType] = useState<'dine-in' | 'takeaway' | 'quick-bill'>(
-        table_id ? 'dine-in' : orderType || 'takeaway'
+        // If we have processing order type and there was an error, use that
+        (processingOrderError && processingOrderType && processingTableId === table_id)
+            ? processingOrderType
+            : table_id ? 'dine-in' : orderType || 'takeaway'
     );
 
     // Effect to set initial sidebar state based on screen size
@@ -167,21 +183,20 @@ function CreateOrderDialogComponent({
         return () => window.removeEventListener('resize', checkIfMobile);
     }, []);
 
+    // Get favorites from the analytics store with caching
+    const { getFavoriteItems } = useMenuAnalyticsStore();
+    
     // Effect to fetch most ordered items when dialog opens
     useEffect(() => {
         if (open) {
             const fetchFavouriteItems = async () => {
                 try {
                     setIsLoadingFavourites(true);
-                    // Fetch the most ordered items, limit to 10, sort by quantity_sold in descending order
-                    const params = {
-                        limit: 10,
-                        sort_by: 'quantity_sold',
-                        order: 'desc' as const
-                    };
-                    const menuItemAnalytics = await analyticsService.getMenuItemAnalytics(params);
+                    // Use the store to get favorites (with caching)
+                    const menuItemAnalytics = await getFavoriteItems();
                     setFavouriteItems(menuItemAnalytics);
-                } catch (err) {
+                } catch (error) {
+                    console.error('Failed to load favourite items:', error);
                     toast.error('Failed to load favourite items');
                 } finally {
                     setIsLoadingFavourites(false);
@@ -190,7 +205,7 @@ function CreateOrderDialogComponent({
 
             fetchFavouriteItems();
         }
-    }, [open]);
+    }, [open, getFavoriteItems]);
 
     // Group categories by parent/child relationship - memoized to prevent recalculation on every render
     const mainCategories = useMemo(() =>
@@ -439,9 +454,9 @@ function CreateOrderDialogComponent({
 
                 // Get KOT printers from configuration
                 const kotPrinters = printerConfig?.kot_printers || [];
-                if (kotPrinters.length === 0) {
-                    throw new Error('No KOT printers configured. Please configure printers in settings.');
-                }
+                // if (kotPrinters.length === 0) {
+                //     throw new Error('No KOT printers configured. Please configure printers in settings.');
+                // }
 
                 // Generate ESC/POS receipt content
                 const kotContent = generateKOTContent(tokenNumber);
@@ -454,7 +469,6 @@ function CreateOrderDialogComponent({
                     await window.qz.print(config, data);
                 }
 
-                toast.success('KOT printed successfully');
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : 'Failed to print KOT';
                 console.error('Print error:', error);
@@ -490,7 +504,14 @@ function CreateOrderDialogComponent({
     // Memoize submit order handler to prevent recreation on every render
     const handleSubmitOrder = useCallback(async () => {
         try {
+            // Save current order state to store before closing dialog
+            setProcessingOrder(orderItems, currentOrderType, table_id);
+            
+            // Set submitting state
             setIsSubmitting(true);
+            
+            // Close the dialog immediately to allow user to work on other orders
+            onClose();
 
             if (existingOrder) {
                 const itemsWithDetails = orderItems.map(item => {
@@ -531,12 +552,7 @@ function CreateOrderDialogComponent({
                 try {
                     // Print KOT automatically
                     handlePrintKOT();
-                    
-                    if (!table_id) {
-                        toast.success(`${currentOrderType === 'takeaway' ? 'Takeaway' : 'Quick Bill'} order created with token: ${newOrder.token_number}`);
-                    } else {
-                        toast.success('Dine-in order created successfully');
-                    }
+
                 } catch (printError) {
                     // Log the error but continue with order creation
                     console.error('KOT printing error:', printError);
@@ -544,17 +560,23 @@ function CreateOrderDialogComponent({
                 }
             }
 
+            // Clear the processing order state since we succeeded
+            clearProcessingOrder();
+
+            // First pass the updated items to parent
+            onCreateOrder(orderItems);
+            
+            // Reset local state (not needed since dialog is closed, but good practice)
             setOrderItems([]);
             setSearchQuery('');
             setSelectedCategory('all');
-
-            // First pass the updated items to parent without closing
-            onCreateOrder(orderItems);
-
-            // Close the dialog immediately to avoid flashing
-            onClose();
-        } catch (err) {
-            toast.error('Failed to process order');
+        } catch (error) {
+            // Set error state in the store so we can recover the order state
+            setProcessingOrderError(true);
+            
+            // Show error message
+            const errorMessage = error instanceof Error ? error.message : 'Failed to process order';
+            toast.error(errorMessage);
         } finally {
             setIsSubmitting(false);
         }
@@ -569,7 +591,9 @@ function CreateOrderDialogComponent({
         onCreateOrder,
         onClose,
         currentOrderType,
-        generateTokenNumber
+        setProcessingOrder,
+        clearProcessingOrder,
+        setProcessingOrderError
     ]);
     
     // Create a debounced version of handleSubmitOrder

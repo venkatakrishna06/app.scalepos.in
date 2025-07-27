@@ -46,10 +46,7 @@ export const useOrder = () => {
         onSuccess: () => {
             // Invalidate orders queries to trigger refetch
             queryClient.invalidateQueries({queryKey: ['orders']});
-        },
-        onError: () => {
-            toast.error('Failed to create order');
-        },
+        }
     });
 
     // Mutation to update an order
