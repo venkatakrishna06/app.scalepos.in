@@ -169,6 +169,10 @@ declare global {
                 create: (printer: string) => any;
             };
             print: (config: any, data: any) => Promise<void>;
+            security: {
+                setCertificatePromise: (certCallback: () => Promise<string>) => void;
+                setSignaturePromise: (signCallback: (toSign: string) => Promise<string>) => void;
+            };
         };
     }
 }

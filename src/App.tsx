@@ -11,6 +11,8 @@ import {Toaster} from 'sonner';
 import {AuthGuard} from './components/auth/auth-guard';
 import {queryClient} from './lib/queryClient';
 import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
+import {useEffect} from 'react';
+import {setupQZSecurity} from './lib/qz/qzSetup';
 
 // Set up localStorage persistence for React Query
 const localStoragePersister = createSyncStoragePersister({
@@ -26,6 +28,34 @@ persistQueryClient({
 });
 
 function App() {
+    useEffect(() => {
+        // Initialize QZ Tray security when the app loads
+        const initQZ = async () => {
+            try {
+                await setupQZSecurity();
+                console.log('QZ Tray security initialized');
+            } catch (error) {
+                console.error('Failed to initialize QZ Tray security:', error);
+            }
+        };
+        
+        // Only initialize if QZ is available
+        if (typeof window.qz !== 'undefined') {
+            initQZ();
+        } else {
+            // Wait for QZ to be available
+            const checkQz = setInterval(() => {
+                if (typeof window.qz !== 'undefined') {
+                    clearInterval(checkQz);
+                    initQZ();
+                }
+            }, 1000);
+            
+            // Stop checking after 10 seconds
+            setTimeout(() => clearInterval(checkQz), 10000);
+        }
+    }, []);
+
     return (
         <QueryClientProvider client={queryClient}>
             <ThemeProvider defaultTheme="system" storageKey="restaurant-theme">
