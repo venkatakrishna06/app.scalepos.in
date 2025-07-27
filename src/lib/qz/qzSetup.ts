@@ -18,17 +18,18 @@ export const setupQZSecurity = async () => {
                 return certificate;
             } catch (error) {
                 console.error('Error fetching certificate:', error);
-                // Fallback to a hardcoded certificate if the endpoint is not available
-                // You should replace this with your actual certificate content from cert.pem
-                return `-----BEGIN CERTIFICATE-----
-[YOUR CERTIFICATE CONTENT HERE]
------END CERTIFICATE-----`;
+                // Fallback to empty certificate - will cause signing to fail
+                // but at least won't crash the application
+                throw new Error('Certificate endpoint not available');
             }
         });
 
         // 2. Set signing function using your Go backend
         window.qz.security.setSignaturePromise(async (toSign: string) => {
             try {
+                console.log('Data to sign:', toSign);
+                console.log('Data length:', toSign.length);
+                
                 const response = await fetch(`${import.meta.env.VITE_API_URL}/sign`, {
                     method: "POST",
                     headers: {
@@ -41,7 +42,11 @@ export const setupQZSecurity = async () => {
                     throw new Error('Failed to sign payload');
                 }
                 
-                return await response.text();
+                const signature = await response.text();
+                console.log('Signature received:', signature);
+                console.log('Signature length:', signature.length);
+                
+                return signature;
             } catch (error) {
                 console.error('Error signing payload:', error);
                 throw error;
