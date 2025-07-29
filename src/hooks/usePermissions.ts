@@ -1,29 +1,19 @@
-import {useAuthStore} from '@/lib/store/auth.store';
+// src/hooks/usePermissions.ts
 
-export function usePermissions() {
-    const {user} = useAuthStore();
+import { useAuthStore } from '@/lib/auth/auth.store';
+import { ROLE_PERMISSIONS } from '@/lib/auth/roles';
 
-    return {
-        // Role-based permissions
-        isAdmin: user?.role === 'admin',
-        isManager: user?.role === 'manager',
-        isKitchen: user?.role === 'kitchen',
-        isServer: user?.role === 'server',
+export const usePermissions = () => {
+    const { user } = useAuthStore();
 
-        // Feature-based permissions
-        canManageUsers: user?.role === 'admin',
-        canManageStaff: user?.role === 'admin',
-        canCreateStaff: user?.role === 'admin',
-        canManageMenu: ['admin', 'manager', 'kitchen'].includes(user?.role || ''),
-        canCreateMenuItem: ['admin', 'manager', 'kitchen'].includes(user?.role || ''),
-        canUpdateMenuItem: ['admin', 'manager', 'kitchen'].includes(user?.role || ''),
-        canManageTables: ['admin', 'manager', 'server'].includes(user?.role || ''),
-        canViewOrders: ['admin', 'manager', 'kitchen', 'server'].includes(user?.role || ''),
-        canCreateOrders: ['admin', 'manager', 'server'].includes(user?.role || ''),
-        canCancelOrders: user?.role === 'admin',
-        canCancelOrderItems: ['admin', 'manager'].includes(user?.role || ''),
-        canManagePayments: ['admin', 'manager'].includes(user?.role || ''),
-        canManageCategories: ['admin', 'manager'].includes(user?.role || ''),
-        canAccessSettings: ['admin', 'manager'].includes(user?.role || ''),
+    const hasPermission = (permission: string) => {
+        if (!user) {
+            return false;
+        }
+
+        const userPermissions = ROLE_PERMISSIONS[user.role] || [];
+        return userPermissions.includes(permission);
     };
-}
+
+    return { hasPermission };
+};

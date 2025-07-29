@@ -1,49 +1,26 @@
-import {useEffect, useRef, useState} from 'react';
-import {Merge, Plus, Search} from 'lucide-react';
-import {TablesSkeleton} from '@/components/skeletons/tables-skeleton';
-import {Button} from '@/components/ui/button';
-import {CreateOrderDialog} from '@/components/create-order-dialog';
-import {PaymentDialog} from '@/components/payment-dialog';
-import {TableManagementDialog} from '@/components/table-management-dialog';
-import {ViewOrdersDialog} from '@/components/view-orders-dialog';
-import {TableReservationDialog} from '@/components/table-reservation-dialog';
-import {useMenuStore, useOrderStore, useTableStore} from '@/lib/store';
-import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
-import {Order, Table} from '@/types';
-import {toast} from '@/lib/toast';
-import {TableCard} from '@/components/tableCard';
-import {Input} from '@/components/ui/input';
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select";
-import {FilterDropdownContainer} from '@/components/FilterDropdownContainer';
-import {useTable} from '@/lib/hooks/useTable';
-import {useMenu} from '@/lib/hooks/useMenu';
-import {useOrder} from '@/lib/hooks/useOrder';
-import {orderService} from "@/lib/api/services";
+import { useState } from 'react';
+import { Merge, Plus, Search } from 'lucide-react';
+import { TablesSkeleton } from '@/components/skeletons/tables-skeleton';
+import { Button } from '@/components/ui/button';
+import { CreateOrderDialog } from '@/components/composed/create-order-dialog';
+import { PaymentDialog } from '@/components/composed/payment-dialog';
+import { TableManagementDialog } from '@/components/composed/table-management-dialog';
+import { ViewOrdersDialog } from '@/components/composed/view-orders-dialog';
+import { TableReservationDialog } from '@/components/composed/table-reservation-dialog';
+import { Order, Table } from '@/types';
+import { toast } from '@/lib/toast';
+import { TableCard } from '@/components/composed/tableCard';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FilterDropdownContainer } from '@/components/composed/FilterDropdownContainer';
+import { useTables, useDeleteTable, useUpdateTable } from '@/api/tables';
+import { useOrders } from '@/api/orders';
 
 export default function Tables() {
-    // Use both Zustand store and React Query hook
-    const {tables, loading, error, fetchTables, deleteTable, updateTableStatus} = useTableStore();
-    const {error: ordersError, fetchOrders} = useOrderStore();
-    const {fetchMenuItems, fetchCategories} = useMenuStore();
-    const {handleError} = useErrorHandler();
-
-    // Add React Query hooks to populate DevTools
-    // Tables
-    const {useTablesQuery} = useTable();
-    const {data: reactQueryTables, isLoading: isLoadingTables} = useTablesQuery();
-
-    // Menu Items
-    const {useMenuItemsQuery} = useMenu();
-    const {data: menuItems, isLoading: isLoadingMenuItems} = useMenuItemsQuery();
-
-    // Orders
-    const {useOrdersQuery} = useOrder();
-    const {data: orders, isLoading: isLoadingOrders} = useOrdersQuery();
-
-    // Log React Query data to console (this ensures the queries are active for DevTools)
-    useEffect(() => {
-
-    }, [reactQueryTables, isLoadingTables, menuItems, isLoadingMenuItems, orders, isLoadingOrders]);
+    const { data: tables = [], isLoading: isLoadingTables, isError: isErrorTables, error: tablesErrorMessage } = useTables();
+    const deleteTableMutation = useDeleteTable();
+    const updateTableMutation = useUpdateTable();
+    const { data: orders = [], isLoading: isLoadingOrders, isError: isErrorOrders, error: ordersErrorMessage } = useOrders();
 
     const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -53,44 +30,12 @@ export default function Tables() {
     const [showOrdersDialog, setShowOrdersDialog] = useState(false);
     const [tableManagementAction, setTableManagementAction] = useState<'add' | 'merge' | 'split' | null>(null);
 
-    // Enhanced filtering and search
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [filterCapacity, setFilterCapacity] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState<string>('');
 
-    // Table reservation
     const [showReservationDialog, setShowReservationDialog] = useState(false);
     const [tableForReservation, setTableForReservation] = useState<Table | null>(null);
-
-    // Using a ref to prevent duplicate API calls in StrictMode
-    const isDataFetchedRef = useRef(false);
-
-    useEffect(() => {
-        const loadData = async () => {
-            try {
-                await Promise.all([fetchTables(), fetchOrders(), fetchMenuItems(), fetchCategories()]);
-            } catch (err) {
-                toast.error("Failed to load data", {
-                    description: err instanceof Error ? err.message : "An unknown error occurred",
-                });
-            }
-        };
-
-        if (!isDataFetchedRef.current) {
-            loadData();
-            isDataFetchedRef.current = true;
-        }
-    }, [fetchTables, fetchOrders, fetchMenuItems, handleError, fetchCategories]);
-
-    // Show errors as toast notifications if they exist
-    useEffect(() => {
-        if (error) {
-            toast.error("Table Error", {description: error});
-        }
-        if (ordersError) {
-            toast.error("Order Error", {description: ordersError});
-        }
-    }, [error, ordersError]);
 
     const getStatusColor = (status: Table['status']) => {
         switch (status) {
@@ -112,7 +57,7 @@ export default function Tables() {
         setIsNewOrder(isNew);
         setShowOrderDialog(true);
         if (!isNew) {
-            const tableOrders = await orderService.getOrdersByTable(tableId);
+            const tableOrders = orders.filter(order => order.table_id === tableId);
             const activeOrder = tableOrders.find(order =>
                 order.status !== 'paid' && order.status !== 'cancelled'
             );
@@ -122,24 +67,8 @@ export default function Tables() {
         }
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const handleCreateOrder = async (_items: OrderItem[]) => {
-        if (!selectedTableId) return;
-        try {
-            // No need to update table status here as it will be updated via WebSocket
-            // The WebSocket service will receive the table update and update the store
-
-            // Only update the state, don't close the dialog here
-            // The dialog is already being closed by its internal onClose call
-            setSelectedTableId(null);
-            setSelectedOrder(null);
-        } catch (err) {
-            handleError(err);
-        }
-    };
-
     const handlePayment = async (table: Table) => {
-        const tableOrders = await orderService.getOrdersByTable(table.id);
+        const tableOrders = orders.filter(order => order.table_id === table.id);
         const activeOrder = tableOrders.find(order =>
             order.status !== 'paid' && order.status !== 'cancelled'
         );
@@ -153,7 +82,10 @@ export default function Tables() {
         try {
             const table = tables.find(t => t.id === tableId);
             if (table && table.status === 'available') {
-                await deleteTable(tableId);
+                await deleteTableMutation.mutateAsync(tableId);
+                toast.success('Table deleted successfully');
+            } else {
+                toast.error('Cannot delete an occupied table');
             }
         } catch (err) {
             toast.error(`Failed to delete table`, {
@@ -164,7 +96,8 @@ export default function Tables() {
 
     const handleStatusChange = async (tableId: number, status: Table['status']) => {
         try {
-            await updateTableStatus(tableId, status);
+            await updateTableMutation.mutateAsync({ id: tableId, table: { status } });
+            toast.success(`Table status updated to ${status}`);
         } catch (err) {
             toast.error(`Failed to update table status to ${status}`, {
                 description: err instanceof Error ? err.message : "An unknown error occurred",
@@ -183,27 +116,35 @@ export default function Tables() {
         setShowPaymentDialog(true);
     };
 
-    // Only show skeleton when initially loading tables, not when placing an order
-    // This allows WebSocket updates to handle table updates after order placement
-    if (loading && tables.length === 0) {
-        return <TablesSkeleton/>;
+    if (isLoadingTables || isLoadingOrders) {
+        return <TablesSkeleton />;
     }
 
-    // Filter tables based on search and filter criteria
-    const filteredTables = tables.filter(table => {
-        // Filter by status
-        const matchesStatus = filterStatus === 'all' || table.status === filterStatus;
+    if (isErrorTables || isErrorOrders) {
+        return (
+            <div className="flex h-[400px] items-center justify-center rounded-lg border border-dashed">
+                <div className="text-center">
+                    <p className="text-muted-foreground">{tablesErrorMessage?.message || ordersErrorMessage?.message}</p>
+                    <Button
+                        variant="outline"
+                        className="mt-4"
+                        onClick={() => window.location.reload()}
+                    >
+                        Try Again
+                    </Button>
+                </div>
+            </div>
+        );
+    }
 
-        // Filter by capacity
+    const filteredTables = tables.filter(table => {
+        const matchesStatus = filterStatus === 'all' || table.status === filterStatus;
         const matchesCapacity = filterCapacity === 'all' ||
             (filterCapacity === 'small' && table.capacity <= 4) ||
             (filterCapacity === 'medium' && table.capacity > 4 && table.capacity <= 8) ||
             (filterCapacity === 'large' && table.capacity > 8);
-
-        // Filter by search query (table number)
         const matchesSearch = searchQuery === '' ||
             table.table_number.toString().includes(searchQuery);
-
         return matchesStatus && matchesCapacity && matchesSearch;
     });
 
@@ -213,22 +154,21 @@ export default function Tables() {
                 <h1 className="text-2xl font-semibold tracking-tight">Order Table Wise</h1>
                 <div className="flex items-center gap-4">
                     <Button variant="outline" onClick={() => setTableManagementAction('merge')}>
-                        <Merge className="mr-2 h-4 w-4"/>
+                        <Merge className="mr-2 h-4 w-4" />
                         Merge Tables
                     </Button>
                     <Button onClick={() => setTableManagementAction('add')}>
-                        <Plus className="mr-2 h-4 w-4"/>
+                        <Plus className="mr-2 h-4 w-4" />
                         Add Table
                     </Button>
                 </div>
             </div>
 
-            {/* Enhanced filtering and search */}
             <div className="flex flex-col gap-4 md:flex-row md:items-center mb-4">
                 <FilterDropdownContainer>
                     <Select value={filterStatus} onValueChange={setFilterStatus}>
                         <SelectTrigger className="w-[130px] sm:w-[180px]">
-                            <SelectValue placeholder="Filter by status"/>
+                            <SelectValue placeholder="Filter by status" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Statuses</SelectItem>
@@ -241,7 +181,7 @@ export default function Tables() {
 
                     <Select value={filterCapacity} onValueChange={setFilterCapacity}>
                         <SelectTrigger className="w-[130px] sm:w-[180px]">
-                            <SelectValue placeholder="Filter by capacity"/>
+                            <SelectValue placeholder="Filter by capacity" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Capacities</SelectItem>
@@ -253,7 +193,7 @@ export default function Tables() {
                 </FilterDropdownContainer>
 
                 <div className="relative w-full md:w-auto flex-1">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                         placeholder="Search tables..."
                         value={searchQuery}
@@ -262,7 +202,6 @@ export default function Tables() {
                     />
                 </div>
             </div>
-
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {filteredTables.map((table) => (
@@ -289,7 +228,7 @@ export default function Tables() {
                             className="mt-4"
                             onClick={() => setTableManagementAction('add')}
                         >
-                            <Plus className="mr-2 h-4 w-4"/>
+                            <Plus className="mr-2 h-4 w-4" />
                             Add Table
                         </Button>
                     </div>
@@ -304,7 +243,6 @@ export default function Tables() {
                     setSelectedOrder(null);
                 }}
                 table_id={selectedTableId || 0}
-                onCreateOrder={handleCreateOrder}
                 existingOrder={!isNewOrder ? selectedOrder : undefined}
             />
 

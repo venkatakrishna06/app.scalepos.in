@@ -1,17 +1,20 @@
-import {useEffect, useState} from 'react';
-import {useAuthStore} from '@/lib/store/auth.store';
-import {Button} from '@/components/ui/button';
-import {Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle} from '@/components/ui/dialog';
-import {AlertCircle, Camera, Key, Loader2, Mail, Phone, Save, User as UserIcon, X} from 'lucide-react';
-import {toast} from "sonner";
-import {Input} from '@/components/ui/input';
-import {Label} from '@/components/ui/label';
-import {Card, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
-import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
-import {Alert, AlertDescription} from '@/components/ui/alert';
+import { useEffect, useState } from 'react';
+import { useAuthStore } from '@/lib/auth/auth.store';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertCircle, Camera, Key, Loader2, Mail, Phone, Save, User as UserIcon, X } from 'lucide-react';
+import { toast } from "sonner";
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useUpdateProfile, useChangePassword } from '@/api/auth';
 
 export default function Profile() {
-    const {user, loading, error, updateProfile, changePassword, clearError, initAuth} = useAuthStore();
+    const { user, loading, error, initAuth } = useAuthStore();
+    const updateProfileMutation = useUpdateProfile();
+    const changePasswordMutation = useChangePassword();
 
     const [showPasswordDialog, setShowPasswordDialog] = useState(false);
     const [currentPassword, setCurrentPassword] = useState('');
@@ -26,7 +29,6 @@ export default function Profile() {
     });
     const [activeTab, setActiveTab] = useState('personal');
 
-    // Initialize user data when component mounts or user changes
     useEffect(() => {
         if (!user) {
             initAuth();
@@ -41,10 +43,12 @@ export default function Profile() {
 
     const handleProfileUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
-        await updateProfile(formData);
-        if (!error) {
+        try {
+            await updateProfileMutation.mutateAsync(formData);
             setIsEditing(false);
             toast.success('Profile updated successfully');
+        } catch (err) {
+            toast.error('Failed to update profile');
         }
     };
 
@@ -62,29 +66,29 @@ export default function Profile() {
             return;
         }
 
-        await changePassword(currentPassword, newPassword);
-        if (!error) {
+        try {
+            await changePasswordMutation.mutateAsync({ currentPassword, newPassword });
             setShowPasswordDialog(false);
             setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
             toast.success('Password changed successfully');
+        } catch (err) {
+            setPasswordError('Failed to change password');
         }
     };
 
-    // Show loading state while fetching user data
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary"/>
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     <span className="text-lg text-muted-foreground">Loading profile...</span>
                 </div>
             </div>
         );
     }
 
-    // Show error state if user data couldn't be loaded
     if (!user && !loading) {
         return (
             <Card className="w-full">
@@ -94,7 +98,7 @@ export default function Profile() {
                 </CardHeader>
                 <CardFooter className="flex justify-center">
                     <Button onClick={() => initAuth()}>
-                        <AlertCircle className="mr-2 h-4 w-4"/>
+                        <AlertCircle className="mr-2 h-4 w-4" />
                         Retry
                     </Button>
                 </CardFooter>
@@ -111,7 +115,6 @@ export default function Profile() {
                 </TabsList>
 
                 <TabsContent value="personal" className="space-y-6">
-                    {/* Profile Header with Avatar */}
                     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8">
                         <div className="relative">
                             <div
@@ -123,14 +126,14 @@ export default function Profile() {
                                         className="h-full w-full rounded-full object-cover"
                                     />
                                 ) : (
-                                    <UserIcon className="h-12 w-12 text-muted-foreground"/>
+                                    <UserIcon className="h-12 w-12 text-muted-foreground" />
                                 )}
                             </div>
                             <button
                                 className="absolute bottom-0 right-0 rounded-full bg-primary p-2 text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
                                 aria-label="Change profile picture"
                             >
-                                <Camera className="h-4 w-4"/>
+                                <Camera className="h-4 w-4" />
                             </button>
                         </div>
                         <div className="text-center sm:text-left">
@@ -151,7 +154,7 @@ export default function Profile() {
 
                     {error && (
                         <Alert variant="destructive" className="mb-6">
-                            <AlertCircle className="h-4 w-4"/>
+                            <AlertCircle className="h-4 w-4" />
                             <AlertDescription>{error}</AlertDescription>
                         </Alert>
                     )}
@@ -163,12 +166,12 @@ export default function Profile() {
                                     Full Name
                                 </Label>
                                 <div className="relative">
-                                    <UserIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground"/>
+                                    <UserIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                     <Input
                                         id="name"
                                         type="text"
                                         value={formData.name}
-                                        onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                         disabled={!isEditing}
                                         className="pl-10"
                                         placeholder="Your full name"
@@ -181,12 +184,12 @@ export default function Profile() {
                                     Email Address
                                 </Label>
                                 <div className="relative">
-                                    <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground"/>
+                                    <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                     <Input
                                         id="email"
                                         type="email"
                                         value={formData.email}
-                                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                         disabled={!isEditing}
                                         className="pl-10"
                                         placeholder="Your email address"
@@ -199,12 +202,12 @@ export default function Profile() {
                                     Phone Number
                                 </Label>
                                 <div className="relative">
-                                    <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground"/>
+                                    <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                     <Input
                                         id="phone"
                                         type="tel"
                                         value={formData.phone}
-                                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                         disabled={!isEditing}
                                         className="pl-10"
                                         placeholder="Your phone number"
@@ -225,17 +228,16 @@ export default function Profile() {
                                             email: user?.username || '',
                                             phone: user?.staff.phone || '',
                                         });
-                                        clearError();
                                     }}
                                 >
-                                    <X className="mr-2 h-4 w-4"/>
+                                    <X className="mr-2 h-4 w-4" />
                                     Cancel
                                 </Button>
-                                <Button type="submit" disabled={loading}>
-                                    {loading ? (
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                <Button type="submit" disabled={updateProfileMutation.isLoading}>
+                                    {updateProfileMutation.isLoading ? (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                     ) : (
-                                        <Save className="mr-2 h-4 w-4"/>
+                                        <Save className="mr-2 h-4 w-4" />
                                     )}
                                     Save Changes
                                 </Button>
@@ -258,7 +260,7 @@ export default function Profile() {
                                 onClick={() => setShowPasswordDialog(true)}
                                 className="flex items-center gap-2"
                             >
-                                <Key className="h-4 w-4"/>
+                                <Key className="h-4 w-4" />
                                 Change Password
                             </Button>
                         </CardFooter>
@@ -303,7 +305,7 @@ export default function Profile() {
                     <form onSubmit={handlePasswordChange} className="space-y-4 py-3">
                         {(error || passwordError) && (
                             <Alert variant="destructive" className="mb-4">
-                                <AlertCircle className="h-4 w-4"/>
+                                <AlertCircle className="h-4 w-4" />
                                 <AlertDescription>{error || passwordError}</AlertDescription>
                             </Alert>
                         )}
@@ -351,13 +353,12 @@ export default function Profile() {
                                     setNewPassword('');
                                     setConfirmPassword('');
                                     setPasswordError('');
-                                    clearError();
                                 }}
                             >
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={loading}>
-                                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                            <Button type="submit" disabled={changePasswordMutation.isLoading}>
+                                {changePasswordMutation.isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Update Password
                             </Button>
                         </DialogFooter>

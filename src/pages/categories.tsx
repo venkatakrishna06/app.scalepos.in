@@ -1,43 +1,36 @@
-import {useCallback, useEffect, useState} from 'react';
-import {AlertCircle, Edit2, FolderTree, Loader2, Plus, Search, Trash2} from 'lucide-react';
-import {CategoriesSkeleton} from '@/components/skeletons/categories-skeleton';
-import {Button} from '@/components/ui/button';
-import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from '@/components/ui/dialog';
-import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
-import {Input} from "@/components/ui/input";
-import {useForm} from "react-hook-form";
-import {zodResolver} from "@hookform/resolvers/zod";
-import {z} from "zod";
-import {useMenuStore} from '@/lib/store';
-import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
-import {Category} from '@/types';
-import {toast} from '@/lib/toast';
-import {Card, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select";
-import {Badge} from '@/components/ui/badge';
+import { useState, useEffect } from 'react';
+import { AlertCircle, Edit2, FolderTree, Loader2, Plus, Search, Trash2 } from 'lucide-react';
+import { CategoriesSkeleton } from '@/components/skeletons/categories-skeleton';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '@/api/menu';
+import { Category } from '@/types';
+import { toast } from '@/lib/toast';
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from '@/components/ui/badge';
 
 const categorySchema = z.object({
     name: z.string().min(1, 'Name is required').max(50, 'Name cannot exceed 50 characters'),
-    parent_category_id: z.number().nullable().optional(), // Corrected to allow null or undefined
+    parent_category_id: z.number().nullable().optional(),
 });
 
 type CategoryFormData = z.infer<typeof categorySchema>;
 
 export default function Categories() {
-    const {
-        categories,
-        loading,
-        error,
-        fetchCategories: fetchCategoriesFromStore,
-        addCategory,
-        updateCategory,
-        deleteCategory
-    } = useMenuStore();
-    const {handleError} = useErrorHandler();
+    const { data: categories = [], isLoading, isError, error } = useCategories();
+    const createCategoryMutation = useCreateCategory();
+    const updateCategoryMutation = useUpdateCategory();
+    const deleteCategoryMutation = useDeleteCategory();
+
     const [searchQuery, setSearchQuery] = useState('');
     const [showDialog, setShowDialog] = useState(false);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [categoryTypeFilter, setCategoryTypeFilter] = useState<string>('all');
     const mainCategories = categories.filter(category => category.parent_category_id === undefined);
     const form = useForm<CategoryFormData>({
@@ -47,29 +40,16 @@ export default function Categories() {
         },
     });
 
-    // Memoize the fetchCategories function to prevent it from changing on each render
-    const fetchCategories = useCallback(async () => {
-        try {
-            await fetchCategoriesFromStore();
-        } catch (err) {
-            handleError(err);
-        }
-    }, [fetchCategoriesFromStore, handleError]);
-
-    useEffect(() => {
-        fetchCategories();
-    }, [fetchCategories]);
-
     useEffect(() => {
         if (editingCategory) {
             form.reset({
                 name: editingCategory.name,
-                parent_category_id: editingCategory.parent_category_id ?? null, // Handle null or undefined
+                parent_category_id: editingCategory.parent_category_id ?? null,
             });
         } else {
             form.reset({
                 name: '',
-                parent_category_id: null, // Default to null
+                parent_category_id: null,
             });
         }
     }, [editingCategory, form]);
@@ -82,7 +62,6 @@ export default function Categories() {
         return matchesSearch && matchesType;
     });
 
-    // Function to find parent category name for badges
     const getParentCategoryName = (parentId?: number | null) => {
         if (parentId === undefined || parentId === null) return null;
         const parentCategory = categories.find(c => c.id === parentId);
@@ -91,52 +70,45 @@ export default function Categories() {
 
     const handleSubmit = async (data: CategoryFormData) => {
         try {
-            setIsSubmitting(true);
             if (editingCategory) {
-                await updateCategory(editingCategory.id, data);
+                await updateCategoryMutation.mutateAsync({ id: editingCategory.id, category: data });
                 toast.success('Category updated successfully');
             } else {
-                await addCategory(data);
+                await createCategoryMutation.mutateAsync(data);
+                toast.success('Category created successfully');
             }
             setShowDialog(false);
             setEditingCategory(null);
             form.reset();
         } catch (err) {
-            handleError(err);
             toast.error('Failed to save category');
-        } finally {
-            setIsSubmitting(false);
         }
     };
 
     const handleDelete = async (id: number) => {
         try {
-            setIsSubmitting(true);
-            await deleteCategory(id);
+            await deleteCategoryMutation.mutateAsync(id);
             toast.success('Category deleted successfully');
         } catch (err) {
-            handleError(err);
             toast.error('Failed to delete category');
-        } finally {
-            setIsSubmitting(false);
         }
     };
 
-    if (loading) {
-        return <CategoriesSkeleton/>;
+    if (isLoading) {
+        return <CategoriesSkeleton />;
     }
 
-    if (error) {
+    if (isError) {
         return (
             <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
                 <div className="text-center">
-                    <AlertCircle className="mx-auto h-10 w-10 text-destructive"/>
-                    <p className="mt-4 text-lg font-semibold text-destructive">{error}</p>
+                    <AlertCircle className="mx-auto h-10 w-10 text-destructive" />
+                    <p className="mt-4 text-lg font-semibold text-destructive">{error?.message || 'An error occurred'}</p>
                     <Button
                         variant="outline"
                         size="lg"
                         className="mt-4"
-                        onClick={() => fetchCategories()}
+                        onClick={() => window.location.reload()}
                     >
                         Try Again
                     </Button>
@@ -147,7 +119,6 @@ export default function Categories() {
 
     return (
         <div className="space-y-6">
-            {/* Page header with title and actions */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight">Categories</h1>
@@ -157,16 +128,15 @@ export default function Categories() {
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     <Button onClick={() => setShowDialog(true)}>
-                        <Plus className="mr-2 h-4 w-4"/>
+                        <Plus className="mr-2 h-4 w-4" />
                         Add Category
                     </Button>
                 </div>
             </div>
 
-            {/* Improved filtering and search */}
             <div className="flex flex-col gap-4 md:flex-row md:items-center">
                 <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                         placeholder="Search categories..."
                         value={searchQuery}
@@ -180,7 +150,7 @@ export default function Categories() {
                     onValueChange={setCategoryTypeFilter}
                 >
                     <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Category Type"/>
+                        <SelectValue placeholder="Category Type" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Categories</SelectItem>
@@ -194,7 +164,7 @@ export default function Categories() {
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {filteredCategories.length === 0 ? (
                         <div className="col-span-full rounded-lg border border-dashed p-8 text-center">
-                            <FolderTree className="mx-auto h-8 w-8 text-muted-foreground"/>
+                            <FolderTree className="mx-auto h-8 w-8 text-muted-foreground" />
                             <h3 className="mt-2 text-lg font-semibold">No Categories Found</h3>
                             <p className="mt-1 text-sm text-muted-foreground">
                                 {categoryTypeFilter === 'main' ? 'No main categories found.' :
@@ -206,7 +176,7 @@ export default function Categories() {
                                 className="mt-4"
                                 onClick={() => setShowDialog(true)}
                             >
-                                <Plus className="mr-2 h-4 w-4"/>
+                                <Plus className="mr-2 h-4 w-4" />
                                 Add Category
                             </Button>
                         </div>
@@ -243,18 +213,18 @@ export default function Categories() {
                                                 setEditingCategory(category);
                                                 setShowDialog(true);
                                             }}
-                                            disabled={isSubmitting}
+                                            disabled={createCategoryMutation.isLoading || updateCategoryMutation.isLoading || deleteCategoryMutation.isLoading}
                                         >
-                                            <Edit2 className="mr-2 h-4 w-4"/>
+                                            <Edit2 className="mr-2 h-4 w-4" />
                                             Edit
                                         </Button>
                                         <Button
                                             variant="destructive"
                                             size="sm"
                                             onClick={() => handleDelete(category.id)}
-                                            disabled={isSubmitting}
+                                            disabled={createCategoryMutation.isLoading || updateCategoryMutation.isLoading || deleteCategoryMutation.isLoading}
                                         >
-                                            <Trash2 className="mr-2 h-4 w-4"/>
+                                            <Trash2 className="mr-2 h-4 w-4" />
                                             Delete
                                         </Button>
                                     </CardFooter>
@@ -266,11 +236,11 @@ export default function Categories() {
             </div>
 
             <Dialog open={showDialog}>
-                <DialogContent onClose={!isSubmitting ? () => {
+                <DialogContent onClose={() => {
                     setShowDialog(false);
                     setEditingCategory(null);
                     form.reset();
-                } : undefined}>
+                }}>
                     <DialogHeader>
                         <DialogTitle>
                             {editingCategory ? 'Edit Category' : 'Add Category'}
@@ -286,13 +256,13 @@ export default function Categories() {
                             <FormField
                                 control={form.control}
                                 name="name"
-                                render={({field}) => (
+                                render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Name</FormLabel>
                                         <FormControl>
                                             <Input placeholder="Enter category name" {...field} />
                                         </FormControl>
-                                        <FormMessage/>
+                                        <FormMessage />
                                     </FormItem>
                                 )}
                             />
@@ -300,14 +270,14 @@ export default function Categories() {
                             <FormField
                                 control={form.control}
                                 name="parent_category_id"
-                                render={({field}) => (
+                                render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Main Category</FormLabel>
                                         <FormControl>
                                             <select
                                                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                                 {...field}
-                                                value={field.value ?? ''} // Ensure proper handling of null or undefined
+                                                value={field.value ?? ''}
                                                 onChange={(e) =>
                                                     field.onChange(e.target.value ? Number(e.target.value) : null)
                                                 }
@@ -320,7 +290,7 @@ export default function Categories() {
                                                 ))}
                                             </select>
                                         </FormControl>
-                                        <FormMessage/>
+                                        <FormMessage />
                                     </FormItem>
                                 )}
                             />
@@ -334,14 +304,14 @@ export default function Categories() {
                                         setEditingCategory(null);
                                         form.reset();
                                     }}
-                                    disabled={isSubmitting}
+                                    disabled={createCategoryMutation.isLoading || updateCategoryMutation.isLoading}
                                 >
                                     Cancel
                                 </Button>
-                                <Button type="submit" disabled={isSubmitting}>
-                                    {isSubmitting ? (
+                                <Button type="submit" disabled={createCategoryMutation.isLoading || updateCategoryMutation.isLoading}>
+                                    {createCategoryMutation.isLoading || updateCategoryMutation.isLoading ? (
                                         <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                             {editingCategory ? 'Updating...' : 'Creating...'}
                                         </>
                                     ) : (

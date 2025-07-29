@@ -1,5 +1,4 @@
-import {useEffect, useState} from 'react';
-import {useNavigate} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
     ArrowRight,
     ArrowUpRight,
@@ -15,53 +14,30 @@ import {
     TrendingUp,
     Users
 } from 'lucide-react';
-import {Button} from '@/components/ui/button';
-import {useMenuStore, useOrderStore} from '@/lib/store';
-import {toast} from '@/lib/toast';
-import {cn} from '@/lib/utils';
-import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
-import {Badge} from '@/components/ui/badge';
-import {Skeleton} from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/lib/toast';
+import { cn } from '@/lib/utils';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useDashboardData } from '@/api/dashboardData';
 
 export function DashboardHome() {
-    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
-    const {orders, fetchOrders} = useOrderStore();
-    const {menuItems, fetchMenuItems} = useMenuStore();
+    const { orders, menuItems, isLoading, isError, refetch } = useDashboardData();
 
-    // Function to fetch data directly from API
-    const fetchDashboardData = async () => {
-        try {
-            setLoading(true);
+    if (isError) {
+        toast.error('Failed to fetch dashboard data');
+    }
 
-            await Promise.all([
-                fetchOrders({period: "day"}),
-                fetchMenuItems()
-            ]);
-            setLoading(false);
-        } catch {
-            // Handle error without using the error object
-            toast.error('Failed to fetch dashboard data');
-            setLoading(false);
-        }
-    };
-
-    // Fetch data on initial load
-    useEffect(() => {
-        fetchDashboardData();
-    }, []);
-
-    // Function to handle refresh button click
     const handleRefresh = () => {
-        fetchDashboardData();
+        refetch();
     };
 
-    // Filter active orders
     const activeOrders = orders.filter(order =>
         order.status !== 'paid' && order.status !== 'cancelled'
     );
 
-    // Calculate metrics
     const todaySales = orders
         .filter(order => {
             const orderDate = new Date(order.order_time);
@@ -86,12 +62,11 @@ export function DashboardHome() {
                 const matchingItems = orderItems.filter(orderItem => orderItem.menu_item_id === item.id);
                 return count + matchingItems.reduce((sum, orderItem) => sum + orderItem.quantity, 0);
             }, 0);
-            return {...item, orderCount};
+            return { ...item, orderCount };
         })
         .sort((a, b) => b.orderCount - a.orderCount)
         .slice(0, 5);
 
-    // Get order status counts
     const placedCount = activeOrders.filter(o => o.status === 'placed').length;
     const preparingCount = activeOrders.filter(o => o.status === 'preparing').length;
     const servedCount = activeOrders.filter(o => o.status === 'served').length;
@@ -103,26 +78,25 @@ export function DashboardHome() {
                 <Button
                     onClick={handleRefresh}
                     variant="outline"
-                    disabled={loading}
+                    disabled={isLoading}
                     className="h-9 px-4"
                 >
-                    {loading ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2"/>
+                    {isLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     ) : (
-                        <RefreshCw className="h-4 w-4 mr-2"/>
+                        <RefreshCw className="h-4 w-4 mr-2" />
                     )}
                     Refresh
                 </Button>
             </div>
 
-            {/* Stats Cards */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <StatsCard
                     title="Today's Sales"
                     value={`₹${todaySales.toFixed(2)}`}
-                    icon={<IndianRupee className="h-5 w-5"/>}
+                    icon={<IndianRupee className="h-5 w-5" />}
                     description="Total revenue today"
-                    loading={loading}
+                    loading={isLoading}
                     trend="up"
                     onClick={() => navigate('/payments')}
                 />
@@ -130,33 +104,32 @@ export function DashboardHome() {
                 <StatsCard
                     title="Active Orders"
                     value={activeOrders.length.toString()}
-                    icon={<ClipboardList className="h-5 w-5"/>}
+                    icon={<ClipboardList className="h-5 w-5" />}
                     description={`${placedCount} placed, ${preparingCount} preparing, ${servedCount} served`}
-                    loading={loading}
+                    loading={isLoading}
                     onClick={() => navigate('/orders')}
                 />
 
                 <StatsCard
                     title="Tables In Use"
                     value={tablesInUse.toString()}
-                    icon={<Table2 className="h-5 w-5"/>}
+                    icon={<Table2 className="h-5 w-5" />}
                     description={`${Math.round(tablesInUse / 20 * 100)}% occupancy rate`}
-                    loading={loading}
+                    loading={isLoading}
                     onClick={() => navigate('/tables')}
                 />
 
                 <StatsCard
                     title="Menu Items"
                     value={menuItems.length.toString()}
-                    icon={<Coffee className="h-5 w-5"/>}
+                    icon={<Coffee className="h-5 w-5" />}
                     description={`${menuItems.filter(i => i.available).length} available`}
-                    loading={loading}
+                    loading={isLoading}
                     onClick={() => navigate('/menu')}
                 />
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
-                {/* Recent Orders */}
                 <Card className="md:col-span-1">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <div>
@@ -171,25 +144,25 @@ export function DashboardHome() {
                             className="h-8 w-8 p-0"
                             onClick={() => navigate('/orders')}
                         >
-                            <ArrowUpRight className="h-4 w-4"/>
+                            <ArrowUpRight className="h-4 w-4" />
                             <span className="sr-only">View all orders</span>
                         </Button>
                     </CardHeader>
                     <CardContent>
-                        {loading ? (
+                        {isLoading ? (
                             <div className="space-y-4">
                                 {Array(3).fill(0).map((_, i) => (
                                     <div key={i} className="flex items-center justify-between pb-4">
                                         <div className="flex items-center gap-4">
-                                            <Skeleton className="h-10 w-10 rounded-full"/>
+                                            <Skeleton className="h-10 w-10 rounded-full" />
                                             <div>
-                                                <Skeleton className="h-4 w-40 mb-2"/>
-                                                <Skeleton className="h-3 w-24"/>
+                                                <Skeleton className="h-4 w-40 mb-2" />
+                                                <Skeleton className="h-3 w-24" />
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <Skeleton className="h-6 w-16"/>
-                                            <Skeleton className="h-6 w-12"/>
+                                            <Skeleton className="h-6 w-16" />
+                                            <Skeleton className="h-6 w-12" />
                                         </div>
                                     </div>
                                 ))}
@@ -215,14 +188,14 @@ export function DashboardHome() {
                                                         order.status === 'placed' ? "text-blue-700" :
                                                             order.status === 'preparing' ? "text-yellow-700" :
                                                                 "text-green-700"
-                                                    )}/>
+                                                    )} />
                                                 ) : (
                                                     <ShoppingBag className={cn(
                                                         "h-5 w-5",
                                                         order.status === 'placed' ? "text-blue-700" :
                                                             order.status === 'preparing' ? "text-yellow-700" :
                                                                 "text-green-700"
-                                                    )}/>
+                                                    )} />
                                                 )}
                                             </div>
                                             <div>
@@ -231,7 +204,7 @@ export function DashboardHome() {
                                                     #{order.id}
                                                 </p>
                                                 <div className="flex items-center text-xs text-muted-foreground">
-                                                    <Clock className="mr-1 h-3 w-3"/>
+                                                    <Clock className="mr-1 h-3 w-3" />
                                                     {new Date(order.order_time).toLocaleTimeString([], {
                                                         hour: '2-digit',
                                                         minute: '2-digit'
@@ -257,7 +230,7 @@ export function DashboardHome() {
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center py-8 text-center">
-                                <ClipboardList className="h-12 w-12 text-muted-foreground mb-3"/>
+                                <ClipboardList className="h-12 w-12 text-muted-foreground mb-3" />
                                 <h3 className="text-lg font-medium">No active orders</h3>
                                 <p className="text-sm text-muted-foreground mt-1">
                                     All orders have been completed or cancelled
@@ -268,12 +241,11 @@ export function DashboardHome() {
                     <CardFooter>
                         <Button variant="outline" className="w-full" onClick={() => navigate('/orders')}>
                             View All Orders
-                            <ArrowRight className="ml-2 h-4 w-4"/>
+                            <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
                     </CardFooter>
                 </Card>
 
-                {/* Popular Items */}
                 <Card className="md:col-span-1">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <div>
@@ -288,23 +260,23 @@ export function DashboardHome() {
                             className="h-8 w-8 p-0"
                             onClick={() => navigate('/menu')}
                         >
-                            <ArrowUpRight className="h-4 w-4"/>
+                            <ArrowUpRight className="h-4 w-4" />
                             <span className="sr-only">View all menu items</span>
                         </Button>
                     </CardHeader>
                     <CardContent>
-                        {loading ? (
+                        {isLoading ? (
                             <div className="space-y-4">
                                 {Array(5).fill(0).map((_, i) => (
                                     <div key={i} className="flex items-center justify-between pb-4">
                                         <div className="flex items-center gap-3">
-                                            <Skeleton className="h-12 w-12 rounded-md"/>
+                                            <Skeleton className="h-12 w-12 rounded-md" />
                                             <div>
-                                                <Skeleton className="h-4 w-32 mb-2"/>
-                                                <Skeleton className="h-3 w-16"/>
+                                                <Skeleton className="h-4 w-32 mb-2" />
+                                                <Skeleton className="h-3 w-16" />
                                             </div>
                                         </div>
-                                        <Skeleton className="h-6 w-20"/>
+                                        <Skeleton className="h-6 w-20" />
                                     </div>
                                 ))}
                             </div>
@@ -332,7 +304,7 @@ export function DashboardHome() {
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <Badge variant="outline" className="flex items-center gap-1">
-                                                <TrendingUp className="h-3 w-3 text-green-500"/>
+                                                <TrendingUp className="h-3 w-3 text-green-500" />
                                                 <span>{item.orderCount}</span>
                                             </Badge>
                                         </div>
@@ -341,7 +313,7 @@ export function DashboardHome() {
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center py-8 text-center">
-                                <Coffee className="h-12 w-12 text-muted-foreground mb-3"/>
+                                <Coffee className="h-12 w-12 text-muted-foreground mb-3" />
                                 <h3 className="text-lg font-medium">No popular items</h3>
                                 <p className="text-sm text-muted-foreground mt-1">
                                     Start taking orders to see popular items
@@ -352,13 +324,12 @@ export function DashboardHome() {
                     <CardFooter>
                         <Button variant="outline" className="w-full" onClick={() => navigate('/menu')}>
                             Manage Menu Items
-                            <ArrowRight className="ml-2 h-4 w-4"/>
+                            <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
                     </CardFooter>
                 </Card>
             </div>
 
-            {/* Quick Actions */}
             <Card>
                 <CardHeader>
                     <CardTitle className="text-lg font-semibold">Quick Actions</CardTitle>
@@ -369,27 +340,27 @@ export function DashboardHome() {
                 <CardContent>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                         <ActionButton
-                            icon={<Table2 className="h-6 w-6"/>}
+                            icon={<Table2 className="h-6 w-6" />}
                             label="Tables"
                             onClick={() => navigate('/tables')}
                         />
                         <ActionButton
-                            icon={<ShoppingBag className="h-6 w-6"/>}
+                            icon={<ShoppingBag className="h-6 w-6" />}
                             label="Takeaway"
                             onClick={() => navigate('/takeaway')}
                         />
                         <ActionButton
-                            icon={<Coffee className="h-6 w-6"/>}
+                            icon={<Coffee className="h-6 w-6" />}
                             label="Menu"
                             onClick={() => navigate('/menu')}
                         />
                         <ActionButton
-                            icon={<Tags className="h-6 w-6"/>}
+                            icon={<Tags className="h-6 w-6" />}
                             label="Categories"
                             onClick={() => navigate('/categories')}
                         />
                         <ActionButton
-                            icon={<Users className="h-6 w-6"/>}
+                            icon={<Users className="h-6 w-6" />}
                             label="Staff"
                             onClick={() => navigate('/staff')}
                         />
@@ -410,7 +381,7 @@ interface StatsCardProps {
     onClick?: () => void;
 }
 
-function StatsCard({title, value, icon, description, loading = false, trend, onClick}: StatsCardProps) {
+function StatsCard({ title, value, icon, description, loading = false, trend, onClick }: StatsCardProps) {
     return (
         <Card
             className={cn(
@@ -433,8 +404,8 @@ function StatsCard({title, value, icon, description, loading = false, trend, onC
             <CardContent>
                 {loading ? (
                     <>
-                        <Skeleton className="h-8 w-24 mb-1"/>
-                        <Skeleton className="h-3 w-32"/>
+                        <Skeleton className="h-8 w-24 mb-1" />
+                        <Skeleton className="h-3 w-32" />
                     </>
                 ) : (
                     <>
@@ -455,7 +426,7 @@ interface ActionButtonProps {
     onClick: () => void;
 }
 
-function ActionButton({icon, label, onClick}: ActionButtonProps) {
+function ActionButton({ icon, label, onClick }: ActionButtonProps) {
     return (
         <Button
             variant="outline"

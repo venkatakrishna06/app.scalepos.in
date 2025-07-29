@@ -1,26 +1,25 @@
-import {useEffect, useState} from 'react';
-import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
-import {Button} from '@/components/ui/button';
-import {Input} from '@/components/ui/input';
-import {Loader2} from 'lucide-react';
-import {restaurantService} from '@/lib/api/services';
-import {Restaurant} from '@/types';
-import {toast} from '@/lib/toast';
+import { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Loader2 } from 'lucide-react';
+import { Restaurant } from '@/types';
+import { toast } from '@/lib/toast';
+import { useUpdateGstSettings } from '@/api/restaurant';
 
 interface RestaurantGstRatesProps {
     restaurant: Restaurant;
     onUpdate: (restaurant: Restaurant) => void;
 }
 
-export function RestaurantGstRates({restaurant, onUpdate}: RestaurantGstRatesProps) {
-    const [saving, setSaving] = useState(false);
+export function RestaurantGstRates({ restaurant, onUpdate }: RestaurantGstRatesProps) {
+    const updateGstSettingsMutation = useUpdateGstSettings();
     const [sgstRate, setSgstRate] = useState<string>(restaurant.default_sgst_rate?.toString() || '');
     const [cgstRate, setCgstRate] = useState<string>(restaurant.default_cgst_rate?.toString() || '');
     const [originalSgstRate, setOriginalSgstRate] = useState<string>(restaurant.default_sgst_rate?.toString() || '');
     const [originalCgstRate, setOriginalCgstRate] = useState<string>(restaurant.default_cgst_rate?.toString() || '');
     const [error, setError] = useState<string | null>(null);
 
-    // Update original rates when restaurant prop changes
     useEffect(() => {
         setSgstRate(restaurant.default_sgst_rate?.toString() || '');
         setCgstRate(restaurant.default_cgst_rate?.toString() || '');
@@ -30,10 +29,7 @@ export function RestaurantGstRates({restaurant, onUpdate}: RestaurantGstRatesPro
 
     const handleSave = async () => {
         try {
-            setSaving(true);
             setError(null);
-
-            // Validate GST rates
             const sgst = parseFloat(sgstRate);
             const cgst = parseFloat(cgstRate);
 
@@ -41,31 +37,23 @@ export function RestaurantGstRates({restaurant, onUpdate}: RestaurantGstRatesPro
                 throw new Error('Please enter valid GST rates');
             }
 
-            // Check if rates have changed
             const originalSgst = parseFloat(originalSgstRate);
             const originalCgst = parseFloat(originalCgstRate);
 
             if (sgst === originalSgst && cgst === originalCgst) {
                 toast.info('No changes detected in GST rates');
-                setSaving(false);
                 return;
             }
 
-            // Update restaurant GST rates
-            const updatedRestaurant = await restaurantService.updateGstSettings(restaurant.id, sgst, cgst);
+            const updatedRestaurant = await updateGstSettingsMutation.mutateAsync({ id: restaurant.id, sgstRate: sgst, cgstRate: cgst });
             onUpdate(updatedRestaurant);
-
-            // Update original rates after successful save
             setOriginalSgstRate(sgstRate);
             setOriginalCgstRate(cgstRate);
-
             toast.success('GST rates updated successfully');
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to save GST rates';
             setError(errorMessage);
             toast.error(errorMessage);
-        } finally {
-            setSaving(false);
         }
     };
 
@@ -107,8 +95,8 @@ export function RestaurantGstRates({restaurant, onUpdate}: RestaurantGstRatesPro
                 </div>
 
                 <div className="mt-4 flex justify-end">
-                    <Button onClick={handleSave} disabled={saving}>
-                        {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                    <Button onClick={handleSave} disabled={updateGstSettingsMutation.isLoading}>
+                        {updateGstSettingsMutation.isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Save GST Rates
                     </Button>
                 </div>

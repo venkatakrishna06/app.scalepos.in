@@ -18,7 +18,7 @@ import {format, isToday, isYesterday, subDays} from 'date-fns';
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
 import {Input} from '@/components/ui/input';
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
-import {FilterDropdownContainer} from '@/components/FilterDropdownContainer';
+\
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -32,6 +32,7 @@ import {cn} from '@/lib/utils';
 import {toast} from '@/lib/toast';
 import {Order} from '@/types';
 import {useRestaurantStore} from '@/lib/store';
+import { FilterDropdownContainer } from './FilterDropdownContainer';
 
 interface AdminOrderOverviewProps {
     orders: Order[];

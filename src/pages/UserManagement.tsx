@@ -1,49 +1,39 @@
-import {Edit2, Filter, Mail, Plus, Search, Trash2, User} from 'lucide-react';
-import {UserManagementSkeleton} from '@/components/skeletons/user-management-skeleton';
-import {Button} from '@/components/ui/button';
-import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from '@/components/ui/dialog';
-import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,} from "@/components/ui/dropdown-menu";
-import UserCreationForm from '@/components/UserManagement/UserCreationForm';
-import {useEffect, useState} from 'react';
-import {toast} from '@/lib/toast';
-import {useUserStore} from '@/lib/store';
-import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
-import {User as UserType} from '@/types';
+import { Edit2, Filter, Mail, Plus, Search, Trash2, User } from 'lucide-react';
 
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import UserCreationForm from '@/components/composed/UserCreationForm';
+import { useState } from 'react';
+import { toast } from '@/lib/toast';
+import { useUsers, useDeleteUser } from '@/api/users';
+import { User as UserType } from '@/types';
+import { UserManagementSkeleton } from '@/components/composed/user-management-skeleton';
 
 const UserManagement: React.FC = () => {
-    const {users, loading, error, fetchUsers, deleteUser} = useUserStore();
-    const {handleError} = useErrorHandler();
+    const { data: users = [], isLoading, isError, error, refetch } = useUsers();
+    const deleteUserMutation = useDeleteUser();
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState<string>('all');
     const [showDialog, setShowDialog] = useState(false);
     const [editingUser, setEditingUser] = useState<UserType | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    useEffect(() => {
-
-        fetchUsers();
-    }, [fetchUsers]);
     const handleDelete = async (id: number) => {
         const confirmed = window.confirm('Are you sure you want to delete this user?');
         if (!confirmed) return;
 
         try {
-            setIsSubmitting(true);
-            await deleteUser(id);
+            await deleteUserMutation.mutateAsync(id);
             toast.success('User deleted successfully');
         } catch (err) {
-            handleError(err);
-        } finally {
-            setIsSubmitting(false);
+            toast.error('Failed to delete user');
         }
     };
 
     const handleFormSubmit = () => {
         setShowDialog(false);
         setEditingUser(null);
-        // Refresh the user list
-        fetchUsers();
+        refetch();
     };
 
     const filteredUsers = users
@@ -55,21 +45,20 @@ const UserManagement: React.FC = () => {
             return matchesSearch && matchesRole;
         });
 
-
-    if (loading) {
-        return <UserManagementSkeleton/>;
+    if (isLoading) {
+        return <UserManagementSkeleton />;
     }
 
-    if (error) {
+    if (isError) {
         return (
             <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
                 <div className="text-center">
-                    <p className="text-sm text-red-600">{error}</p>
+                    <p className="text-sm text-red-600">{error?.message}</p>
                     <Button
                         variant="outline"
                         size="sm"
                         className="mt-2"
-                        onClick={() => fetchUsers()}
+                        onClick={() => refetch()}
                     >
                         Try Again
                     </Button>
@@ -87,7 +76,7 @@ const UserManagement: React.FC = () => {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" size="sm" className="h-10 w-full sm:w-auto">
-                                    <Filter className="mr-2 h-4 w-4"/>
+                                    <Filter className="mr-2 h-4 w-4" />
                                     {roleFilter === 'all' ? 'All Roles' : roleFilter}
                                 </Button>
                             </DropdownMenuTrigger>
@@ -108,15 +97,15 @@ const UserManagement: React.FC = () => {
                         </DropdownMenu>
                         <Button
                             onClick={() => setShowDialog(true)}
-                            disabled={isSubmitting}
+                            disabled={deleteUserMutation.isLoading}
                             className="h-10 w-full sm:w-auto"
                         >
-                            <Plus className="mr-2 h-4 w-4"/>
+                            <Plus className="mr-2 h-4 w-4" />
                             Add User
                         </Button>
                     </div>
                     <div className="relative w-full sm:max-w-xs">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <input
                             type="text"
                             placeholder="Search by email or role..."
@@ -139,15 +128,13 @@ const UserManagement: React.FC = () => {
                             key={user.id}
                             className="group relative overflow-hidden rounded-xl border bg-card shadow-sm transition-all duration-200 hover:shadow-md hover:border-primary/50"
                         >
-                            {/* Role badge */}
                             <div className={`absolute right-0 top-0 px-3 py-1 text-xs font-medium uppercase tracking-wider text-white 
                 ${user.role === 'admin' ? 'bg-red-500' :
-                                user.role === 'manager' ? 'bg-blue-500' : 'bg-green-500'}`}>
+                                    user.role === 'manager' ? 'bg-blue-500' : 'bg-green-500'}`}>
                                 {user.role}
                             </div>
 
                             <div className="p-4 sm:p-6">
-                                {/* Avatar and name section */}
                                 <div
                                     className="flex flex-col sm:flex-row items-center text-center sm:text-left sm:items-start gap-4 mb-4">
                                     <div
@@ -160,24 +147,22 @@ const UserManagement: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* User details */}
                                 <div className="space-y-3 border-t pt-3 mt-2">
                                     <div className="flex flex-wrap items-center gap-2 text-sm">
-                                        <User className="h-4 w-4 text-primary"/>
+                                        <User className="h-4 w-4 text-primary" />
                                         <span className="text-muted-foreground">Status:</span>
                                         <span className="font-medium">{user.staff?.status || 'Unknown'}</span>
                                     </div>
 
                                     {user.staff && (
                                         <div className="flex flex-wrap items-center gap-2 text-sm">
-                                            <Mail className="h-4 w-4 text-primary"/>
+                                            <Mail className="h-4 w-4 text-primary" />
                                             <span className="text-muted-foreground">Linked to:</span>
                                             <span className="font-medium">{user.staff.name}</span>
                                         </div>
                                     )}
                                 </div>
 
-                                {/* Action buttons */}
                                 <div className="mt-6 flex gap-2">
                                     <Button
                                         variant="outline"
@@ -187,9 +172,9 @@ const UserManagement: React.FC = () => {
                                             setEditingUser(user);
                                             setShowDialog(true);
                                         }}
-                                        disabled={isSubmitting}
+                                        disabled={deleteUserMutation.isLoading}
                                     >
-                                        <Edit2 className="mr-2 h-4 w-4"/>
+                                        <Edit2 className="mr-2 h-4 w-4" />
                                         Edit
                                     </Button>
                                     <Button
@@ -197,9 +182,9 @@ const UserManagement: React.FC = () => {
                                         size="sm"
                                         className="flex-1 h-10 opacity-80 hover:opacity-100"
                                         onClick={() => handleDelete(user.id)}
-                                        disabled={isSubmitting}
+                                        disabled={deleteUserMutation.isLoading}
                                     >
-                                        <Trash2 className="mr-2 h-4 w-4"/>
+                                        <Trash2 className="mr-2 h-4 w-4" />
                                         Delete
                                     </Button>
                                 </div>
@@ -213,7 +198,7 @@ const UserManagement: React.FC = () => {
                 <DialogContent
                     className="w-[95vw] max-w-[95vw] sm:max-w-[90vw] md:max-w-[550px] p-4 sm:p-6"
                     onClose={() => {
-                        if (isSubmitting) return;
+                        if (deleteUserMutation.isLoading) return;
                         setShowDialog(false);
                         setEditingUser(null);
                     }}
@@ -224,15 +209,15 @@ const UserManagement: React.FC = () => {
                         </DialogTitle>
                         <DialogDescription className="mt-1">
                             {editingUser
-                                ? 'Update the user\'s information below.'
+                                ? 'Update the user's information below.'
                                 : 'Fill in the details to add a new user.'}
                         </DialogDescription>
                     </DialogHeader>
 
-                        <UserCreationForm
-                            initialData={editingUser || undefined}
-                            onSuccess={handleFormSubmit}
-                        />
+                    <UserCreationForm
+                        initialData={editingUser || undefined}
+                        onSuccess={handleFormSubmit}
+                    />
 
                 </DialogContent>
             </Dialog>

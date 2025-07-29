@@ -1,32 +1,30 @@
-import {useEffect, useState} from 'react';
-import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
-import {Button} from '@/components/ui/button';
-import {Checkbox} from '@/components/ui/checkbox';
-import {Input} from '@/components/ui/input';
-import {Loader2, Search, XCircle} from 'lucide-react';
-import {menuService} from '@/lib/api/services';
-import {MenuItem} from '@/types';
-import {toast} from '@/lib/toast';
+import { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Loader2, Search, XCircle } from 'lucide-react';
+import { MenuItem } from '@/types';
+import { toast } from '@/lib/toast';
+import { useUpdateMenuItem } from '@/api/menu';
 
 interface MenuItemGstSettingsProps {
     menuItems: MenuItem[];
     onUpdate: (menuItems: MenuItem[]) => void;
 }
 
-export function MenuItemGstSettings({menuItems, onUpdate}: MenuItemGstSettingsProps) {
-    const [saving, setSaving] = useState(false);
+export function MenuItemGstSettings({ menuItems, onUpdate }: MenuItemGstSettingsProps) {
+    const updateMenuItemMutation = useUpdateMenuItem();
     const [localMenuItems, setLocalMenuItems] = useState<MenuItem[]>(menuItems);
     const [originalMenuItems, setOriginalMenuItems] = useState<MenuItem[]>(menuItems);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState<string>('');
 
-    // Update original menu items when props change
     useEffect(() => {
         setLocalMenuItems(menuItems);
         setOriginalMenuItems(menuItems);
     }, [menuItems]);
 
-    // Filter menu items based on search query
     const filteredMenuItems = searchQuery
         ? localMenuItems.filter(item =>
             item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -34,21 +32,17 @@ export function MenuItemGstSettings({menuItems, onUpdate}: MenuItemGstSettingsPr
         )
         : localMenuItems;
 
-    // Handle menu item checkbox change
     const handleMenuItemChange = (itemId: number, checked: boolean) => {
         setLocalMenuItems(
             localMenuItems.map((item) =>
-                item.id === itemId ? {...item, include_in_gst: checked} : item
+                item.id === itemId ? { ...item, include_in_gst: checked } : item
             )
         );
     };
 
     const handleSave = async () => {
         try {
-            setSaving(true);
             setError(null);
-
-            // Find menu items that have changed
             const changedMenuItems = localMenuItems.filter(
                 (item) => {
                     const original = originalMenuItems.find(i => i.id === item.id);
@@ -56,24 +50,18 @@ export function MenuItemGstSettings({menuItems, onUpdate}: MenuItemGstSettingsPr
                 }
             );
 
-            // Only update menu items that have changed
             const menuItemPromises = changedMenuItems.map((item) =>
-                menuService.updateItem(item.id, {include_in_gst: item.include_in_gst})
+                updateMenuItemMutation.mutateAsync({ id: item.id, item: { include_in_gst: item.include_in_gst } })
             );
 
             await Promise.all(menuItemPromises);
             onUpdate(localMenuItems);
-
-            // Update original menu items after successful save
             setOriginalMenuItems(localMenuItems);
-
             toast.success(`Menu item GST settings updated successfully (${changedMenuItems.length} items changed)`);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to save menu item GST settings';
             setError(errorMessage);
             toast.error(errorMessage);
-        } finally {
-            setSaving(false);
         }
     };
 
@@ -88,10 +76,9 @@ export function MenuItemGstSettings({menuItems, onUpdate}: MenuItemGstSettingsPr
                         {error}
                     </div>
                 )}
-
                 <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-center">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
                             placeholder="Search menu items..."
                             value={searchQuery}
@@ -105,7 +92,7 @@ export function MenuItemGstSettings({menuItems, onUpdate}: MenuItemGstSettingsPr
                                 className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full p-0"
                                 onClick={() => setSearchQuery('')}
                             >
-                                <XCircle className="h-4 w-4"/>
+                                <XCircle className="h-4 w-4" />
                                 <span className="sr-only">Clear search</span>
                             </Button>
                         )}
@@ -141,8 +128,8 @@ export function MenuItemGstSettings({menuItems, onUpdate}: MenuItemGstSettingsPr
                 </div>
 
                 <div className="mt-4 flex justify-end">
-                    <Button onClick={handleSave} disabled={saving}>
-                        {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                    <Button onClick={handleSave} disabled={updateMenuItemMutation.isLoading}>
+                        {updateMenuItemMutation.isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Save Menu Item Settings
                     </Button>
                 </div>

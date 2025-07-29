@@ -1,38 +1,29 @@
-import {Clock, Edit2, Filter, Phone, Plus, Search, Trash2} from 'lucide-react';
-import {StaffSkeleton} from '@/components/skeletons/staff-skeleton';
-import {Button} from '@/components/ui/button';
-import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from '@/components/ui/dialog';
-import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,} from "@/components/ui/dropdown-menu"
-import {StaffForm} from '@/components/forms/staff-form';
-import {useStaffStore} from '@/lib/store';
-import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
-import {useEffect, useRef, useState} from 'react';
-import {StaffMember} from '@/types';
-import {toast} from '@/lib/toast';
+import { Clock, Edit2, Filter, Phone, Plus, Search, Trash2 } from 'lucide-react';
+import { StaffSkeleton } from '@/components/skeletons/staff-skeleton';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { StaffForm } from '@/components/forms/staff-form';
+import { useState } from 'react';
+import { StaffMember } from '@/types';
+import { toast } from '@/lib/toast';
+import { useStaff, useCreateStaff, useUpdateStaff, useDeleteStaff } from '@/api/staff';
 
 type SortField = 'name' | 'role' | 'status';
 type SortOrder = 'asc' | 'desc';
 
 export default function Staff() {
-    const {staff, loading, error, fetchStaff, addStaff, updateStaff, deleteStaff} = useStaffStore();
-    const {handleError} = useErrorHandler();
+    const { data: staff = [], isLoading, isError, error } = useStaff();
+    const createStaffMutation = useCreateStaff();
+    const updateStaffMutation = useUpdateStaff();
+    const deleteStaffMutation = useDeleteStaff();
+
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState<string>('all');
     const [sortField, setSortField] = useState<SortField>('name');
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
     const [showDialog, setShowDialog] = useState(false);
     const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
-    // Using a ref to prevent duplicate API calls in StrictMode
-    const isDataFetchedRef = useRef(false);
-
-    useEffect(() => {
-        if (!isDataFetchedRef.current) {
-            fetchStaff();
-            isDataFetchedRef.current = true;
-        }
-    }, [fetchStaff]);
 
     const filteredStaff = staff
         .filter((member) => {
@@ -52,19 +43,17 @@ export default function Staff() {
 
     const handleSubmit = async (data: Omit<StaffMember, 'id'>) => {
         try {
-            setIsSubmitting(true);
             if (editingStaff) {
-                await updateStaff(editingStaff.id, data);
+                await updateStaffMutation.mutateAsync({ id: editingStaff.id, staff: data });
+                toast.success('Staff member updated successfully');
             } else {
-                await addStaff(data);
+                await createStaffMutation.mutateAsync(data);
+                toast.success('Staff member created successfully');
             }
             setShowDialog(false);
             setEditingStaff(null);
         } catch (err) {
-            handleError(err);
             toast.error('Failed to save staff member');
-        } finally {
-            setIsSubmitting(false);
         }
     };
 
@@ -73,40 +62,27 @@ export default function Staff() {
         if (!confirmed) return;
 
         try {
-            setIsSubmitting(true);
-            await deleteStaff(id);
+            await deleteStaffMutation.mutateAsync(id);
             toast.success('Staff member deleted successfully');
         } catch (err) {
-            handleError(err);
             toast.error('Failed to delete staff member');
-        } finally {
-            setIsSubmitting(false);
         }
     };
 
-    const toggleSort = (field: SortField) => {
-        if (sortField === field) {
-            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-        } else {
-            setSortField(field);
-            setSortOrder('asc');
-        }
-    };
-
-    if (loading) {
-        return <StaffSkeleton/>;
+    if (isLoading) {
+        return <StaffSkeleton />;
     }
 
-    if (error) {
+    if (isError) {
         return (
             <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
                 <div className="text-center">
-                    <p className="text-sm text-red-600">{error}</p>
+                    <p className="text-sm text-red-600">{error?.message}</p>
                     <Button
                         variant="outline"
                         size="sm"
                         className="mt-2"
-                        onClick={() => fetchStaff()}
+                        onClick={() => window.location.reload()}
                     >
                         Try Again
                     </Button>
@@ -124,7 +100,7 @@ export default function Staff() {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" size="sm" className="h-10 w-full sm:w-auto">
-                                    <Filter className="mr-2 h-4 w-4"/>
+                                    <Filter className="mr-2 h-4 w-4" />
                                     {roleFilter === 'all' ? 'All Roles' : roleFilter}
                                 </Button>
                             </DropdownMenuTrigger>
@@ -148,15 +124,15 @@ export default function Staff() {
                         </DropdownMenu>
                         <Button
                             onClick={() => setShowDialog(true)}
-                            disabled={isSubmitting}
+                            disabled={createStaffMutation.isLoading || updateStaffMutation.isLoading || deleteStaffMutation.isLoading}
                             className="h-10 w-full sm:w-auto"
                         >
-                            <Plus className="mr-2 h-4 w-4"/>
+                            <Plus className="mr-2 h-4 w-4" />
                             Add Staff
                         </Button>
                     </div>
                     <div className="relative w-full sm:max-w-xs">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <input
                             type="text"
                             placeholder="Search by name, role, or phone..."
@@ -179,16 +155,14 @@ export default function Staff() {
                             key={member.id}
                             className="group relative overflow-hidden rounded-xl border bg-card shadow-sm transition-all duration-200 hover:shadow-md hover:border-primary/50"
                         >
-                            {/* Role badge */}
                             <div className={`absolute right-0 top-0 px-3 py-1 text-xs font-medium uppercase tracking-wider text-white 
                 ${member.role === 'admin' ? 'bg-red-500' :
-                                member.role === 'manager' ? 'bg-blue-500' :
-                                    member.role === 'kitchen' ? 'bg-amber-500' : 'bg-green-500'}`}>
+                                    member.role === 'manager' ? 'bg-blue-500' :
+                                        member.role === 'kitchen' ? 'bg-amber-500' : 'bg-green-500'}`}>
                                 {member.role}
                             </div>
 
                             <div className="p-4 sm:p-6">
-                                {/* Avatar and name section */}
                                 <div
                                     className="flex flex-col sm:flex-row items-center text-center sm:text-left sm:items-start gap-4 mb-4">
                                     <div
@@ -204,22 +178,20 @@ export default function Staff() {
                                     </div>
                                 </div>
 
-                                {/* Staff details */}
                                 <div className="space-y-3 border-t pt-3 mt-2">
                                     <div className="flex flex-wrap items-center gap-2 text-sm">
-                                        <Phone className="h-4 w-4 text-primary"/>
+                                        <Phone className="h-4 w-4 text-primary" />
                                         <span className="text-muted-foreground">Phone:</span>
                                         <span className="font-medium">{member.phone}</span>
                                     </div>
 
                                     <div className="flex flex-wrap items-center gap-2 text-sm">
-                                        <Clock className="h-4 w-4 text-primary"/>
+                                        <Clock className="h-4 w-4 text-primary" />
                                         <span className="text-muted-foreground">Shift:</span>
                                         <span className="font-medium">{member.shift}</span>
                                     </div>
                                 </div>
 
-                                {/* Action buttons */}
                                 <div className="mt-6 flex gap-2">
                                     <Button
                                         variant="outline"
@@ -229,9 +201,9 @@ export default function Staff() {
                                             setEditingStaff(member);
                                             setShowDialog(true);
                                         }}
-                                        disabled={isSubmitting}
+                                        disabled={createStaffMutation.isLoading || updateStaffMutation.isLoading || deleteStaffMutation.isLoading}
                                     >
-                                        <Edit2 className="mr-2 h-4 w-4"/>
+                                        <Edit2 className="mr-2 h-4 w-4" />
                                         Edit
                                     </Button>
                                     <Button
@@ -239,9 +211,9 @@ export default function Staff() {
                                         size="sm"
                                         className="flex-1 h-10 opacity-80 hover:opacity-100"
                                         onClick={() => handleDelete(member.id)}
-                                        disabled={isSubmitting}
+                                        disabled={createStaffMutation.isLoading || updateStaffMutation.isLoading || deleteStaffMutation.isLoading}
                                     >
-                                        <Trash2 className="mr-2 h-4 w-4"/>
+                                        <Trash2 className="mr-2 h-4 w-4" />
                                         Delete
                                     </Button>
                                 </div>
@@ -257,7 +229,7 @@ export default function Staff() {
                 <DialogContent
                     size="lg"
                     onClose={() => {
-                        if (isSubmitting) return;
+                        if (createStaffMutation.isLoading || updateStaffMutation.isLoading) return;
                         setShowDialog(false);
                         setEditingStaff(null);
                     }}
@@ -268,14 +240,14 @@ export default function Staff() {
                         </DialogTitle>
                         <DialogDescription className="mt-1">
                             {editingStaff
-                                ? 'Update the staff member\'s information below.'
+                                ? 'Update the staff member's information below.'
                                 : 'Fill in the details to add a new staff member.'}
                         </DialogDescription>
                     </DialogHeader>
                     <StaffForm
                         onSubmit={handleSubmit}
                         initialData={editingStaff || undefined}
-                        isSubmitting={isSubmitting}
+                        isSubmitting={createStaffMutation.isLoading || updateStaffMutation.isLoading}
                     />
                 </DialogContent>
             </Dialog>
