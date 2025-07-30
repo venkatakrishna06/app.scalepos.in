@@ -14,7 +14,6 @@ import {
     XCircle
 } from 'lucide-react';
 import {usePermissions} from '@/hooks/usePermissions';
-import {MenuSkeleton} from '@/components/skeletons/menu-skeleton';
 import {Button} from '@/components/ui/button';
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle} from '@/components/ui/dialog';
 import {Input} from '@/components/ui/input';
@@ -31,6 +30,7 @@ import {MenuItemForm} from '@/components/composed/menu-item-form';
 import {cn} from '@/lib/utils';
 import {PERMISSIONS} from '@/lib/auth/roles';
 import {useMenuPage} from '@/hooks/useMenuPage';
+import {MenuSkeleton} from "@/components/composed/menu-skeleton.tsx";
 
 export default function Menu() {
     const {hasPermission} = usePermissions();

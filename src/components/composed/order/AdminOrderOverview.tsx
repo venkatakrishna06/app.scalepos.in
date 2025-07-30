@@ -2,7 +2,7 @@ import {AdminOrderOverview as AdminOrderOverviewComponent} from '@/components/co
 import {Order} from '@/types';
 
 interface AdminOrderOverviewProps {
-    orders: Order[];
+    orders?: Order[];
     onEditOrder: (order: Order) => void;
     onCancelOrder: (order: Order) => void;
     onRefreshOrders: () => void;
@@ -11,7 +11,7 @@ interface AdminOrderOverviewProps {
 }
 
 export function AdminOrderOverview({
-                                       orders,
+                                       orders = [],
                                        onEditOrder,
                                        onCancelOrder,
                                        onRefreshOrders,

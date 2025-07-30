@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import {cn} from '@/lib/utils';
 import {useAuthStore} from '@/lib/auth/auth.store';
-import {Separator} from './ui/separator';
+import {Separator} from '@/components/ui/separator';
 import {usePermissions} from '@/hooks/usePermissions';
 import {PERMISSIONS} from '@/lib/auth/roles';
 

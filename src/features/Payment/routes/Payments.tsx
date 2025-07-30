@@ -1,8 +1,8 @@
 import {Calendar, CreditCard, Search} from 'lucide-react';
-import {PaymentsSkeleton} from '@/components/skeletons/payments-skeleton';
 import {Button} from '@/components/ui/button';
 import {format} from 'date-fns';
 import {usePaymentsPage} from '@/hooks/usePaymentsPage';
+import {PaymentsSkeleton} from "@/components/composed/payments-skeleton.tsx";
 
 export default function Payments() {
     const {

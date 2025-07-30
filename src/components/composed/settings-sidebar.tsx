@@ -1,7 +1,8 @@
 import {Link, useLocation} from 'react-router-dom';
 import {ChevronRight, ClipboardList, Percent, Printer, User} from 'lucide-react';
 import {cn} from '@/lib/utils';
-import {useAuthStore} from '@/lib/store/auth.store';
+import {useAuthStore} from "@/lib/auth/auth.store.ts";
+
 
 const settingsNavigation = [
     {

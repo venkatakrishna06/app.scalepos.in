@@ -3,7 +3,7 @@ import {QueryClientProvider} from '@tanstack/react-query';
 import {persistQueryClient} from '@tanstack/react-query-persist-client';
 import {createSyncStoragePersister} from '@tanstack/query-sync-storage-persister';
 
-import AppRoutes from './routes';
+import AppRoutes from './routes/index.tsx';
 import Login from './pages/auth/login';
 import Signup from './pages/auth/signup';
 
@@ -15,7 +15,7 @@ import {useEffect} from 'react';
 import {setupQZSecurity} from './lib/qz/qzSetup';
 import {ThemeProvider} from "@/components/composed/theme-provider.tsx";
 import {AuthGuard} from "@/components/composed/auth-guard.tsx";
-import {Layout} from "lucide-react";
+import Layout from "@/components/composed/layout.tsx";
 
 // Set up localStorage persistence for React Query
 const localStoragePersister = createSyncStoragePersister({

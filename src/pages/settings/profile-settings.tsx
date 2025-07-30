@@ -1,4 +1,4 @@
-import Profile from '@/pages/profile';
+import {Profile} from '@/features/Profile';
 
 export default function ProfileSettings() {
     return (

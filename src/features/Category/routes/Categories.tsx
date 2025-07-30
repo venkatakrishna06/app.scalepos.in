@@ -1,5 +1,5 @@
 import {AlertCircle, Edit2, FolderTree, Loader2, Plus, Search, Trash2} from 'lucide-react';
-import {CategoriesSkeleton} from '@/components/skeletons/categories-skeleton';
+
 import {Button} from '@/components/ui/button';
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle} from '@/components/ui/dialog';
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
@@ -8,6 +8,7 @@ import {Card, CardDescription, CardFooter, CardHeader, CardTitle} from '@/compon
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {Badge} from '@/components/ui/badge';
 import {useCategoriesPage} from '@/hooks/useCategoriesPage';
+import {CategoriesSkeleton} from "@/components/composed/categories-skeleton.tsx";
 
 export default function Categories() {
     const {

@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
 import {websocketService} from '@/lib/services/websocket.service';
-import {useAuthStore} from '@/lib/store/auth.store';
+import {useAuthStore} from '@/lib/auth/auth.store';
 
 /**
  * Hook for using WebSocket connection in components

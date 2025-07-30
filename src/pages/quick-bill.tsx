@@ -1,5 +1,5 @@
 import {memo} from 'react';
-import {DashboardTakeaway} from '@/components/dashboard/DashboardTakeaway';
+import {DashboardTakeaway} from '@/components/composed/DashboardTakeaway';
 
 /**
  * Takeaway page component that renders the takeaway order view

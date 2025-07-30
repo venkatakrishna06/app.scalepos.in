@@ -2,11 +2,11 @@ import {KitchenView as KitchenViewComponent} from '@/components/composed/Kitchen
 import {Order} from '@/types';
 
 interface KitchenViewProps {
-    orders: Order[];
+    orders?: Order[];
     onItemStatusChange: (orderId: number, itemId: number, newStatus: string) => void;
 }
 
-export function KitchenView({orders, onItemStatusChange}: KitchenViewProps) {
+export function KitchenView({orders = [], onItemStatusChange}: KitchenViewProps) {
     return (
         <KitchenViewComponent
             orders={orders}

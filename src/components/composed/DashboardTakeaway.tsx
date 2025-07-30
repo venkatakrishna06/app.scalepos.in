@@ -1,50 +1,52 @@
 import {memo, useCallback, useMemo, useState} from 'react';
-import {TakeawaySkeleton} from '@/components/skeletons/takeaway-skeleton';
-import {OrderItem} from '@/types';
-import {useAuthStore} from "@/lib/store/auth.store";
+import {ChevronRight, Loader2} from 'lucide-react';
+import {Dialog, DialogContent} from '@/components/ui/dialog';
+import {Button} from '@/components/ui/button';
+import {Order, OrderItem} from '@/types';
 import {toast} from '@/lib/toast';
+import {useAuthStore} from "@/lib/auth/auth.store";
+import {generateTokenNumber} from '@/lib/utils';
 import {useCategories, useMenuItems} from '@/api/menu';
-import {useCreateOrder, useUpdateOrderStatus} from '@/api/orders';
-import {useCreatePayment} from '@/api/payments';
-import {useRestaurant} from '@/api/restaurant';
+import {useCreateOrder, useUpdateOrder} from '@/api/orders';
 import {usePrinterConfig} from '@/api/printers';
-import {MenuItemAnalytics} from '@/types/analytics';
+import {useFavoriteItems} from '@/api/analytics';
 
 // ... (ESCPOS constants and helper functions remain the same)
 
-interface DashboardTakeawayProps {
-    onOrderCreated?: () => void;
-    type: string;
+interface CreateOrderDialogProps {
+    open: boolean;
+    onClose: () => void;
+    table_id?: number;
+    existingOrder?: Order | null;
+    orderType?: 'dine-in' | 'takeaway' | 'quick-bill';
 }
 
-const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
-                                                                          onOrderCreated,
-                                                                          type
-                                                                      }) => {
-    const [selectedCategory, setSelectedCategory] = useState<string>('all');
-    const [searchQuery, setSearchQuery] = useState('');
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [isCartOpen, setIsCartOpen] = useState(false);
-    const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
-    const [error, setError] = useState<string | null>(null);
-    const [favouriteItems, setFavouriteItems] = useState<MenuItemAnalytics[]>([]);
-    const [isLoadingFavourites, setIsLoadingFavourites] = useState(false);
-    const [editingItemId, setEditingItemId] = useState<number | null>(null);
-    const [itemNote, setItemNote] = useState<string>('');
-    const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'upi' | ''>('');
-    const [cashGiven, setCashGiven] = useState<string>('');
-    const [showTaxDetails, setShowTaxDetails] = useState(false);
-
+function CreateOrderDialogComponent({
+                                        open,
+                                        onClose,
+                                        table_id,
+                                        existingOrder,
+                                        orderType
+                                    }: CreateOrderDialogProps) {
     const {data: menuItems = [], isLoading: menuItemsLoading} = useMenuItems();
     const {data: categories = [], isLoading: categoriesLoading} = useCategories();
-    const {data: restaurant} = useRestaurant();
     const {data: printerConfig} = usePrinterConfig();
-    const createOrderMutation = useCreateOrder();
-    const createPaymentMutation = useCreatePayment();
-    const updateOrderStatusMutation = useUpdateOrderStatus();
-    const {user} = useAuthStore();
+    const {data: favoriteItems = [], isLoading: favoriteItemsLoading} = useFavoriteItems();
 
-    // ... (useEffect for sidebar, fetch favourites, etc. remain the same)
+    const createOrderMutation = useCreateOrder();
+    const updateOrderMutation = useUpdateOrder();
+    const {user} = useAuthStore(state => ({user: state.user}));
+
+    const [selectedCategory, setSelectedCategory] = useState<string>('all');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [orderItems, setOrderItems] = useState<OrderItem[]>(existingOrder?.items || []);
+    const [editingItemId, setEditingItemId] = useState<number | null>(null);
+    const [itemNote, setItemNote] = useState<string>('');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isCartOpen, setIsCartOpen] = useState(false);
+    const [currentOrderType, setCurrentOrderType] = useState<'dine-in' | 'takeaway' | 'quick-bill'>(table_id ? 'dine-in' : orderType || 'takeaway');
+
+    // ... (useEffect for sidebar, etc. remain the same)
 
     const mainCategories = useMemo(() =>
             categories.filter(cat => !cat.parent_category_id),
@@ -82,7 +84,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
 
     const filteredItems = useMemo(() => {
         if (selectedCategory === 'favourites') {
-            const favouriteItemIds = favouriteItems.map(item => item.menu_item_id);
+            const favouriteItemIds = favoriteItems.map(item => item.menu_item_id);
             return menuItems.filter(item => {
                 const isFavourite = favouriteItemIds.includes(item.id);
                 const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -94,128 +96,112 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
             const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
             return matchesCategory && matchesSearch;
         });
-    }, [menuItems, selectedCategory, searchQuery, favouriteItems]);
+    }, [menuItems, selectedCategory, searchQuery, favoriteItems]);
 
     // ... (handleQuantityChange, getItemQuantity, handleEditNote, handleSaveNote remain the same)
+
+    const handleSubmitOrder = useCallback(async () => {
+        try {
+            if (existingOrder) {
+                const itemsWithDetails = orderItems.map(item => {
+                    const menuItem = menuItems.find(m => m.id === item.menu_item_id);
+                    return {
+                        ...item,
+                        price: menuItem?.price || 0,
+                        name: menuItem?.name || '',
+                        include_in_gst: menuItem?.include_in_gst
+                    };
+                });
+
+                await updateOrderMutation.mutateAsync({id: existingOrder.id, order: {items: itemsWithDetails}});
+            } else {
+                const newOrder = {
+                    table_id: table_id,
+                    customer_id: 1,
+                    staff_id: user?.staff_id,
+                    status: 'placed' as const,
+                    order_time: new Date().toISOString(),
+                    order_type: table_id ? 'dine-in' : currentOrderType,
+                    token_number: !table_id ? generateTokenNumber() : undefined,
+                    items: orderItems.map(item => {
+                        const menuItem = menuItems.find(m => m.id === item.menu_item_id);
+                        return {
+                            menu_item_id: item.menu_item_id,
+                            quantity: item.quantity,
+                            notes: item.notes || '',
+                            include_in_gst: menuItem?.include_in_gst,
+                            name: menuItem?.name,
+                            price: menuItem?.price,
+                        };
+                    })
+                };
+                await createOrderMutation.mutateAsync(newOrder);
+            }
+
+            // handlePrintKOT();
+            onClose();
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to process order';
+            toast.error(errorMessage);
+        }
+    }, [
+        existingOrder,
+        orderItems,
+        menuItems,
+        table_id,
+        user,
+        currentOrderType,
+        onClose,
+        createOrderMutation,
+        updateOrderMutation
+    ]);
+
+    const totalAmount = useMemo(() =>
+            orderItems.reduce(
+                (sum, item) => {
+                    const menuItem = menuItems.find(m => m.id === item.menu_item_id);
+                    return sum + (menuItem?.price || 0) * item.quantity;
+                },
+                0
+            ),
+        [orderItems, menuItems]);
 
     const totalItems = useMemo(() =>
             orderItems.reduce((sum, item) => sum + item.quantity, 0),
         [orderItems]);
 
-    const calculateOrderTotals = (items: OrderItem[]) => {
-        const subTotal = items.reduce((total, item) => {
-            return total + (item.price * item.quantity);
-        }, 0);
-        const taxableAmount = items.reduce((total, item) => {
-            if (item.include_in_gst === true) {
-                return total + (item.price * item.quantity);
-            }
-            return total;
-        }, 0);
-        const sgstAmount = (taxableAmount * (restaurant?.default_sgst_rate || 0)) / 100;
-        const cgstAmount = (taxableAmount * (restaurant?.default_cgst_rate || 0)) / 100;
-        const totalAmount = subTotal + sgstAmount + cgstAmount;
-        return {
-            subTotal,
-            sgstAmount,
-            cgstAmount,
-            totalAmount
-        };
-    };
-
-    const gstDetails = useMemo(() => {
-        const {subTotal, sgstAmount, cgstAmount, totalAmount} = calculateOrderTotals(orderItems);
-        return {
-            subTotal,
-            sgstAmount,
-            cgstAmount,
-            sgstRate: restaurant?.default_sgst_rate || 0,
-            cgstRate: restaurant?.default_cgst_rate || 0,
-            totalAmount,
-            roundedAmount: Math.ceil(totalAmount),
-            roundingDifference: Math.ceil(totalAmount) - totalAmount
-        };
-    }, [orderItems, restaurant]);
-
-    const cashGivenNumber = cashGiven ? parseFloat(cashGiven) : 0;
-    const changeAmount = cashGivenNumber > gstDetails.roundedAmount ? cashGivenNumber - gstDetails.roundedAmount : 0;
-
-    // ... (generateReceiptContent, handlePrintBill, generateKOTContent, handlePrintKOT remain the same, but remove direct store access)
-
-    const handlePlaceOrder = useCallback(async () => {
-        if (orderItems.length === 0) return;
-        if (!paymentMethod) {
-            setError('Please select a payment method');
-            toast.error('Please select a payment method');
-            return;
-        }
-
-        try {
-            const tokenNumber = `${type.charAt(0).toUpperCase()}${Date.now().toString().slice(-6)}`;
-            const newOrder = {
-                order_type: type,
-                customer_id: 1,
-                staff_id: user?.staff_id,
-                status: 'placed' as const,
-                order_time: new Date().toISOString(),
-                token_number: tokenNumber,
-                items: orderItems.map(item => ({
-                    menu_item_id: item.menu_item_id,
-                    quantity: item.quantity,
-                    notes: item.notes || '',
-                    name: item.name,
-                    price: item.price,
-                    include_in_gst: item.include_in_gst
-                })),
-                sub_total: gstDetails.subTotal,
-                sgst_rate: gstDetails.sgstRate,
-                cgst_rate: gstDetails.cgstRate,
-                sgst_amount: gstDetails.sgstAmount,
-                cgst_amount: gstDetails.cgstAmount,
-                total_amount: gstDetails.totalAmount
-            };
-
-            const createdOrder = await createOrderMutation.mutateAsync(newOrder);
-
-            const payment = {
-                order_id: createdOrder.id,
-                amount: gstDetails.roundedAmount,
-                payment_method: paymentMethod,
-                payment_status: 'completed',
-                transaction_id: `txn_${Date.now()}`,
-            };
-
-            await createPaymentMutation.mutateAsync(payment);
-            await updateOrderStatusMutation.mutateAsync({id: createdOrder.id, status: 'paid'});
-
-            // handlePrintBill(createdOrder);
-            toast.success('Order placed and payment completed successfully');
-            setOrderItems([]);
-            setSearchQuery('');
-            setSelectedCategory('all');
-            setIsCartOpen(false);
-            setPaymentMethod('');
-            setCashGiven('');
-
-            if (onOrderCreated) {
-                onOrderCreated();
-            }
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Failed to process order';
-            setError(errorMessage);
-            toast.error(errorMessage);
-        }
-    }, [orderItems, user, type, paymentMethod, gstDetails, createOrderMutation, createPaymentMutation, updateOrderStatusMutation, onOrderCreated]);
-
     if (menuItemsLoading || categoriesLoading) {
-        return <TakeawaySkeleton type={type as 'takeaway' | 'quick-bill'}/>;
+        return <div>Loading...</div>
     }
 
     return (
-        <div className="flex h-[calc(100vh-8rem)] flex-col md:flex-row gap-1">
-            {/* ... (rest of the JSX remains the same, but remove direct store access) */}
-        </div>
+        <Dialog open={open}>
+            <DialogContent
+                onClose={onClose}
+                className="h-[90vh] max-h-[90vh] max-w-[90vw] md:max-w-[90vw] lg:max-w-[80vw] p-0 sm:p-2 overflow-hidden">
+                <div className="flex h-full flex-col overflow-hidden">
+                    {/* ... (rest of the JSX remains the same, but remove direct store access) */}
+                    <Button
+                        className="w-full justify-between py-4 text-base"
+                        onClick={handleSubmitOrder}
+                        disabled={orderItems.length === 0 || createOrderMutation.isLoading || updateOrderMutation.isLoading}
+                    >
+                        {(createOrderMutation.isLoading || updateOrderMutation.isLoading) ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                <span>Processing...</span>
+                            </>
+                        ) : (
+                            <>
+                                <span>{existingOrder ? 'Update Order' : 'Place Order'}</span>
+                                <ChevronRight className="h-5 w-5"/>
+                            </>
+                        )}
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
     );
-};
+}
 
-export const DashboardTakeaway = memo(DashboardTakeawayComponent);
+export const CreateOrderDialog = memo(CreateOrderDialogComponent);

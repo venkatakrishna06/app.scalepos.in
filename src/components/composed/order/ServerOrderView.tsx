@@ -3,14 +3,14 @@ import {Order} from '@/types';
 import {toast} from '@/lib/toast';
 
 interface ServerOrderViewProps {
-    orders: Order[];
+    orders?: Order[];
     currentServer: string;
     onMarkItemAsServed: (orderId: number, itemId: number) => void;
     onMarkOrderAsPaid: (orderId: number) => void;
 }
 
 export function ServerOrderView({
-                                    orders,
+                                    orders = [],
                                     currentServer,
                                     onMarkItemAsServed,
                                     onMarkOrderAsPaid

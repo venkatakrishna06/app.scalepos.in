@@ -1,5 +1,5 @@
 import {BarChart2, ClipboardList, LogOut, Menu, PlusCircle, Receipt, Settings, ShoppingBag, X} from 'lucide-react';
-import {Button} from './ui/button';
+import {Button} from '@/components/ui/button';
 import {PropsWithChildren} from 'react';
 import {useLocation, useNavigate} from 'react-router-dom';
 import {useAuthStore} from '@/lib/auth/auth.store';

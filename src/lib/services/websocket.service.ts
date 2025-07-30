@@ -1,10 +1,4 @@
 import {tokenService} from './token.service';
-import {useRootStore} from '../store/root.store';
-import {useTableStore} from '../store/table.store';
-import {useOrderStore} from '../store/order.store';
-import {useMenuStore} from '../store/menu.store';
-import {useNotificationStore} from '../store/notification.store';
-import {CACHE_KEYS, cacheService} from './cache.service';
 import {queryClient} from '../queryClient';
 import {MenuItem, Order, Table} from '@/types';
 
@@ -17,7 +11,7 @@ interface DeletedEntityData {
 }
 
 interface OrderItemStatusUpdateData {
-    id: number;
+    id:number;
     order_id: number;
     status: 'placed' | 'preparing' | 'served' | 'cancelled';
 }
@@ -26,24 +20,6 @@ interface WebSocketMessage<T = Table | Order | MenuItem | DeletedEntityData | Or
     type: WebSocketMessageType;
     data: T;
     restaurant_id: number;
-}
-
-// Define a type for the root store state
-interface RootStoreState {
-    tableStore: {
-        tables: Table[];
-        [key: string]: unknown;
-    };
-    orderStore: {
-        orders: Order[];
-        [key: string]: unknown;
-    };
-    menuStore: {
-        menuItems: MenuItem[];
-        [key: string]: unknown;
-    };
-
-    [key: string]: unknown;
 }
 
 /**
@@ -138,23 +114,18 @@ class WebSocketService {
         try {
             const message = JSON.parse(event.data) as WebSocketMessage;
 
-            // Log the received WebSocket message
-
-            // Get the root store to access individual stores
-            const rootStore = useRootStore.getState() as RootStoreState;
-
             switch (message.type) {
                 case 'table_update':
-                    this.handleTableUpdate(message.data, rootStore);
+                    this.handleTableUpdate(message.data as Table | DeletedEntityData);
                     break;
                 case 'order_update':
-                    this.handleOrderUpdate(message.data, rootStore);
+                    this.handleOrderUpdate(message.data as Order | DeletedEntityData);
                     break;
                 case 'menu_item_update':
-                    this.handleMenuItemUpdate(message.data, rootStore);
+                    this.handleMenuItemUpdate(message.data as MenuItem | DeletedEntityData);
                     break;
                 case 'order_item_status_update':
-                    this.handleOrderItemStatusUpdate(message.data, rootStore);
+                    this.handleOrderItemStatusUpdate(message.data as OrderItemStatusUpdateData);
                     break;
                 default:
 
@@ -209,300 +180,29 @@ class WebSocketService {
     /**
      * Handle table update message
      */
-    private handleTableUpdate(data: Table | DeletedEntityData, rootStore: RootStoreState): void {
-        const tableStore = rootStore.tableStore;
-
-        // Log the table update data
-
-        if ('deleted' in data && data.deleted) {
-            // Handle table deletion
-
-            const tables = tableStore.tables.filter((table: Table) => table.id !== data.id);
-
-            // Update both the root store and the table store directly
-            useRootStore.setState({tableStore: {...tableStore, tables}});
-            useTableStore.setState({tables});
-
-
-            // Add notification
-            useNotificationStore.getState().addNotification({
-                type: 'table_update',
-                message: `Table ${data.id} has been deleted`,
-                entityId: data.id,
-            });
-        } else {
-            // Handle table creation or update
-            const tableData = data as Table;
-            const existingTableIndex = tableStore.tables.findIndex((table: Table) => table.id === tableData.id);
-
-            if (existingTableIndex >= 0) {
-                // Update existing table
-
-                const updatedTables = [...tableStore.tables];
-                updatedTables[existingTableIndex] = tableData;
-
-                // Update both the root store and the table store directly
-                useRootStore.setState({tableStore: {...tableStore, tables: updatedTables}});
-                useTableStore.setState({tables: updatedTables});
-
-
-                // Add notification
-                useNotificationStore.getState().addNotification({
-                    type: 'table_update',
-                    message: `Table ${tableData.table_number} has been updated`,
-                    details: `Status: ${tableData.status}`,
-                    entityId: tableData.id,
-                });
-            } else {
-                // Add new table
-
-                const newTables = [...tableStore.tables, tableData];
-
-                // Update both the root store and the table store directly
-                useRootStore.setState({
-                    tableStore: {
-                        ...tableStore,
-                        tables: newTables
-                    }
-                });
-                useTableStore.setState({tables: newTables});
-
-
-                // Add notification
-                useNotificationStore.getState().addNotification({
-                    type: 'table_update',
-                    message: `New table ${tableData.table_number} has been added`,
-                    details: `Capacity: ${tableData.capacity}`,
-                    entityId: tableData.id,
-                });
-            }
-        }
+    private handleTableUpdate(data: Table | DeletedEntityData): void {
+        queryClient.invalidateQueries({queryKey: ['tables']});
     }
 
     /**
      * Handle order update message
      */
-    private handleOrderUpdate(data: Order | DeletedEntityData, rootStore: RootStoreState): void {
-        const orderStore = rootStore.orderStore;
-
-        // Log the order update data
-
-        if ('deleted' in data && data.deleted) {
-            // Handle order deletion
-
-            const orders = orderStore.orders.filter((order: Order) => order.id !== data.id);
-
-            // Update both the root store and the order store directly
-            useRootStore.setState({orderStore: {...orderStore, orders}});
-            useOrderStore.setState({orders});
-
-            // Update cache
-            cacheService.setCache(CACHE_KEYS.ORDERS, orders);
-
-            // Invalidate React Query cache
-            queryClient.invalidateQueries({queryKey: ['orders']});
-            // Specifically invalidate the query used in the orders page
-            queryClient.invalidateQueries({queryKey: ['orders', {period: 'day'}]});
-
-            // Add notification
-            useNotificationStore.getState().addNotification({
-                type: 'order_update',
-                message: `Order #${data.id} has been deleted`,
-                entityId: data.id,
-            });
-        } else {
-            // Handle order creation or update
-            const orderData = data as Order;
-            const existingOrderIndex = orderStore.orders.findIndex((order: Order) => order.id === orderData.id);
-
-            if (existingOrderIndex >= 0) {
-                // Update existing order
-
-                const updatedOrders = [...orderStore.orders];
-                updatedOrders[existingOrderIndex] = orderData;
-
-                // Update both the root store and the order store directly
-                useRootStore.setState({orderStore: {...orderStore, orders: updatedOrders}});
-                useOrderStore.setState({orders: updatedOrders});
-
-                // Update cache
-                cacheService.setCache(CACHE_KEYS.ORDERS, updatedOrders);
-
-                // Invalidate React Query cache
-                queryClient.invalidateQueries({queryKey: ['orders']});
-                // Specifically invalidate the query used in the orders page
-                queryClient.invalidateQueries({queryKey: ['orders', {period: 'day'}]});
-
-                // Add notification
-                useNotificationStore.getState().addNotification({
-                    type: 'order_update',
-                    message: `Order #${orderData.id} has been updated`,
-                    details: `Status: ${orderData.status}`,
-                    entityId: orderData.id,
-                });
-            } else {
-                // Add new order
-
-                const newOrders = [...orderStore.orders, orderData];
-
-                // Update both the root store and the order store directly
-                useRootStore.setState({
-                    orderStore: {
-                        ...orderStore,
-                        orders: newOrders
-                    }
-                });
-                useOrderStore.setState({orders: newOrders});
-
-                // Update cache
-                cacheService.setCache(CACHE_KEYS.ORDERS, newOrders);
-
-                // Invalidate React Query cache
-                queryClient.invalidateQueries({queryKey: ['orders']});
-                // Specifically invalidate the query used in the orders page
-                queryClient.invalidateQueries({queryKey: ['orders', {period: 'day'}]});
-
-                // Add notification
-                useNotificationStore.getState().addNotification({
-                    type: 'order_update',
-                    message: `New order #${orderData.id} has been created`,
-                    details: `Total: ${orderData.total_amount.toFixed(2)}`,
-                    entityId: orderData.id,
-                });
-            }
-        }
+    private handleOrderUpdate(data: Order | DeletedEntityData): void {
+        queryClient.invalidateQueries({queryKey: ['orders']});
     }
 
     /**
      * Handle menu item update message
      */
-    private handleMenuItemUpdate(data: MenuItem | DeletedEntityData, rootStore: RootStoreState): void {
-        const menuStore = rootStore.menuStore;
-
-        // Log the menu item update data
-
-        if ('deleted' in data && data.deleted) {
-            // Handle menu item deletion
-
-            const menuItems = menuStore.menuItems.filter((item: MenuItem) => item.id !== data.id);
-
-            // Update both the root store and the menu store directly
-            useRootStore.setState({menuStore: {...menuStore, menuItems}});
-            useMenuStore.setState({menuItems});
-
-            // Update cache
-            cacheService.setCache(CACHE_KEYS.MENU_ITEMS, menuItems);
-
-            // Invalidate React Query cache for menu items
-            queryClient.invalidateQueries({queryKey: ['menu', 'items']});
-
-            // Add notification
-            useNotificationStore.getState().addNotification({
-                type: 'menu_item_update',
-                message: `Menu item #${data.id} has been deleted`,
-                entityId: data.id,
-            });
-        } else {
-            // Handle menu item creation or update
-            const menuItemData = data as MenuItem;
-            const existingItemIndex = menuStore.menuItems.findIndex((item: MenuItem) => item.id === menuItemData.id);
-
-            if (existingItemIndex >= 0) {
-                // Update existing menu item
-
-                const updatedMenuItems = [...menuStore.menuItems];
-                updatedMenuItems[existingItemIndex] = menuItemData;
-
-                // Update both the root store and the menu store directly
-                useRootStore.setState({menuStore: {...menuStore, menuItems: updatedMenuItems}});
-                useMenuStore.setState({menuItems: updatedMenuItems});
-
-                // Update cache
-                cacheService.setCache(CACHE_KEYS.MENU_ITEMS, updatedMenuItems);
-
-                // Invalidate React Query cache for menu items
-                queryClient.invalidateQueries({queryKey: ['menu', 'items']});
-
-                // Add notification
-                useNotificationStore.getState().addNotification({
-                    type: 'menu_item_update',
-                    message: `Menu item "${menuItemData.name}" has been updated`,
-                    details: `Price: ${menuItemData.price.toFixed(2)}`,
-                    entityId: menuItemData.id,
-                });
-            } else {
-                // Add new menu item
-
-                const newMenuItems = [...menuStore.menuItems, menuItemData];
-
-                // Update both the root store and the menu store directly
-                useRootStore.setState({
-                    menuStore: {
-                        ...menuStore,
-                        menuItems: newMenuItems
-                    }
-                });
-                useMenuStore.setState({menuItems: newMenuItems});
-
-                // Update cache
-                cacheService.setCache(CACHE_KEYS.MENU_ITEMS, newMenuItems);
-
-                // Invalidate React Query cache for menu items
-                queryClient.invalidateQueries({queryKey: ['menu', 'items']});
-
-                // Add notification
-                useNotificationStore.getState().addNotification({
-                    type: 'menu_item_update',
-                    message: `New menu item "${menuItemData.name}" has been added`,
-                    details: `Price: ${menuItemData.price.toFixed(2)}`,
-                    entityId: menuItemData.id,
-                });
-            }
-        }
+    private handleMenuItemUpdate(data: MenuItem | DeletedEntityData): void {
+        queryClient.invalidateQueries({queryKey: ['menu', 'items']});
     }
 
     /**
      * Handle order item status update message
      */
-    private handleOrderItemStatusUpdate(data: OrderItemStatusUpdateData, rootStore: RootStoreState): void {
-        const orderStore = rootStore.orderStore;
-
-        // Log the order item status update data
-
-        // Find the order and update the status of the specific item
-        const orderIndex = orderStore.orders.findIndex((order: Order) => order.id === data.order_id);
-        if (orderIndex >= 0) {
-            const updatedOrders = [...orderStore.orders];
-            const order = updatedOrders[orderIndex];
-
-            const itemIndex = order.items.findIndex((item) => item.id === data.id);
-            if (itemIndex >= 0) {
-                const item = order.items[itemIndex];
-                const oldStatus = item.status;
-                item.status = data.status;
-                updatedOrders[orderIndex] = order;
-
-                // Update both the root store and the order store directly
-                useRootStore.setState({orderStore: {...orderStore, orders: updatedOrders}});
-                useOrderStore.setState({orders: updatedOrders});
-
-                // Update cache
-                cacheService.setCache(CACHE_KEYS.ORDERS, updatedOrders);
-
-                // Invalidate React Query cache
-                queryClient.invalidateQueries({queryKey: ['orders']});
-                // Specifically invalidate the query used in the orders page
-                queryClient.invalidateQueries({queryKey: ['orders', {period: 'day'}]});
-
-                // Add notification
-                useNotificationStore.getState().addNotification({
-                    type: 'order_item_status_update',
-                    message: `Order #${order.id} item status changed`,
-                    details: `${item.name} changed from ${oldStatus} to ${data.status}`,
-                    entityId: order.id,
-                });
-            }
-        }
+    private handleOrderItemStatusUpdate(data: OrderItemStatusUpdateData): void {
+        queryClient.invalidateQueries({queryKey: ['orders']});
     }
 
 }

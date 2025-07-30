@@ -1,11 +1,12 @@
 import {Clock, Edit2, Filter, Phone, Plus, Search, Trash2} from 'lucide-react';
-import {StaffSkeleton} from '@/components/skeletons/staff-skeleton';
 import {Button} from '@/components/ui/button';
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle} from '@/components/ui/dialog';
 import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu";
-import {StaffForm} from '@/components/forms/staff-form';
+
 import {useStaffPage} from '@/hooks/useStaffPage';
 import {ConfirmationDialog} from '@/components/composed/ConfirmationDialog';
+import {StaffSkeleton} from "@/components/composed/staff-skeleton.tsx";
+import {StaffForm} from "@/components/composed/staff-form.tsx";
 
 export default function Staff() {
     const {
