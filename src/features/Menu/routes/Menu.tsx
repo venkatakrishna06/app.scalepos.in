@@ -1,4 +1,4 @@
-import { useState } from 'react';
+
 import {
     AlertCircle,
     ArrowUpRight,
@@ -29,83 +29,46 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MenuItemForm } from '@/components/composed/menu-item-form';
-import { MenuItem } from '@/types';
-import { toast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
-import { useMenuItems, useCategories, useCreateMenuItem, useUpdateMenuItem, useDeleteMenuItem } from '@/api/menu';
 import { PERMISSIONS } from '@/lib/auth/roles';
-
-type SortField = 'name' | 'price' | 'category';
-type ViewMode = 'grid' | 'list';
+import { useMenuPage } from '@/hooks/useMenuPage';
 
 export default function Menu() {
     const { hasPermission } = usePermissions();
-
-    const { data: menuItems = [], isLoading: menuItemsLoading, isError: menuItemsError, error: menuItemsErrorMessage } = useMenuItems();
-    const { data: categories = [], isLoading: categoriesLoading, isError: categoriesError, error: categoriesErrorMessage } = useCategories();
-    const createMenuItemMutation = useCreateMenuItem();
-    const updateMenuItemMutation = useUpdateMenuItem();
-    const deleteMenuItemMutation = useDeleteMenuItem();
-
-    const [selectedCategory, setSelectedCategory] = useState<string>('all');
-    const [searchQuery, setSearchQuery] = useState<string>('');
-    const [showAddDialog, setShowAddDialog] = useState(false);
-    const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
-    const [sortField, setSortField] = useState<SortField>('name');
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-    const [viewMode, setViewMode] = useState<ViewMode>('grid');
-    const [availabilityFilter, setAvailabilityFilter] = useState<string>('all');
-
-    const filteredItems = menuItems.filter((item) => {
-        const matchesCategory = selectedCategory === 'all' || item.category.name === selectedCategory;
-        const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.category.name.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesAvailability = availabilityFilter === 'all' ||
-            (availabilityFilter === 'available' && item.available) ||
-            (availabilityFilter === 'unavailable' && !item.available);
-        return matchesCategory && matchesSearch && matchesAvailability;
-    });
-
-    const handleSubmit = async (data: Omit<MenuItem, 'id' | 'available' | 'category'> & { category_id: number }) => {
-        try {
-            if (editingItem) {
-                await updateMenuItemMutation.mutateAsync({ id: editingItem.id, item: data });
-                toast.success('Menu item updated successfully');
-                setEditingItem(null);
-            } else {
-                await createMenuItemMutation.mutateAsync({ ...data, available: true });
-                toast.success('Menu item created successfully');
-            }
-            setShowAddDialog(false);
-        } catch (error) {
-            toast.error('Failed to save menu item');
-        }
-    };
-
-    const handleDelete = async (id: number) => {
-        try {
-            await deleteMenuItemMutation.mutateAsync(id);
-            toast.success('Menu item deleted successfully');
-        } catch (error) {
-            toast.error('Failed to delete menu item');
-        }
-    };
-
-    const handleToggleAvailability = async (id: number) => {
-        try {
-            const item = menuItems.find(item => item.id === id);
-            if (item) {
-                await updateMenuItemMutation.mutateAsync({
-                    id,
-                    item: { available: !item.available }
-                });
-                toast.success('Item availability updated');
-            }
-        } catch (err) {
-            toast.error('Failed to update item availability');
-        }
-    };
+    const {
+        menuItemsLoading,
+        menuItemsError,
+        menuItemsErrorMessage,
+        categories,
+        categoriesLoading,
+        categoriesError,
+        categoriesErrorMessage,
+        createMenuItemMutation,
+        updateMenuItemMutation,
+        deleteMenuItemMutation,
+        selectedCategory,
+        setSelectedCategory,
+        searchQuery,
+        setSearchQuery,
+        showAddDialog,
+        setShowAddDialog,
+        editingItem,
+        setEditingItem,
+        sortField,
+        setSortField,
+        sortOrder,
+        setSortOrder,
+        viewMode,
+        setViewMode,
+        availabilityFilter,
+        setAvailabilityFilter,
+        filteredItems,
+        handleSubmit,
+        handleDelete,
+        handleToggleAvailability,
+        openEditDialog,
+        openNewDialog
+    } = useMenuPage();
 
     if (menuItemsLoading || categoriesLoading) {
         return <MenuSkeleton />;
@@ -160,7 +123,7 @@ export default function Menu() {
                     </Button>
 
                     {hasPermission(PERMISSIONS.CREATE_MENU) && (
-                        <Button onClick={() => setShowAddDialog(true)}>
+                        <Button onClick={openNewDialog}>
                             <Plus className="mr-2 h-4 w-4" />
                             Add Item
                         </Button>
@@ -227,7 +190,7 @@ export default function Menu() {
                             </SelectContent>
                         </Select>
 
-                        <Select value={sortField} onValueChange={(value) => setSortField(value as SortField)}>
+                        <Select value={sortField} onValueChange={(value) => setSortField(value as 'name' | 'price' | 'category')}>
                             <SelectTrigger className="h-10 w-full sm:w-[180px]">
                                 <LayoutList className="mr-2 h-4 w-4 text-muted-foreground" />
                                 <SelectValue placeholder="Sort by" />
@@ -332,10 +295,7 @@ export default function Menu() {
                                                 )}
                                                 {hasPermission(PERMISSIONS.UPDATE_MENU) && (
                                                     <DropdownMenuItem
-                                                        onClick={() => {
-                                                            setEditingItem(item);
-                                                            setShowAddDialog(true);
-                                                        }}
+                                                        onClick={() => openEditDialog(item)}
                                                         disabled={createMenuItemMutation.isLoading || updateMenuItemMutation.isLoading || deleteMenuItemMutation.isLoading}
                                                     >
                                                         <Edit2 className="mr-2 h-4 w-4" />
@@ -462,10 +422,7 @@ export default function Menu() {
                                                     variant="ghost"
                                                     size="sm"
                                                     className="h-8 px-2 text-xs"
-                                                    onClick={() => {
-                                                        setEditingItem(item);
-                                                        setShowAddDialog(true);
-                                                    }}
+                                                    onClick={() => openEditDialog(item)}
                                                     disabled={createMenuItemMutation.isLoading || updateMenuItemMutation.isLoading || deleteMenuItemMutation.isLoading}
                                                 >
                                                     <Edit2 className="mr-1.5 h-3.5 w-3.5" />
@@ -505,7 +462,7 @@ export default function Menu() {
                             <Button
                                 variant="default"
                                 className="mt-6"
-                                onClick={() => setShowAddDialog(true)}
+                                onClick={openNewDialog}
                             >
                                 <Plus className="mr-2 h-4 w-4" />
                                 Add New Item

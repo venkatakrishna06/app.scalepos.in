@@ -11,14 +11,14 @@ import {UserManagementSkeleton} from '@/components/skeletons/user-management-ske
 
 // Lazy load pages to reduce initial bundle size
 const Dashboard = React.lazy(() => import('@/pages/dashboard'));
-const Tables = React.lazy(() => import('@/pages/tables'));
-const Orders = React.lazy(() => import('@/pages/orders'));
+const Tables = React.lazy(() => import('@/features/Table/routes/Tables'));
+const Orders = React.lazy(() => import('@/features/Order/routes/Orders'));
 const Takeaway = React.lazy(() => import('@/pages/takeaway'));
-const Menu = React.lazy(() => import('@/pages/menu'));
-const Categories = React.lazy(() => import('@/pages/categories'));
-const Staff = React.lazy(() => import('@/pages/staff'));
-const Payments = React.lazy(() => import('@/pages/payments'));
-const Profile = React.lazy(() => import('@/pages/profile'));
+const Menu = React.lazy(() => import('@/features/Menu/routes/Menu'));
+const Categories = React.lazy(() => import('@/features/Category/routes/Categories'));
+const Staff = React.lazy(() => import('@/features/Staff/routes/Staff'));
+const Payments = React.lazy(() => import('@/features/Payment/routes/Payments'));
+const Profile = React.lazy(() => import('@/features/Profile/routes/Profile'));
 const UserManagement = React.lazy(() => import('@/pages/UserManagement'));
 const Settings = React.lazy(() => import('@/pages/settings'));
 const ProfileSettings = React.lazy(() => import('@/pages/settings/profile-settings'));

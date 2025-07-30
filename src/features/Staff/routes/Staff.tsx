@@ -1,73 +1,38 @@
+
 import { Clock, Edit2, Filter, Phone, Plus, Search, Trash2 } from 'lucide-react';
 import { StaffSkeleton } from '@/components/skeletons/staff-skeleton';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { StaffForm } from '@/components/forms/staff-form';
-import { useState } from 'react';
-import { StaffMember } from '@/types';
-import { toast } from '@/lib/toast';
-import { useStaff, useCreateStaff, useUpdateStaff, useDeleteStaff } from '@/api/staff';
-
-type SortField = 'name' | 'role' | 'status';
-type SortOrder = 'asc' | 'desc';
+import { useStaffPage } from '@/hooks/useStaffPage';
+import { ConfirmationDialog } from '@/components/composed/ConfirmationDialog';
 
 export default function Staff() {
-    const { data: staff = [], isLoading, isError, error } = useStaff();
-    const createStaffMutation = useCreateStaff();
-    const updateStaffMutation = useUpdateStaff();
-    const deleteStaffMutation = useDeleteStaff();
-
-    const [searchQuery, setSearchQuery] = useState('');
-    const [roleFilter, setRoleFilter] = useState<string>('all');
-    const [sortField, setSortField] = useState<SortField>('name');
-    const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
-    const [showDialog, setShowDialog] = useState(false);
-    const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
-
-    const filteredStaff = staff
-        .filter((member) => {
-            const matchesSearch =
-                member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                member.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                member.phone.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesRole = roleFilter === 'all' || member.role === roleFilter;
-            return matchesSearch && matchesRole;
-        })
-        .sort((a, b) => {
-            const aValue = a[sortField].toLowerCase();
-            const bValue = b[sortField].toLowerCase();
-            const sortMultiplier = sortOrder === 'asc' ? 1 : -1;
-            return aValue.localeCompare(bValue) * sortMultiplier;
-        });
-
-    const handleSubmit = async (data: Omit<StaffMember, 'id'>) => {
-        try {
-            if (editingStaff) {
-                await updateStaffMutation.mutateAsync({ id: editingStaff.id, staff: data });
-                toast.success('Staff member updated successfully');
-            } else {
-                await createStaffMutation.mutateAsync(data);
-                toast.success('Staff member created successfully');
-            }
-            setShowDialog(false);
-            setEditingStaff(null);
-        } catch (err) {
-            toast.error('Failed to save staff member');
-        }
-    };
-
-    const handleDelete = async (id: number) => {
-        const confirmed = window.confirm('Are you sure you want to delete this staff member?');
-        if (!confirmed) return;
-
-        try {
-            await deleteStaffMutation.mutateAsync(id);
-            toast.success('Staff member deleted successfully');
-        } catch (err) {
-            toast.error('Failed to delete staff member');
-        }
-    };
+    const {
+        isLoading,
+        isError,
+        error,
+        createStaffMutation,
+        updateStaffMutation,
+        deleteStaffMutation,
+        searchQuery,
+        setSearchQuery,
+        roleFilter,
+        setRoleFilter,
+        showDialog,
+        setShowDialog,
+        editingStaff,
+        setEditingStaff,
+        filteredStaff,
+        handleSubmit,
+        handleDelete,
+        isDeleteDialogOpen,
+        setIsDeleteDialogOpen,
+        openDeleteDialog,
+        openEditDialog,
+        openNewDialog
+    } = useStaffPage();
 
     if (isLoading) {
         return <StaffSkeleton />;
@@ -123,7 +88,7 @@ export default function Staff() {
                             </DropdownMenuContent>
                         </DropdownMenu>
                         <Button
-                            onClick={() => setShowDialog(true)}
+                            onClick={openNewDialog}
                             disabled={createStaffMutation.isLoading || updateStaffMutation.isLoading || deleteStaffMutation.isLoading}
                             className="h-10 w-full sm:w-auto"
                         >
@@ -197,10 +162,7 @@ export default function Staff() {
                                         variant="outline"
                                         size="sm"
                                         className="flex-1 h-10 border-primary/30 hover:bg-primary/5"
-                                        onClick={() => {
-                                            setEditingStaff(member);
-                                            setShowDialog(true);
-                                        }}
+                                        onClick={() => openEditDialog(member)}
                                         disabled={createStaffMutation.isLoading || updateStaffMutation.isLoading || deleteStaffMutation.isLoading}
                                     >
                                         <Edit2 className="mr-2 h-4 w-4" />
@@ -210,7 +172,7 @@ export default function Staff() {
                                         variant="destructive"
                                         size="sm"
                                         className="flex-1 h-10 opacity-80 hover:opacity-100"
-                                        onClick={() => handleDelete(member.id)}
+                                        onClick={() => openDeleteDialog(member.id)}
                                         disabled={createStaffMutation.isLoading || updateStaffMutation.isLoading || deleteStaffMutation.isLoading}
                                     >
                                         <Trash2 className="mr-2 h-4 w-4" />
@@ -251,6 +213,15 @@ export default function Staff() {
                     />
                 </DialogContent>
             </Dialog>
+
+            <ConfirmationDialog
+                open={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
+                onConfirm={handleDelete}
+                title="Delete Staff Member"
+                description="Are you sure you want to delete this staff member? This action cannot be undone."
+                confirmText="Yes, Delete"
+            />
         </div>
     );
 }

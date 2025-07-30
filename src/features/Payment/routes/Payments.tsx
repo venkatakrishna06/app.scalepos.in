@@ -1,29 +1,24 @@
+
 import { Calendar, CreditCard, Search } from 'lucide-react';
 import { PaymentsSkeleton } from '@/components/skeletons/payments-skeleton';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
 import { format } from 'date-fns';
-import { usePayments } from '@/api/payments';
-import { useOrders } from '@/api/orders';
+import { usePaymentsPage } from '@/hooks/usePaymentsPage';
 
 export default function Payments() {
-    const { data: payments = [], isLoading: paymentsLoading, isError: paymentsError, error: paymentsErrorMessage } = usePayments();
-    const { data: orders = [], isLoading: ordersLoading, isError: ordersError, error: ordersErrorMessage } = useOrders();
-    const [searchQuery, setSearchQuery] = useState('');
+    const {
+        paymentsLoading,
+        paymentsError,
+        paymentsErrorMessage,
+        ordersLoading,
+        ordersError,
+        ordersErrorMessage,
+        searchQuery,
+        setSearchQuery,
+        getOrderDetails,
+        filteredPayments
+    } = usePaymentsPage();
 
-    const getOrderDetails = (orderId: number) => {
-        return orders.find(order => order.id === orderId);
-    };
-
-    const filteredPayments = payments.filter(payment => {
-        const order = getOrderDetails(payment.order_id);
-        return (
-            order?.id.toString().includes(searchQuery) ||
-            payment.payment_method.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            order?.customer?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            order?.table?.table_number?.toString().includes(searchQuery)
-        );
-    });
 
     if (paymentsLoading || ordersLoading) {
         return <PaymentsSkeleton />;

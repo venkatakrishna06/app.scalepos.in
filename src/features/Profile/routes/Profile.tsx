@@ -1,82 +1,32 @@
-import { useEffect, useState } from 'react';
-import { useAuthStore } from '@/lib/auth/auth.store';
+
+import { AlertCircle, Camera, Key, Loader2, Mail, Phone, Save, User as UserIcon, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { AlertCircle, Camera, Key, Loader2, Mail, Phone, Save, User as UserIcon, X } from 'lucide-react';
-import { toast } from "sonner";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useUpdateProfile, useChangePassword } from '@/api/auth';
+import { useProfilePage } from '@/hooks/useProfilePage';
 
 export default function Profile() {
-    const { user, loading, error, initAuth } = useAuthStore();
-    const updateProfileMutation = useUpdateProfile();
-    const changePasswordMutation = useChangePassword();
-
-    const [showPasswordDialog, setShowPasswordDialog] = useState(false);
-    const [currentPassword, setCurrentPassword] = useState('');
-    const [newPassword, setNewPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [passwordError, setPasswordError] = useState('');
-    const [isEditing, setIsEditing] = useState(false);
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        phone: '',
-    });
-    const [activeTab, setActiveTab] = useState('personal');
-
-    useEffect(() => {
-        if (!user) {
-            initAuth();
-        } else {
-            setFormData({
-                name: user.staff.name || '',
-                email: user.username || '',
-                phone: user.staff.phone || '',
-            });
-        }
-    }, [user, initAuth]);
-
-    const handleProfileUpdate = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            await updateProfileMutation.mutateAsync(formData);
-            setIsEditing(false);
-            toast.success('Profile updated successfully');
-        } catch (err) {
-            toast.error('Failed to update profile');
-        }
-    };
-
-    const handlePasswordChange = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setPasswordError('');
-
-        if (newPassword !== confirmPassword) {
-            setPasswordError('New passwords do not match');
-            return;
-        }
-
-        if (newPassword.length < 8) {
-            setPasswordError('Password must be at least 8 characters long');
-            return;
-        }
-
-        try {
-            await changePasswordMutation.mutateAsync({ currentPassword, newPassword });
-            setShowPasswordDialog(false);
-            setCurrentPassword('');
-            setNewPassword('');
-            setConfirmPassword('');
-            toast.success('Password changed successfully');
-        } catch (err) {
-            setPasswordError('Failed to change password');
-        }
-    };
+    const {
+        user,
+        loading,
+        error,
+        showPasswordDialog,
+        passwordError,
+        isEditing,
+        formData,
+        activeTab,
+        dispatch,
+        updateProfileMutation,
+        changePasswordMutation,
+        handleProfileUpdate,
+        handlePasswordChange,
+        cancelEdit,
+        initAuth,
+    } = useProfilePage();
 
     if (loading) {
         return (
@@ -108,7 +58,11 @@ export default function Profile() {
 
     return (
         <div>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs
+                value={activeTab}
+                onValueChange={(payload) => dispatch({ type: 'SET_ACTIVE_TAB', payload })}
+                className="w-full"
+            >
                 <TabsList className="mb-6 grid w-full grid-cols-2">
                     <TabsTrigger value="personal">Personal Information</TabsTrigger>
                     <TabsTrigger value="security">Security</TabsTrigger>
@@ -117,8 +71,7 @@ export default function Profile() {
                 <TabsContent value="personal" className="space-y-6">
                     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8">
                         <div className="relative">
-                            <div
-                                className="h-24 w-24 rounded-full bg-muted flex items-center justify-center border-2 border-primary/10">
+                            <div className="h-24 w-24 rounded-full bg-muted flex items-center justify-center border-2 border-primary/10">
                                 {user?.avatar_url ? (
                                     <img
                                         src={user.avatar_url}
@@ -141,7 +94,7 @@ export default function Profile() {
                             <p className="text-muted-foreground">{user?.role}</p>
                             {!isEditing && (
                                 <Button
-                                    onClick={() => setIsEditing(true)}
+                                    onClick={() => dispatch({ type: 'SET_IS_EDITING', payload: true })}
                                     variant="outline"
                                     size="sm"
                                     className="mt-2"
@@ -171,7 +124,9 @@ export default function Profile() {
                                         id="name"
                                         type="text"
                                         value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        onChange={(e) =>
+                                            dispatch({ type: 'SET_FORM_DATA', payload: { name: e.target.value } })
+                                        }
                                         disabled={!isEditing}
                                         className="pl-10"
                                         placeholder="Your full name"
@@ -189,7 +144,9 @@ export default function Profile() {
                                         id="email"
                                         type="email"
                                         value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                        onChange={(e) =>
+                                            dispatch({ type: 'SET_FORM_DATA', payload: { email: e.target.value } })
+                                        }
                                         disabled={!isEditing}
                                         className="pl-10"
                                         placeholder="Your email address"
@@ -207,7 +164,9 @@ export default function Profile() {
                                         id="phone"
                                         type="tel"
                                         value={formData.phone}
-                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                        onChange={(e) =>
+                                            dispatch({ type: 'SET_FORM_DATA', payload: { phone: e.target.value } })
+                                        }
                                         disabled={!isEditing}
                                         className="pl-10"
                                         placeholder="Your phone number"
@@ -218,18 +177,7 @@ export default function Profile() {
 
                         {isEditing && (
                             <div className="flex justify-end gap-3">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => {
-                                        setIsEditing(false);
-                                        setFormData({
-                                            name: user?.staff.name || '',
-                                            email: user?.username || '',
-                                            phone: user?.staff.phone || '',
-                                        });
-                                    }}
-                                >
+                                <Button type="button" variant="outline" onClick={cancelEdit}>
                                     <X className="mr-2 h-4 w-4" />
                                     Cancel
                                 </Button>
@@ -257,7 +205,7 @@ export default function Profile() {
                         <CardFooter>
                             <Button
                                 variant="outline"
-                                onClick={() => setShowPasswordDialog(true)}
+                                onClick={() => dispatch({ type: 'SET_SHOW_PASSWORD_DIALOG', payload: true })}
                                 className="flex items-center gap-2"
                             >
                                 <Key className="h-4 w-4" />
@@ -296,7 +244,10 @@ export default function Profile() {
                 </TabsContent>
             </Tabs>
 
-            <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+            <Dialog
+                open={showPasswordDialog}
+                onOpenChange={(payload) => dispatch({ type: 'SET_SHOW_PASSWORD_DIALOG', payload })}
+            >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Change Password</DialogTitle>
@@ -315,8 +266,9 @@ export default function Profile() {
                             <Input
                                 id="current-password"
                                 type="password"
-                                value={currentPassword}
-                                onChange={(e) => setCurrentPassword(e.target.value)}
+                                onChange={(e) =>
+                                    dispatch({ type: 'SET_CURRENT_PASSWORD', payload: e.target.value })
+                                }
                                 required
                             />
                         </div>
@@ -326,8 +278,9 @@ export default function Profile() {
                             <Input
                                 id="new-password"
                                 type="password"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
+                                onChange={(e) =>
+                                    dispatch({ type: 'SET_NEW_PASSWORD', payload: e.target.value })
+                                }
                                 required
                             />
                         </div>
@@ -337,8 +290,9 @@ export default function Profile() {
                             <Input
                                 id="confirm-password"
                                 type="password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                onChange={(e) =>
+                                    dispatch({ type: 'SET_CONFIRM_PASSWORD', payload: e.target.value })
+                                }
                                 required
                             />
                         </div>
@@ -347,18 +301,14 @@ export default function Profile() {
                             <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => {
-                                    setShowPasswordDialog(false);
-                                    setCurrentPassword('');
-                                    setNewPassword('');
-                                    setConfirmPassword('');
-                                    setPasswordError('');
-                                }}
+                                onClick={() => dispatch({ type: 'RESET_PASSWORD_FORM' })}
                             >
                                 Cancel
                             </Button>
                             <Button type="submit" disabled={changePasswordMutation.isLoading}>
-                                {changePasswordMutation.isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {changePasswordMutation.isLoading && (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                )}
                                 Update Password
                             </Button>
                         </DialogFooter>

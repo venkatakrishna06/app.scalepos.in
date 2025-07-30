@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+
 import { AlertCircle, Edit2, FolderTree, Loader2, Plus, Search, Trash2 } from 'lucide-react';
 import { CategoriesSkeleton } from '@/components/skeletons/categories-skeleton';
 import { Button } from '@/components/ui/button';
@@ -6,93 +6,36 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '@/api/menu';
-import { Category } from '@/types';
-import { toast } from '@/lib/toast';
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from '@/components/ui/badge';
-
-const categorySchema = z.object({
-    name: z.string().min(1, 'Name is required').max(50, 'Name cannot exceed 50 characters'),
-    parent_category_id: z.number().nullable().optional(),
-});
-
-type CategoryFormData = z.infer<typeof categorySchema>;
+import { useCategoriesPage } from '@/hooks/useCategoriesPage';
 
 export default function Categories() {
-    const { data: categories = [], isLoading, isError, error } = useCategories();
-    const createCategoryMutation = useCreateCategory();
-    const updateCategoryMutation = useUpdateCategory();
-    const deleteCategoryMutation = useDeleteCategory();
-
-    const [searchQuery, setSearchQuery] = useState('');
-    const [showDialog, setShowDialog] = useState(false);
-    const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-    const [categoryTypeFilter, setCategoryTypeFilter] = useState<string>('all');
-    const mainCategories = categories.filter(category => category.parent_category_id === undefined);
-    const form = useForm<CategoryFormData>({
-        resolver: zodResolver(categorySchema),
-        defaultValues: {
-            name: '',
-        },
-    });
-
-    useEffect(() => {
-        if (editingCategory) {
-            form.reset({
-                name: editingCategory.name,
-                parent_category_id: editingCategory.parent_category_id ?? null,
-            });
-        } else {
-            form.reset({
-                name: '',
-                parent_category_id: null,
-            });
-        }
-    }, [editingCategory, form]);
-
-    const filteredCategories = categories.filter((category) => {
-        const matchesSearch = category.name.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesType = categoryTypeFilter === 'all' ||
-            (categoryTypeFilter === 'main' && category.parent_category_id === undefined) ||
-            (categoryTypeFilter === 'sub' && category.parent_category_id !== undefined);
-        return matchesSearch && matchesType;
-    });
-
-    const getParentCategoryName = (parentId?: number | null) => {
-        if (parentId === undefined || parentId === null) return null;
-        const parentCategory = categories.find(c => c.id === parentId);
-        return parentCategory ? parentCategory.name : null;
-    };
-
-    const handleSubmit = async (data: CategoryFormData) => {
-        try {
-            if (editingCategory) {
-                await updateCategoryMutation.mutateAsync({ id: editingCategory.id, category: data });
-                toast.success('Category updated successfully');
-            } else {
-                await createCategoryMutation.mutateAsync(data);
-                toast.success('Category created successfully');
-            }
-            setShowDialog(false);
-            setEditingCategory(null);
-            form.reset();
-        } catch (err) {
-            toast.error('Failed to save category');
-        }
-    };
-
-    const handleDelete = async (id: number) => {
-        try {
-            await deleteCategoryMutation.mutateAsync(id);
-            toast.success('Category deleted successfully');
-        } catch (err) {
-            toast.error('Failed to delete category');
-        }
-    };
+    const {
+        isLoading,
+        isError,
+        error,
+        searchQuery,
+        setSearchQuery,
+        showDialog,
+        setShowDialog,
+        editingCategory,
+        setEditingCategory,
+        categoryTypeFilter,
+        setCategoryTypeFilter,
+        mainCategories,
+        form,
+        filteredCategories,
+        getParentCategoryName,
+        handleSubmit,
+        handleDelete,
+        createCategoryMutation,
+        updateCategoryMutation,
+        deleteCategoryMutation,
+        openEditDialog,
+        openNewDialog
+    } = useCategoriesPage();
 
     if (isLoading) {
         return <CategoriesSkeleton />;
@@ -127,7 +70,7 @@ export default function Categories() {
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <Button onClick={() => setShowDialog(true)}>
+                    <Button onClick={() => openNewDialog()}>
                         <Plus className="mr-2 h-4 w-4" />
                         Add Category
                     </Button>
@@ -174,7 +117,7 @@ export default function Categories() {
                             <Button
                                 variant="outline"
                                 className="mt-4"
-                                onClick={() => setShowDialog(true)}
+                                onClick={() => openNewDialog()}
                             >
                                 <Plus className="mr-2 h-4 w-4" />
                                 Add Category
@@ -209,10 +152,7 @@ export default function Categories() {
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            onClick={() => {
-                                                setEditingCategory(category);
-                                                setShowDialog(true);
-                                            }}
+                                            onClick={() => openEditDialog(category)}
                                             disabled={createCategoryMutation.isLoading || updateCategoryMutation.isLoading || deleteCategoryMutation.isLoading}
                                         >
                                             <Edit2 className="mr-2 h-4 w-4" />
@@ -326,3 +266,4 @@ export default function Categories() {
         </div>
     );
 }
+
