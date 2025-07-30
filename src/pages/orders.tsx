@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { FileText } from 'lucide-react';
-import { OrdersSkeleton } from '@/components/skeletons/orders-skeleton';
+
 import { Button } from '@/components/ui/button';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
 import { toast } from '@/lib/toast';
-import { ViewOrdersDialog } from '@/components/view-orders-dialog';
+import { ViewOrdersDialog } from '@/components/composed/view-orders-dialog';
 import { Order } from '@/types';
 import {
     Dialog,
@@ -14,16 +14,19 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { AdminOrderOverview } from '@/components/orders/AdminOrderOverview';
-import { ServerOrderView } from '@/components/orders/ServerOrderView';
-import { KitchenView } from '@/components/orders/KitchenView';
-import { useAuth } from "@/lib/hooks";
+import { AdminOrderOverview } from '@/components/composed/AdminOrderOverview';
+import { ServerOrderView } from '@/components/composed/ServerOrderView';
+import { KitchenView } from '@/components/composed/KitchenView';
+import { useAuthStore } from "@/lib/auth/auth.store";
 import { useOrders, useCancelOrder, useUpdateOrderStatus, useUpdateOrderItemStatus } from '@/api/orders';
+import { usePermissions } from '@/hooks/usePermissions';
+import { PERMISSIONS } from '@/lib/auth/roles';
+import { OrdersSkeleton } from '@/components/composed/orders-skeleton';
 
 export default function Orders() {
     const { handleError } = useErrorHandler();
-    const { user } = useAuth();
-    const selectedRole = user?.role;
+    const { user } = useAuthStore();
+    const { hasPermission } = usePermissions();
     const currentServer = user?.staff?.name;
 
     const [isViewOrdersDialogOpen, setIsViewOrdersDialogOpen] = useState(false);
@@ -157,7 +160,7 @@ export default function Orders() {
 
     return (
         <div className="space-y-6">
-            {selectedRole === 'admin' && (
+            {hasPermission(PERMISSIONS.UPDATE_ORDER) && (
                 <AdminOrderOverview
                     orders={orders}
                     onEditOrder={handleEditOrder}
@@ -168,17 +171,17 @@ export default function Orders() {
                 />
             )}
 
-            {selectedRole === 'server' && (
+            {hasPermission(PERMISSIONS.CREATE_PAYMENT) && (
                 <ServerOrderView
                     orders={orders}
-                    currentServer={currentServer}
+                    currentServer={currentServer || ''}
                     onMarkItemAsServed={(orderId, itemId) => handleItemStatusChange(orderId, itemId, 'served')}
                     onMarkOrderAsPaid={(orderId) => handleUpdateOrderStatus(orderId, 'paid')}
                     onPrintBill={(orderId) => toast.success(`Printing bill for order #${orderId}`)}
                 />
             )}
 
-            {selectedRole === 'kitchen' && (
+            {hasPermission(PERMISSIONS.READ_ORDER) && (
                 <KitchenView
                     orders={orders}
                     onItemStatusChange={handleItemStatusChange}

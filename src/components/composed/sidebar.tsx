@@ -1,4 +1,4 @@
-import {Link, useLocation} from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
     BarChart2,
     ChevronRight,
@@ -13,59 +13,41 @@ import {
     UserCircle,
     Users,
 } from 'lucide-react';
-import {cn} from '@/lib/utils';
-import {useAuthStore} from '@/lib/store/auth.store';
-import {Separator} from './ui/separator';
+import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/lib/auth/auth.store';
+import { Separator } from './ui/separator';
+import { usePermissions } from '@/hooks/usePermissions';
+import { PERMISSIONS } from '@/lib/auth/roles';
 
-// Define navigation items with role-based access and categories
 interface NavigationItem {
     name: string;
     href: string;
     icon: React.ComponentType<{ className?: string }>;
-    roles: string[];
+    permissions: string[];
     category: 'operations' | 'management' | 'admin';
     onClick?: () => void;
 }
 
-const navigationWithRoles: NavigationItem[] = [
+const navigationWithPermissions: NavigationItem[] = [
     // Operations category
-    {name: 'Tables', href: '/tables', icon: Table2, roles: ['admin', 'manager', 'server'], category: 'operations'},
-    {
-        name: 'Takeaway',
-        href: '/takeaway',
-        icon: ShoppingBag,
-        roles: ['admin', 'manager', 'server'],
-        category: 'operations'
-    },
-    {
-        name: 'QuikBill',
-        href: '/quick-bill',
-        icon: Receipt,
-        roles: ['admin', 'manager', 'server'],
-        category: 'operations'
-    },
-    {
-        name: 'Orders',
-        href: '/orders',
-        icon: ClipboardList,
-        roles: ['admin', 'manager', 'kitchen', 'server'],
-        category: 'operations'
-    },
+    { name: 'Tables', href: '/tables', icon: Table2, permissions: [PERMISSIONS.READ_TABLE], category: 'operations' },
+    { name: 'Takeaway', href: '/takeaway', icon: ShoppingBag, permissions: [PERMISSIONS.CREATE_ORDER], category: 'operations' },
+    { name: 'QuikBill', href: '/quick-bill', icon: Receipt, permissions: [PERMISSIONS.CREATE_ORDER], category: 'operations' },
+    { name: 'Orders', href: '/orders', icon: ClipboardList, permissions: [PERMISSIONS.READ_ORDER], category: 'operations' },
 
     // Management category
-    {name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin'], category: 'management'},
-    {name: 'Menu', href: '/menu', icon: Coffee, roles: ['admin', 'manager', 'kitchen'], category: 'management'},
-    {name: 'Categories', href: '/categories', icon: Tags, roles: ['admin', 'manager'], category: 'management'},
-    {name: 'Payments', href: '/payments', icon: Receipt, roles: ['admin', 'manager'], category: 'management'},
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, permissions: [PERMISSIONS.READ_USER], category: 'management' },
+    { name: 'Menu', href: '/menu', icon: Coffee, permissions: [PERMISSIONS.READ_MENU], category: 'management' },
+    { name: 'Categories', href: '/categories', icon: Tags, permissions: [PERMISSIONS.READ_MENU], category: 'management' },
+    { name: 'Payments', href: '/payments', icon: Receipt, permissions: [PERMISSIONS.READ_PAYMENT], category: 'management' },
 
     // Admin category
-    {name: 'Staff', href: '/staff', icon: UserCircle, roles: ['admin'], category: 'admin'},
-    {name: 'User Access', href: '/user-management', icon: Users, roles: ['admin'], category: 'admin'},
-    {name: 'Settings', href: '/settings', icon: Settings, roles: ['admin', 'manager'], category: 'admin'},
+    { name: 'Staff', href: '/staff', icon: UserCircle, permissions: [PERMISSIONS.READ_USER], category: 'admin' },
+    { name: 'User Access', href: '/user-management', icon: Users, permissions: [PERMISSIONS.READ_USER], category: 'admin' },
+    { name: 'Settings', href: '/settings', icon: Settings, permissions: [PERMISSIONS.UPDATE_SETTINGS], category: 'admin' },
     {
-        name: 'Analytics', href: '#', icon: BarChart2, roles: ['admin'], category: 'admin', onClick: () => {
+        name: 'Analytics', href: '#', icon: BarChart2, permissions: [PERMISSIONS.READ_USER], category: 'admin', onClick: () => {
             const analyticsUrl = import.meta.env.VITE_ANALYTICS_URL || 'http://localhost:5174/';
-            // Ensure the URL is absolute by checking if it starts with http:// or https://
             const absoluteUrl = analyticsUrl.startsWith('http://') || analyticsUrl.startsWith('https://')
                 ? analyticsUrl
                 : `https://${analyticsUrl}`;
@@ -78,16 +60,15 @@ interface SidebarProps {
     closeSidebar?: () => void;
 }
 
-export default function Sidebar({closeSidebar}: SidebarProps) {
+export default function Sidebar({ closeSidebar }: SidebarProps) {
     const location = useLocation();
-    const {user} = useAuthStore();
+    const { user } = useAuthStore();
+    const { hasPermission } = usePermissions();
 
-    // Filter navigation items based on user role
-    const filteredNavigation = navigationWithRoles.filter(
-        item => item.roles.includes(user?.role || '')
+    const filteredNavigation = navigationWithPermissions.filter(
+        item => item.permissions.some(permission => hasPermission(permission))
     );
 
-    // Group navigation items by category
     const operationsItems = filteredNavigation.filter(item => item.category === 'operations');
     const managementItems = filteredNavigation.filter(item => item.category === 'management');
     const adminItems = filteredNavigation.filter(item => item.category === 'admin');
@@ -95,14 +76,12 @@ export default function Sidebar({closeSidebar}: SidebarProps) {
     return (
         <div className="h-[calc(100vh-4rem)] w-full overflow-y-auto overflow-x-hidden pt-0 custom-scrollbar">
             <div className="py-2 px-4">
-                {/* Restaurant logo or name could go here */}
                 <div className="mb-6 px-2">
                     <h2 className="text-lg font-semibold text-foreground">ScalePOS</h2>
                     <p className="text-xs text-muted-foreground">Restaurant Management</p>
                 </div>
 
                 <nav className="space-y-6">
-                    {/* Operations Section */}
                     {operationsItems.length > 0 && (
                         <div>
                             <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -121,7 +100,6 @@ export default function Sidebar({closeSidebar}: SidebarProps) {
                         </div>
                     )}
 
-                    {/* Management Section */}
                     {managementItems.length > 0 && (
                         <div>
                             <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -140,7 +118,6 @@ export default function Sidebar({closeSidebar}: SidebarProps) {
                         </div>
                     )}
 
-                    {/* Admin Section */}
                     {adminItems.length > 0 && (
                         <div>
                             <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -160,15 +137,14 @@ export default function Sidebar({closeSidebar}: SidebarProps) {
                     )}
                 </nav>
 
-                {/* User info at bottom */}
                 <div className="mt-auto pt-6">
-                    <Separator className="mb-4"/>
+                    <Separator className="mb-4" />
                     <div className="px-2 flex items-center">
                         <div
                             className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground mr-3">
-              <span className="text-sm font-semibold">
-                {user?.staff?.name?.charAt(0).toUpperCase()}
-              </span>
+                            <span className="text-sm font-semibold">
+                                {user?.staff?.name?.charAt(0).toUpperCase()}
+                            </span>
                         </div>
                         <div className="overflow-hidden">
                             <p className="truncate text-sm font-medium">{user?.staff.name}</p>
@@ -181,20 +157,18 @@ export default function Sidebar({closeSidebar}: SidebarProps) {
     );
 }
 
-// NavItem component for better code organization
 interface NavItemProps {
     item: NavigationItem;
     isActive: boolean;
     closeSidebar?: () => void;
 }
 
-function NavItem({item, isActive, closeSidebar}: NavItemProps) {
+function NavItem({ item, isActive, closeSidebar }: NavItemProps) {
     const handleClick = () => {
         if (item.onClick) {
             item.onClick();
         }
 
-        // Close sidebar on mobile when a link is clicked
         if (window.innerWidth < 1024 && closeSidebar) {
             closeSidebar();
         }
@@ -239,7 +213,7 @@ function NavItem({item, isActive, closeSidebar}: NavItemProps) {
             className={className}
         >
             {content}
-            {isActive && <ChevronRight className="h-4 w-4 ml-2 opacity-70"/>}
+            {isActive && <ChevronRight className="h-4 w-4 ml-2 opacity-70" />}
         </Link>
     );
 }

@@ -1,7 +1,7 @@
-import {useState} from 'react';
-import {Bell} from 'lucide-react';
-import {formatDistanceToNow} from 'date-fns';
-import {Notification, useNotificationStore} from '@/lib/store/notification.store';
+import { useState } from 'react';
+import { Bell } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { Notification } from '@/types';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -9,21 +9,24 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {Button} from '@/components/ui/button';
-import {useNavigate} from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { useNotifications, useMarkAsRead, useMarkAllAsRead, useClearNotifications } from '@/api/notifications';
 
 export function NotificationDropdown() {
     const navigate = useNavigate();
-    const {notifications, unreadCount, markAsRead, markAllAsRead, clearNotifications} = useNotificationStore();
+    const { data: notifications = [] } = useNotifications();
+    const markAsReadMutation = useMarkAsRead();
+    const markAllAsReadMutation = useMarkAllAsRead();
+    const clearNotificationsMutation = useClearNotifications();
     const [isOpen, setIsOpen] = useState(false);
 
-    // Get only the 10 most recent notifications
+    const unreadCount = notifications.filter(n => !n.read).length;
     const recentNotifications = notifications.slice(0, 10);
 
     const handleNotificationClick = (notification: Notification) => {
-        markAsRead(notification.id);
+        markAsReadMutation.mutate(notification.id);
 
-        // Navigate based on notification type
         switch (notification.type) {
             case 'table_update':
                 navigate('/tables');
@@ -44,12 +47,12 @@ export function NotificationDropdown() {
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-5 w-5"/>
+                    <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
                         <span
                             className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </span>
+                            {unreadCount > 99 ? '99+' : unreadCount}
+                        </span>
                     )}
                 </Button>
             </DropdownMenuTrigger>
@@ -57,16 +60,16 @@ export function NotificationDropdown() {
                 <div className="flex justify-between items-center p-2">
                     <h3 className="font-semibold">Notifications</h3>
                     <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" onClick={markAllAsRead} disabled={unreadCount === 0}>
+                        <Button variant="ghost" size="sm" onClick={() => markAllAsReadMutation.mutate()} disabled={unreadCount === 0}>
                             Mark all read
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={clearNotifications}
-                                disabled={notifications.length === 0}>
+                        <Button variant="ghost" size="sm" onClick={() => clearNotificationsMutation.mutate()}
+                            disabled={notifications.length === 0}>
                             Clear all
                         </Button>
                     </div>
                 </div>
-                <DropdownMenuSeparator/>
+                <DropdownMenuSeparator />
 
                 {recentNotifications.length === 0 ? (
                     <div className="p-4 text-center text-muted-foreground">
@@ -83,8 +86,8 @@ export function NotificationDropdown() {
                                 <div className="flex justify-between items-start">
                                     <span className="font-medium">{notification.message}</span>
                                     <span className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(notification.timestamp, {addSuffix: true})}
-                  </span>
+                                        {formatDistanceToNow(notification.timestamp, { addSuffix: true })}
+                                    </span>
                                 </div>
                                 {notification.details && (
                                     <span className="text-sm text-muted-foreground">{notification.details}</span>

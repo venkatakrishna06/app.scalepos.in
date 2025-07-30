@@ -1,7 +1,7 @@
 import React from 'react';
-import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
-import {Order} from '@/types';
-import {OrderDetails} from './OrderDetails';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Order } from '@/types';
+import { OrderDetails } from './OrderDetails';
 
 interface OrderTabsProps {
     orders: Order[];
@@ -22,28 +22,21 @@ interface OrderTabsProps {
         totalGstAmount: number;
     };
     getStatusBadgeClass: (status: string) => string;
-    isServer: boolean;
 }
 
-/**
- * Component for rendering tabs for multiple orders
- * Each tab shows a different order's details
- */
 export const OrderTabs: React.FC<OrderTabsProps> = ({
-                                                        orders,
-                                                        activeOrderId,
-                                                        setActiveOrderId,
-                                                        onPayment,
-                                                        handleQuantityChange,
-                                                        handleItemStatusChange,
-                                                        handleCancelItem,
-                                                        processingItemId,
-                                                        getOrderTotal,
-                                                        getGstDetails,
-                                                        getStatusBadgeClass,
-                                                        isServer
-                                                    }) => {
-    // If there's only one order, don't show tabs
+    orders,
+    activeOrderId,
+    setActiveOrderId,
+    onPayment,
+    handleQuantityChange,
+    handleItemStatusChange,
+    handleCancelItem,
+    processingItemId,
+    getOrderTotal,
+    getGstDetails,
+    getStatusBadgeClass,
+}) => {
     if (orders.length === 1) {
         return (
             <OrderDetails
@@ -56,7 +49,6 @@ export const OrderTabs: React.FC<OrderTabsProps> = ({
                 getOrderTotal={getOrderTotal}
                 getGstDetails={getGstDetails}
                 getStatusBadgeClass={getStatusBadgeClass}
-                isServer={isServer}
             />
         );
     }
@@ -87,7 +79,6 @@ export const OrderTabs: React.FC<OrderTabsProps> = ({
                         getOrderTotal={getOrderTotal}
                         getGstDetails={getGstDetails}
                         getStatusBadgeClass={getStatusBadgeClass}
-                        isServer={isServer}
                     />
                 </TabsContent>
             ))}

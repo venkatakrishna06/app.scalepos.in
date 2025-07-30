@@ -14,7 +14,7 @@ import {
     Trash2,
     XCircle
 } from 'lucide-react';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
 import { MenuSkeleton } from '@/components/skeletons/menu-skeleton';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -28,18 +28,18 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MenuItemForm } from '@/components/forms/menu-item-form';
+import { MenuItemForm } from '@/components/composed/menu-item-form';
 import { MenuItem } from '@/types';
 import { toast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 import { useMenuItems, useCategories, useCreateMenuItem, useUpdateMenuItem, useDeleteMenuItem } from '@/api/menu';
+import { PERMISSIONS } from '@/lib/auth/roles';
 
 type SortField = 'name' | 'price' | 'category';
 type ViewMode = 'grid' | 'list';
 
 export default function Menu() {
-    const { user } = useAuth();
-    const isAdmin = user?.role === 'admin';
+    const { hasPermission } = usePermissions();
 
     const { data: menuItems = [], isLoading: menuItemsLoading, isError: menuItemsError, error: menuItemsErrorMessage } = useMenuItems();
     const { data: categories = [], isLoading: categoriesLoading, isError: categoriesError, error: categoriesErrorMessage } = useCategories();
@@ -159,7 +159,7 @@ export default function Menu() {
                         {viewMode === 'grid' ? 'List View' : 'Grid View'}
                     </Button>
 
-                    {isAdmin && (
+                    {hasPermission(PERMISSIONS.CREATE_MENU) && (
                         <Button onClick={() => setShowAddDialog(true)}>
                             <Plus className="mr-2 h-4 w-4" />
                             Add Item
@@ -312,34 +312,38 @@ export default function Menu() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuItem
-                                                    onClick={() => handleToggleAvailability(item.id)}
-                                                    disabled={createMenuItemMutation.isLoading || updateMenuItemMutation.isLoading || deleteMenuItemMutation.isLoading}
-                                                >
-                                                    {item.available ? (
-                                                        <>
-                                                            <XCircle className="mr-2 h-4 w-4" />
-                                                            <span>Mark Unavailable</span>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <CheckCircle className="mr-2 h-4 w-4" />
-                                                            <span>Mark Available</span>
-                                                        </>
-                                                    )}
-                                                </DropdownMenuItem>
-                                                {isAdmin && (
+                                                {hasPermission(PERMISSIONS.UPDATE_MENU) && (
+                                                    <DropdownMenuItem
+                                                        onClick={() => handleToggleAvailability(item.id)}
+                                                        disabled={createMenuItemMutation.isLoading || updateMenuItemMutation.isLoading || deleteMenuItemMutation.isLoading}
+                                                    >
+                                                        {item.available ? (
+                                                            <>
+                                                                <XCircle className="mr-2 h-4 w-4" />
+                                                                <span>Mark Unavailable</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <CheckCircle className="mr-2 h-4 w-4" />
+                                                                <span>Mark Available</span>
+                                                            </>
+                                                        )}
+                                                    </DropdownMenuItem>
+                                                )}
+                                                {hasPermission(PERMISSIONS.UPDATE_MENU) && (
+                                                    <DropdownMenuItem
+                                                        onClick={() => {
+                                                            setEditingItem(item);
+                                                            setShowAddDialog(true);
+                                                        }}
+                                                        disabled={createMenuItemMutation.isLoading || updateMenuItemMutation.isLoading || deleteMenuItemMutation.isLoading}
+                                                    >
+                                                        <Edit2 className="mr-2 h-4 w-4" />
+                                                        <span>Edit Item</span>
+                                                    </DropdownMenuItem>
+                                                )}
+                                                {hasPermission(PERMISSIONS.DELETE_MENU) && (
                                                     <>
-                                                        <DropdownMenuItem
-                                                            onClick={() => {
-                                                                setEditingItem(item);
-                                                                setShowAddDialog(true);
-                                                            }}
-                                                            disabled={createMenuItemMutation.isLoading || updateMenuItemMutation.isLoading || deleteMenuItemMutation.isLoading}
-                                                        >
-                                                            <Edit2 className="mr-2 h-4 w-4" />
-                                                            <span>Edit Item</span>
-                                                        </DropdownMenuItem>
                                                         <DropdownMenuSeparator />
                                                         <DropdownMenuItem
                                                             onClick={() => handleDelete(item.id)}
@@ -432,53 +436,53 @@ export default function Menu() {
                                         </div>
 
                                         <div className="flex items-center gap-2">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-8 px-2 text-xs"
-                                                onClick={() => handleToggleAvailability(item.id)}
-                                                disabled={createMenuItemMutation.isLoading || updateMenuItemMutation.isLoading || deleteMenuItemMutation.isLoading}
-                                            >
-                                                {item.available ? (
-                                                    <>
-                                                        <XCircle className="mr-1.5 h-3.5 w-3.5" />
-                                                        <span>Unavailable</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <CheckCircle className="mr-1.5 h-3.5 w-3.5" />
-                                                        <span>Available</span>
-                                                    </>
-                                                )}
-                                            </Button>
-
-                                            {isAdmin && (
-                                                <>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-8 px-2 text-xs"
-                                                        onClick={() => {
-                                                            setEditingItem(item);
-                                                            setShowAddDialog(true);
-                                                        }}
-                                                        disabled={createMenuItemMutation.isLoading || updateMenuItemMutation.isLoading || deleteMenuItemMutation.isLoading}
-                                                    >
-                                                        <Edit2 className="mr-1.5 h-3.5 w-3.5" />
-                                                        <span>Edit</span>
-                                                    </Button>
-
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-8 px-2 text-xs text-destructive hover:text-destructive"
-                                                        onClick={() => handleDelete(item.id)}
-                                                        disabled={createMenuItemMutation.isLoading || updateMenuItemMutation.isLoading || deleteMenuItemMutation.isLoading}
-                                                    >
-                                                        <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                                                        <span>Delete</span>
-                                                    </Button>
-                                                </>
+                                            {hasPermission(PERMISSIONS.UPDATE_MENU) && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 px-2 text-xs"
+                                                    onClick={() => handleToggleAvailability(item.id)}
+                                                    disabled={createMenuItemMutation.isLoading || updateMenuItemMutation.isLoading || deleteMenuItemMutation.isLoading}
+                                                >
+                                                    {item.available ? (
+                                                        <>
+                                                            <XCircle className="mr-1.5 h-3.5 w-3.5" />
+                                                            <span>Unavailable</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <CheckCircle className="mr-1.5 h-3.5 w-3.5" />
+                                                            <span>Available</span>
+                                                        </>
+                                                    )}
+                                                </Button>
+                                            )}
+                                            {hasPermission(PERMISSIONS.UPDATE_MENU) && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 px-2 text-xs"
+                                                    onClick={() => {
+                                                        setEditingItem(item);
+                                                        setShowAddDialog(true);
+                                                    }}
+                                                    disabled={createMenuItemMutation.isLoading || updateMenuItemMutation.isLoading || deleteMenuItemMutation.isLoading}
+                                                >
+                                                    <Edit2 className="mr-1.5 h-3.5 w-3.5" />
+                                                    <span>Edit</span>
+                                                </Button>
+                                            )}
+                                            {hasPermission(PERMISSIONS.DELETE_MENU) && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 px-2 text-xs text-destructive hover:text-destructive"
+                                                    onClick={() => handleDelete(item.id)}
+                                                    disabled={createMenuItemMutation.isLoading || updateMenuItemMutation.isLoading || deleteMenuItemMutation.isLoading}
+                                                >
+                                                    <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                                                    <span>Delete</span>
+                                                </Button>
                                             )}
                                         </div>
                                     </div>
@@ -495,9 +499,9 @@ export default function Menu() {
                         <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
                             {searchQuery
                                 ? `No items match "${searchQuery}". Try adjusting your search or filters.`
-                                : isAdmin ? "Try adjusting your filters or add a new menu item." : "Try adjusting your filters."}
+                                : hasPermission(PERMISSIONS.CREATE_MENU) ? "Try adjusting your filters or add a new menu item." : "Try adjusting your filters."}
                         </p>
-                        {isAdmin && (
+                        {hasPermission(PERMISSIONS.CREATE_MENU) && (
                             <Button
                                 variant="default"
                                 className="mt-6"

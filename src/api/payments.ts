@@ -11,7 +11,7 @@ export const usePayments = () => {
         queryKey: ['payments'],
         queryFn: paymentService.getPayments,
         staleTime: STALE_TIME,
-        cacheTime: CACHE_TIME,
+        gcTime: CACHE_TIME,
     });
 };
 
@@ -40,7 +40,7 @@ export const usePaymentsByOrder = (orderId: number) => {
         queryKey: ['payments', { orderId }],
         queryFn: () => paymentService.getPaymentsByOrder(orderId),
         staleTime: STALE_TIME,
-        cacheTime: CACHE_TIME,
+        gcTime: CACHE_TIME,
         enabled: !!orderId,
     });
 };

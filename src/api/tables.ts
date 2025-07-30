@@ -11,7 +11,7 @@ export const useTables = () => {
         queryKey: ['tables'],
         queryFn: tableService.getTables,
         staleTime: STALE_TIME,
-        cacheTime: CACHE_TIME,
+        gcTime: CACHE_TIME,
     });
 };
 
@@ -39,7 +39,27 @@ export const useDeleteTable = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (id: number) => tableService.deleteTable(id),
-        onSuccess:.
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['tables'] });
+        },
+    });
+};
+
+export const useMergeTables = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (tableIds: number[]) => tableService.mergeTables(tableIds),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['tables'] });
+        },
+    });
+};
+
+export const useSplitTable = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, capacity }: { id: number, capacity: number }) => tableService.splitTable(id, capacity),
+        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['tables'] });
         },
     });

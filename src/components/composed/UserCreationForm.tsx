@@ -1,27 +1,25 @@
-import {useEffect, useState} from 'react';
-import {Button} from '@/components/ui/button';
-import {Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
-import {Input} from "@/components/ui/input";
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select";
-import {useForm} from "react-hook-form";
-import {zodResolver} from "@hookform/resolvers/zod";
-import {z} from "zod";
-import {Loader2, Lock, Mail} from 'lucide-react';
-import {toast} from '@/lib/toast';
-import {useStaffStore, useUserStore} from '@/lib/store';
-import {useErrorHandler} from '@/lib/hooks/useErrorHandler';
-import {User} from '@/types';
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Loader2, Lock, Mail } from 'lucide-react';
+import { toast } from '@/lib/toast';
+import { useStaff } from '@/api/staff';
+import { useCreateUser, useUpdateUser } from '@/api/users';
+import { User } from '@/types';
 
-// Define form validation schema with conditional password validation
 const userBaseSchema = z.object({
     email: z.string()
         .email('Please enter a valid email address')
         .min(1, 'Email is required'),
-    staff_id: z.number().min(1, 'Please select a staff member'),
+    staff_id: z.number().min(1, 'Please select a staff member').optional().nullable(),
     role: z.string().min(1, 'Please select a role'),
 });
 
-// Schema for creating a new user (requires password)
 const newUserSchema = userBaseSchema.extend({
     password: z.string()
         .min(8, 'Password must be at least 8 characters')
@@ -35,7 +33,6 @@ const newUserSchema = userBaseSchema.extend({
     path: ["confirmPassword"],
 });
 
-// Schema for editing an existing user (password is optional)
 const editUserSchema = userBaseSchema.extend({
     password: z.string()
         .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
@@ -51,10 +48,10 @@ const editUserSchema = userBaseSchema.extend({
 });
 
 const ROLES = [
-    {id: 'admin', label: 'Admin'},
-    {id: 'manager', label: 'Manager'},
-    {id: 'server', label: 'Server'},
-    {id: 'kitchen', label: 'Kitchen'},
+    { id: 'admin', label: 'Admin' },
+    { id: 'manager', label: 'Manager' },
+    { id: 'server', label: 'Server' },
+    { id: 'kitchen', label: 'Kitchen' },
 ];
 
 interface UserFormProps {
@@ -62,11 +59,10 @@ interface UserFormProps {
     onSuccess?: () => void;
 }
 
-export default function UserCreationForm({initialData, onSuccess}: UserFormProps) {
-    const {staff, loading: staffLoading, error: staffError, fetchStaff} = useStaffStore();
-    const {addUser, updateUser} = useUserStore();
-    const {handleError} = useErrorHandler();
-    const [loading, setLoading] = useState(false);
+export default function UserCreationForm({ initialData, onSuccess }: UserFormProps) {
+    const { data: staff = [], isLoading: staffLoading, isError: staffError } = useStaff();
+    const createUserMutation = useCreateUser();
+    const updateUserMutation = useUpdateUser();
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -81,45 +77,32 @@ export default function UserCreationForm({initialData, onSuccess}: UserFormProps
             confirmPassword: '',
             staff_id: initialData?.staff_id || undefined,
             role: initialData?.role || '',
-        },
+        } as z.infer<typeof schema>,
     });
 
-    // Watch for changes to the staff_id field
     const selectedStaffId = form.watch('staff_id');
 
-    // Auto-fill the role based on the selected staff member
     useEffect(() => {
         if (selectedStaffId && staff.length > 0) {
             const selectedStaff = staff.find(member => member.id === selectedStaffId);
             if (selectedStaff) {
-                // Directly use the role from the staff object
                 form.setValue('role', selectedStaff.role.toLowerCase());
             }
         }
     }, [selectedStaffId, staff, form]);
 
-    // Fetch staff list on component mount using the staff store
-    useEffect(() => {
-        fetchStaff();
-    }, [fetchStaff]);
-
-    const handleSubmit = async (data: any) => {
-        setLoading(true);
+    const handleSubmit = async (data: z.infer<typeof schema>) => {
         try {
-            // Remove confirmPassword as it's not needed in the payload
-            const {confirmPassword, ...payload} = data;
+            const { confirmPassword, ...payload } = data;
 
-            // If editing and no password provided, remove the password field
             if (isEditMode && !payload.password) {
                 delete payload.password;
             }
 
             if (isEditMode && initialData) {
-                // Update existing user
-                await updateUser(initialData.id, payload);
+                await updateUserMutation.mutateAsync({ id: initialData.id, user: payload });
             } else {
-                // Create new user
-                await addUser(payload);
+                await createUserMutation.mutateAsync(payload as z.infer<typeof newUserSchema>);
             }
 
             if (onSuccess) {
@@ -128,11 +111,8 @@ export default function UserCreationForm({initialData, onSuccess}: UserFormProps
                 toast.success(`User ${isEditMode ? 'updated' : 'created'} successfully!`);
                 form.reset();
             }
-        } catch (error) {
-            handleError(error);
-            toast.error(`Failed to ${isEditMode ? 'update' : 'create'} user. Please try again.`);
-        } finally {
-            setLoading(false);
+        } catch (error: any) {
+            toast.error(`Failed to ${isEditMode ? 'update' : 'create'} user. ${error?.message || 'Please try again.'}`);
         }
     };
 
@@ -143,14 +123,14 @@ export default function UserCreationForm({initialData, onSuccess}: UserFormProps
                     <FormField
                         control={form.control}
                         name="email"
-                        render={({field}) => (
+                        render={({ field }) => (
                             <FormItem>
                                 <FormLabel className="text-gray-700 dark:text-gray-300">
                                     Email address
                                 </FormLabel>
                                 <FormControl>
                                     <div className="relative">
-                                        <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"/>
+                                        <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                                         <Input
                                             placeholder="Enter email"
                                             className="pl-10"
@@ -158,7 +138,7 @@ export default function UserCreationForm({initialData, onSuccess}: UserFormProps
                                         />
                                     </div>
                                 </FormControl>
-                                <FormMessage/>
+                                <FormMessage />
                             </FormItem>
                         )}
                     />
@@ -167,14 +147,14 @@ export default function UserCreationForm({initialData, onSuccess}: UserFormProps
                         <FormField
                             control={form.control}
                             name="password"
-                            render={({field}) => (
+                            render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="text-gray-700 dark:text-gray-300">
                                         {isEditMode ? 'New Password (leave blank to keep current)' : 'Password'}
                                     </FormLabel>
                                     <FormControl>
                                         <div className="relative">
-                                            <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"/>
+                                            <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                                             <Input
                                                 type={showPassword ? "text" : "password"}
                                                 placeholder={isEditMode ? "Enter new password" : "Create a password"}
@@ -191,15 +171,15 @@ export default function UserCreationForm({initialData, onSuccess}: UserFormProps
                                                          viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                         <path
-                                                            d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                                                        <line x1="1" y1="1" x2="23" y2="23"/>
+                                                            d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                                        <line x1="1" y1="1" x2="23" y2="23" />
                                                     </svg>
                                                 ) : (
                                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5"
                                                          viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                                        <circle cx="12" cy="12" r="3"/>
+                                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                                        <circle cx="12" cy="12" r="3" />
                                                     </svg>
                                                 )}
                                             </button>
@@ -211,7 +191,7 @@ export default function UserCreationForm({initialData, onSuccess}: UserFormProps
                                             number, and special character
                                         </FormDescription>
                                     )}
-                                    <FormMessage/>
+                                    <FormMessage />
                                 </FormItem>
                             )}
                         />
@@ -219,14 +199,14 @@ export default function UserCreationForm({initialData, onSuccess}: UserFormProps
                         <FormField
                             control={form.control}
                             name="confirmPassword"
-                            render={({field}) => (
+                            render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="text-gray-700 dark:text-gray-300">
                                         {isEditMode ? 'Confirm New Password' : 'Confirm Password'}
                                     </FormLabel>
                                     <FormControl>
                                         <div className="relative">
-                                            <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"/>
+                                            <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                                             <Input
                                                 type={showConfirmPassword ? "text" : "password"}
                                                 placeholder="Confirm your password"
@@ -243,21 +223,21 @@ export default function UserCreationForm({initialData, onSuccess}: UserFormProps
                                                          viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                         <path
-                                                            d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                                                        <line x1="1" y1="1" x2="23" y2="23"/>
+                                                            d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                                        <line x1="1" y1="1" x2="23" y2="23" />
                                                     </svg>
                                                 ) : (
                                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5"
                                                          viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                                        <circle cx="12" cy="12" r="3"/>
+                                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                                        <circle cx="12" cy="12" r="3" />
                                                     </svg>
                                                 )}
                                             </button>
                                         </div>
                                     </FormControl>
-                                    <FormMessage/>
+                                    <FormMessage />
                                 </FormItem>
                             )}
                         />
@@ -272,32 +252,30 @@ export default function UserCreationForm({initialData, onSuccess}: UserFormProps
                             <FormField
                                 control={form.control}
                                 name="staff_id"
-                                render={({field}) => (
+                                render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-gray-700 dark:text-gray-300">
                                             Select Staff
                                         </FormLabel>
                                         <Select
-                                            onValueChange={(value) => field.onChange(Number(value))}
-                                            defaultValue={field.value?.toString()}
+                                            onValueChange={(value) => field.onChange(value ? Number(value) : null)}
+                                            value={field.value?.toString() || ''}
                                         >
                                             <FormControl>
                                                 <SelectTrigger className="w-full">
-                                                    <SelectValue placeholder="Select staff member"/>
+                                                    <SelectValue placeholder="Select staff member" />
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
                                                 {staffLoading ? (
                                                     <div className="flex items-center justify-center p-2">
-                                                        <Loader2 className="h-4 w-4 animate-spin text-gray-400"/>
-                                                        <span
-                                                            className="ml-2 text-sm text-gray-500">Loading staff...</span>
+                                                        <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                                                        <span className="ml-2 text-sm text-gray-500">Loading staff...</span>
                                                     </div>
                                                 ) : staffError ? (
                                                     <div className="p-2 text-sm text-red-500">Failed to load staff</div>
                                                 ) : staff.length === 0 ? (
-                                                    <div className="p-2 text-sm text-gray-500">No staff members
-                                                        found</div>
+                                                    <div className="p-2 text-sm text-gray-500">No staff members found</div>
                                                 ) : (
                                                     staff.map(member => (
                                                         <SelectItem key={member.id} value={member.id.toString()}>
@@ -307,7 +285,7 @@ export default function UserCreationForm({initialData, onSuccess}: UserFormProps
                                                 )}
                                             </SelectContent>
                                         </Select>
-                                        <FormMessage/>
+                                        <FormMessage />
                                     </FormItem>
                                 )}
                             />
@@ -315,7 +293,7 @@ export default function UserCreationForm({initialData, onSuccess}: UserFormProps
                             <FormField
                                 control={form.control}
                                 name="role"
-                                render={({field}) => (
+                                render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-gray-700 dark:text-gray-300">
                                             Select Role
@@ -326,7 +304,7 @@ export default function UserCreationForm({initialData, onSuccess}: UserFormProps
                                         >
                                             <FormControl>
                                                 <SelectTrigger className="w-full">
-                                                    <SelectValue placeholder="Select role"/>
+                                                    <SelectValue placeholder="Select role" />
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
@@ -337,7 +315,7 @@ export default function UserCreationForm({initialData, onSuccess}: UserFormProps
                                                 ))}
                                             </SelectContent>
                                         </Select>
-                                        <FormMessage/>
+                                        <FormMessage />
                                     </FormItem>
                                 )}
                             />
@@ -348,11 +326,11 @@ export default function UserCreationForm({initialData, onSuccess}: UserFormProps
                 <Button
                     type="submit"
                     className="w-full bg-gradient-to-r from-blue-600 to-blue-700 py-6 text-white hover:from-blue-700 hover:to-blue-800"
-                    disabled={loading || staffLoading}
+                    disabled={createUserMutation.isLoading || updateUserMutation.isLoading || staffLoading}
                 >
-                    {loading ? (
+                    {(createUserMutation.isLoading || updateUserMutation.isLoading) ? (
                         <>
-                            <Loader2 className="mr-2 h-5 w-5 animate-spin"/>
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                             {isEditMode ? 'Updating user...' : 'Creating user...'}
                         </>
                     ) : (

@@ -2,9 +2,9 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/lib/auth/auth.store';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { tokenService } from '@/lib/services/token.service';
-import { authService } from '@/lib/api/services/auth.service';
 import { tokenBlacklistService } from '@/lib/services/token-blacklist.service';
 import logger from '@/lib/services/logger.service';
+import { useRefreshToken } from '@/api/auth';
 
 interface AuthGuardProps {
     children: React.ReactNode;
@@ -21,6 +21,8 @@ export function AuthGuard({ children }: AuthGuardProps) {
     const refreshTimerRef = useRef<number | null>(null);
     const [refreshAttempts, setRefreshAttempts] = useState(0);
     const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const refreshTokenMutation = useRefreshToken();
 
     const handleLogout = useCallback(async () => {
         logger.info('User logged out due to token refresh failure or invalid token.');
@@ -46,11 +48,11 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
         logger.info(`Scheduling token refresh in ${refreshDelay / 1000} seconds.`);
         refreshTimerRef.current = window.setTimeout(() => {
-            refreshToken();
+            attemptTokenRefresh();
         }, refreshDelay);
     }, []);
 
-    const refreshToken = useCallback(async () => {
+    const attemptTokenRefresh = useCallback(async () => {
         if (isRefreshing) return;
 
         const currentRefreshToken = tokenService.getRefreshToken();
@@ -63,20 +65,12 @@ export function AuthGuard({ children }: AuthGuardProps) {
         logger.info('Attempting to refresh token.');
 
         try {
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('Token refresh timeout')), TOKEN_REFRESH_TIMEOUT);
-            });
-
-            const response = await Promise.race([
-                authService.refreshToken(),
-                timeoutPromise
-            ]) as { token: string; refreshToken?: string };
-
+            const response = await refreshTokenMutation.mutateAsync(currentRefreshToken);
             logger.info('Token refreshed successfully.');
             tokenBlacklistService.addToBlacklist(currentRefreshToken);
             tokenService.setToken(response.token);
             if (response.refreshToken) {
-                tokenService.setRefreshToken();
+                 tokenService.setRefreshToken(response.refreshToken);
             }
 
             setToken(response.token);
@@ -89,7 +83,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
                 logger.info(`Retrying token refresh in ${RETRY_DELAY / 1000} seconds.`);
                 setTimeout(() => {
                     setIsRefreshing(false);
-                    refreshToken();
+                    attemptTokenRefresh();
                 }, RETRY_DELAY);
             } else {
                 logger.error('Max refresh attempts reached. Logging out.');
@@ -97,10 +91,10 @@ export function AuthGuard({ children }: AuthGuardProps) {
             }
         } finally {
             if (refreshAttempts >= MAX_REFRESH_ATTEMPTS) {
-                setIsRefreshing(false);
+                 setIsRefreshing(false);
             }
         }
-    }, [isRefreshing, handleLogout, setToken, scheduleTokenRefresh, refreshAttempts]);
+    }, [isRefreshing, handleLogout, setToken, scheduleTokenRefresh, refreshAttempts, refreshTokenMutation]);
 
     useEffect(() => {
         if (isAuthenticated) {

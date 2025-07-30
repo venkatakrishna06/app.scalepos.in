@@ -1,13 +1,12 @@
-import {BarChart2, ClipboardList, LogOut, Menu, PlusCircle, Receipt, Settings, ShoppingBag, X} from 'lucide-react';
-import {Button} from './ui/button';
-import {PropsWithChildren, useEffect} from 'react';
-import {useLocation, useNavigate} from 'react-router-dom';
-import {useAuthStore} from '@/lib/store/auth.store';
-import {useRestaurantStore} from '@/lib/store/restaurant.store';
-import {usePermissions} from '@/hooks/usePermissions';
-import {ThemeToggle} from './theme/theme-toggle';
-import {NotificationDropdown} from './notification-dropdown';
-import {cn} from '@/lib/utils';
+import { BarChart2, ClipboardList, LogOut, Menu, PlusCircle, Receipt, Settings, ShoppingBag, X } from 'lucide-react';
+import { Button } from './ui/button';
+import { PropsWithChildren } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/lib/auth/auth.store';
+import { usePermissions } from '@/hooks/usePermissions';
+import { ThemeToggle } from './theme-toggle';
+import { NotificationDropdown } from './notification-dropdown';
+import { cn } from '@/lib/utils';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -16,30 +15,26 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useRestaurant } from '@/api/restaurant';
+import { PERMISSIONS } from '@/lib/auth/roles';
 
 interface NavbarProps extends PropsWithChildren {
     toggleSidebar: () => void;
     isSidebarOpen?: boolean;
 }
 
-export default function Navbar({toggleSidebar, isSidebarOpen}: NavbarProps) {
+export default function Navbar({ toggleSidebar, isSidebarOpen }: NavbarProps) {
     const navigate = useNavigate();
     const location = useLocation();
-    const {user, logout} = useAuthStore();
-    const {isAdmin, canCreateOrders, canViewOrders} = usePermissions();
-    const {restaurant, fetchRestaurant} = useRestaurantStore();
-
-    // Fetch restaurant information when component mounts
-    useEffect(() => {
-        fetchRestaurant();
-    }, [fetchRestaurant]);
+    const { user, logout } = useAuthStore();
+    const { hasPermission } = usePermissions();
+    const { data: restaurant } = useRestaurant();
 
     const handleLogout = async () => {
         await logout();
         navigate('/login');
     };
 
-    // Check if a route is active
     const isRouteActive = (path: string) => location.pathname === path;
 
     return (
@@ -48,7 +43,6 @@ export default function Navbar({toggleSidebar, isSidebarOpen}: NavbarProps) {
             <div className="container flex h-14 sm:h-16 items-center px-2 sm:px-4 lg:px-6">
                 <div className="flex flex-1 items-center justify-between">
                     <div className="flex items-center gap-2 sm:gap-4 lg:gap-6">
-                        {/* Mobile menu button - only visible on mobile */}
                         <Button
                             variant="ghost"
                             size="icon"
@@ -57,13 +51,12 @@ export default function Navbar({toggleSidebar, isSidebarOpen}: NavbarProps) {
                             aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
                         >
                             {isSidebarOpen ? (
-                                <X className="h-4 w-4 sm:h-5 sm:w-5"/>
+                                <X className="h-4 w-4 sm:h-5 sm:w-5" />
                             ) : (
-                                <Menu className="h-4 w-4 sm:h-5 sm:w-5"/>
+                                <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
                             )}
                         </Button>
 
-                        {/* Desktop menu button - only visible on desktop */}
                         <Button
                             variant="ghost"
                             size="icon"
@@ -72,26 +65,24 @@ export default function Navbar({toggleSidebar, isSidebarOpen}: NavbarProps) {
                             aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
                         >
                             {isSidebarOpen ? (
-                                <Menu className="h-4 w-4 sm:h-5 sm:w-5 rotate-90"/>
+                                <Menu className="h-4 w-4 sm:h-5 sm:w-5 rotate-90" />
                             ) : (
-                                <Menu className="h-4 w-4 sm:h-5 sm:w-5"/>
+                                <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
                             )}
                         </Button>
 
-                        {/* Restaurant name */}
                         <div
                             className="flex items-center"
-                            onClick={() => navigate(isAdmin ? '/dashboard' : '/tables')}
-                            style={{cursor: 'pointer'}}
+                            onClick={() => navigate(hasPermission(PERMISSIONS.READ_USER) ? '/dashboard' : '/tables')}
+                            style={{ cursor: 'pointer' }}
                         >
                             <h1 className="text-base sm:text-lg font-semibold truncate max-w-[120px] xs:max-w-[150px] sm:max-w-none">
                                 {restaurant?.name || 'Restaurant'}
                             </h1>
                         </div>
 
-                        {/* Quick action buttons - responsive visibility */}
                         <div className="hidden md:flex items-center gap-1 sm:gap-2 rounded-lg bg-muted p-1">
-                            {canCreateOrders && (
+                            {hasPermission(PERMISSIONS.CREATE_ORDER) && (
                                 <>
                                     <Button
                                         variant={isRouteActive('/tables') ? "default" : "ghost"}
@@ -99,7 +90,7 @@ export default function Navbar({toggleSidebar, isSidebarOpen}: NavbarProps) {
                                         onClick={() => navigate('/tables')}
                                         className="rounded-md text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9 relative"
                                     >
-                                        <PlusCircle className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4"/>
+                                        <PlusCircle className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                         <span className="hidden sm:inline">New Order</span>
                                         <span className="sm:hidden">Order</span>
                                     </Button>
@@ -109,7 +100,7 @@ export default function Navbar({toggleSidebar, isSidebarOpen}: NavbarProps) {
                                         onClick={() => navigate('/takeaway')}
                                         className="rounded-md text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9 relative"
                                     >
-                                        <ShoppingBag className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4"/>
+                                        <ShoppingBag className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                         <span>Takeaway</span>
                                     </Button>
                                     <Button
@@ -118,20 +109,20 @@ export default function Navbar({toggleSidebar, isSidebarOpen}: NavbarProps) {
                                         onClick={() => navigate('/quick-bill')}
                                         className="rounded-md text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9 relative"
                                     >
-                                        <Receipt className="mr-2 h-4 w-4 sm:h-5 sm:w-5"/>
+                                        <Receipt className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                                         <span className="hidden sm:inline">Quick Bill</span>
                                         <span className="sm:hidden">Bill</span>
                                     </Button>
                                 </>
                             )}
-                            {canViewOrders && (
+                            {hasPermission(PERMISSIONS.READ_ORDER) && (
                                 <Button
                                     variant={isRouteActive('/orders') ? "default" : "ghost"}
                                     size="sm"
                                     onClick={() => navigate('/orders')}
                                     className="rounded-md text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9 relative"
                                 >
-                                    <ClipboardList className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4"/>
+                                    <ClipboardList className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                     <span>Orders</span>
                                 </Button>
                             )}
@@ -139,12 +130,10 @@ export default function Navbar({toggleSidebar, isSidebarOpen}: NavbarProps) {
                     </div>
 
                     <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-2 lg:gap-3">
-                        {/* Notifications - visible on all screen sizes */}
                         <div className="flex relative">
-                            <NotificationDropdown/>
+                            <NotificationDropdown />
                         </div>
 
-                        {/* Settings - hidden on very small screens */}
                         <Button
                             variant="ghost"
                             size="icon"
@@ -152,15 +141,11 @@ export default function Navbar({toggleSidebar, isSidebarOpen}: NavbarProps) {
                             className="hidden xs:flex h-8 w-8 sm:h-9 sm:w-9"
                             aria-label="Settings"
                         >
-                            <Settings className="h-4 w-4 sm:h-5 sm:w-5"/>
+                            <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
                         </Button>
 
-                        {/* Theme toggle - hidden on very small screens */}
+                        <ThemeToggle />
 
-                        <ThemeToggle/>
-
-
-                        {/* User dropdown - always visible */}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button className={cn(
@@ -169,9 +154,9 @@ export default function Navbar({toggleSidebar, isSidebarOpen}: NavbarProps) {
                                 )}>
                                     <div
                                         className="flex h-full w-full items-center justify-center rounded-full bg-primary text-primary-foreground">
-                    <span className="text-xs sm:text-sm font-semibold">
-                      {user?.staff.name?.charAt(0).toUpperCase()}
-                    </span>
+                                        <span className="text-xs sm:text-sm font-semibold">
+                                            {user?.staff.name?.charAt(0).toUpperCase()}
+                                        </span>
                                     </div>
                                 </Button>
                             </DropdownMenuTrigger>
@@ -184,8 +169,8 @@ export default function Navbar({toggleSidebar, isSidebarOpen}: NavbarProps) {
                                         </p>
                                     </div>
                                 </DropdownMenuLabel>
-                                <DropdownMenuSeparator/>
-                                {isAdmin && (
+                                <DropdownMenuSeparator />
+                                {hasPermission(PERMISSIONS.READ_USER) && (
                                     <DropdownMenuItem onClick={() => {
                                         const analyticsUrl = import.meta.env.VITE_ANALYTICS_URL || 'http://localhost:5174/';
                                         const absoluteUrl = analyticsUrl.startsWith('http://') || analyticsUrl.startsWith('https://')
@@ -193,22 +178,22 @@ export default function Navbar({toggleSidebar, isSidebarOpen}: NavbarProps) {
                                             : `https://${analyticsUrl}`;
                                         window.open(absoluteUrl, '_blank', 'noopener,noreferrer');
                                     }}>
-                                        <BarChart2 className="mr-2 h-4 w-4"/>
+                                        <BarChart2 className="mr-2 h-4 w-4" />
                                         Analytics
                                     </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem onClick={() => navigate('/settings')}>
-                                    <Settings className="mr-2 h-4 w-4"/>
+                                    <Settings className="mr-2 h-4 w-4" />
                                     Settings
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => navigate('/profile')}>
-                                    <Settings className="mr-2 h-4 w-4"/>
+                                    <Settings className="mr-2 h-4 w-4" />
                                     Profile
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator/>
+                                <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={handleLogout}
-                                                  className="text-destructive focus:text-destructive">
-                                    <LogOut className="mr-2 h-4 w-4"/>
+                                    className="text-destructive focus:text-destructive">
+                                    <LogOut className="mr-2 h-4 w-4" />
                                     Log out
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
