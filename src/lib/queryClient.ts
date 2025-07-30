@@ -4,11 +4,12 @@ import {QueryClient} from '@tanstack/react-query';
 export const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
-            staleTime: 30 * 1000, // 30 seconds - reduced for more frequent updates
-            cacheTime: 5 * 60 * 1000, // 5 minutes
+            staleTime: 1000 * 60 * 5, // 5 minutes
+            gcTime: 1000 * 60 * 60, // 1 hour
             retry: 1,
-            refetchOnWindowFocus: true, // Enable refetch on window focus for better real-time updates
-            refetchInterval: 60 * 1000, // Poll every minute for critical data
+            refetchOnWindowFocus: false, // Disable refetch on window focus
+            refetchOnMount: false, // Disable refetch on mount
+            refetchOnReconnect: false, // Disable refetch on reconnect
         },
     },
 });
