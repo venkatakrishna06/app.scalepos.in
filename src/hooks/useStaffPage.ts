@@ -1,14 +1,13 @@
-
-import { useState, useMemo } from 'react';
-import { useStaff, useCreateStaff, useUpdateStaff, useDeleteStaff } from '@/api/staff';
-import { StaffMember } from '@/types';
-import { toast } from '@/lib/toast';
+import {useMemo, useState} from 'react';
+import {useCreateStaff, useDeleteStaff, useStaff, useUpdateStaff} from '@/api/staff';
+import {StaffMember} from '@/types';
+import {toast} from '@/lib/toast';
 
 type SortField = 'name' | 'role' | 'status';
 type SortOrder = 'asc' | 'desc';
 
 export const useStaffPage = () => {
-    const { data: staff = [], isLoading, isError, error } = useStaff();
+    const {data: staff = [], isLoading, isError, error} = useStaff();
     const createStaffMutation = useCreateStaff();
     const updateStaffMutation = useUpdateStaff();
     const deleteStaffMutation = useDeleteStaff();
@@ -43,7 +42,7 @@ export const useStaffPage = () => {
     const handleSubmit = async (data: Omit<StaffMember, 'id'>) => {
         try {
             if (editingStaff) {
-                await updateStaffMutation.mutateAsync({ id: editingStaff.id, staff: data });
+                await updateStaffMutation.mutateAsync({id: editingStaff.id, staff: data});
                 toast.success('Staff member updated successfully');
             } else {
                 await createStaffMutation.mutateAsync(data);
@@ -68,17 +67,17 @@ export const useStaffPage = () => {
             toast.error('Failed to delete staff member');
         }
     };
-    
+
     const openDeleteDialog = (id: number) => {
         setDeletingStaffId(id);
         setIsDeleteDialogOpen(true);
     };
-    
+
     const openEditDialog = (staff: StaffMember) => {
         setEditingStaff(staff);
         setShowDialog(true);
     };
-    
+
     const openNewDialog = () => {
         setEditingStaff(null);
         setShowDialog(true);

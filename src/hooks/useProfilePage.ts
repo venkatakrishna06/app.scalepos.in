@@ -1,9 +1,8 @@
-
-import { useEffect, useReducer } from 'react';
-import { useAuthStore } from '@/lib/auth/auth.store';
-import { useUpdateProfile, useChangePassword } from '@/api/auth';
-import { toast } from 'sonner';
-import { validatePassword } from '@/services/profile.service';
+import {useEffect, useReducer} from 'react';
+import {useAuthStore} from '@/lib/auth/auth.store';
+import {useChangePassword, useUpdateProfile} from '@/api/auth';
+import {toast} from 'sonner';
+import {validatePassword} from '@/services/profile.service';
 
 const initialState = {
     showPasswordDialog: false,
@@ -37,23 +36,23 @@ type Action =
 const reducer = (state: State, action: Action): State => {
     switch (action.type) {
         case 'SET_SHOW_PASSWORD_DIALOG':
-            return { ...state, showPasswordDialog: action.payload };
+            return {...state, showPasswordDialog: action.payload};
         case 'SET_CURRENT_PASSWORD':
-            return { ...state, currentPassword: action.payload };
+            return {...state, currentPassword: action.payload};
         case 'SET_NEW_PASSWORD':
-            return { ...state, newPassword: action.payload };
+            return {...state, newPassword: action.payload};
         case 'SET_CONFIRM_PASSWORD':
-            return { ...state, confirmPassword: action.payload };
+            return {...state, confirmPassword: action.payload};
         case 'SET_PASSWORD_ERROR':
-            return { ...state, passwordError: action.payload };
+            return {...state, passwordError: action.payload};
         case 'SET_IS_EDITING':
-            return { ...state, isEditing: action.payload };
+            return {...state, isEditing: action.payload};
         case 'SET_FORM_DATA':
-            return { ...state, formData: { ...state.formData, ...action.payload } };
+            return {...state, formData: {...state.formData, ...action.payload}};
         case 'SET_ACTIVE_TAB':
-            return { ...state, activeTab: action.payload };
+            return {...state, activeTab: action.payload};
         case 'RESET_FORM':
-            return { ...state, isEditing: false, formData: action.payload };
+            return {...state, isEditing: false, formData: action.payload};
         case 'RESET_PASSWORD_FORM':
             return {
                 ...state,
@@ -69,7 +68,7 @@ const reducer = (state: State, action: Action): State => {
 };
 
 export const useProfilePage = () => {
-    const { user, loading, error, initAuth } = useAuthStore();
+    const {user, loading, error, initAuth} = useAuthStore();
     const updateProfileMutation = useUpdateProfile();
     const changePasswordMutation = useChangePassword();
     const [state, dispatch] = useReducer(reducer, initialState);
@@ -93,7 +92,7 @@ export const useProfilePage = () => {
         e.preventDefault();
         try {
             await updateProfileMutation.mutateAsync(state.formData);
-            dispatch({ type: 'SET_IS_EDITING', payload: false });
+            dispatch({type: 'SET_IS_EDITING', payload: false});
             toast.success('Profile updated successfully');
         } catch (err) {
             toast.error('Failed to update profile');
@@ -102,16 +101,16 @@ export const useProfilePage = () => {
 
     const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault();
-        dispatch({ type: 'SET_PASSWORD_ERROR', payload: '' });
+        dispatch({type: 'SET_PASSWORD_ERROR', payload: ''});
 
         if (state.newPassword !== state.confirmPassword) {
-            dispatch({ type: 'SET_PASSWORD_ERROR', payload: 'New passwords do not match' });
+            dispatch({type: 'SET_PASSWORD_ERROR', payload: 'New passwords do not match'});
             return;
         }
 
         const passwordError = validatePassword(state.newPassword);
         if (passwordError) {
-            dispatch({ type: 'SET_PASSWORD_ERROR', payload: passwordError });
+            dispatch({type: 'SET_PASSWORD_ERROR', payload: passwordError});
             return;
         }
 
@@ -120,10 +119,10 @@ export const useProfilePage = () => {
                 currentPassword: state.currentPassword,
                 newPassword: state.newPassword,
             });
-            dispatch({ type: 'RESET_PASSWORD_FORM' });
+            dispatch({type: 'RESET_PASSWORD_FORM'});
             toast.success('Password changed successfully');
         } catch (err) {
-            dispatch({ type: 'SET_PASSWORD_ERROR', payload: 'Failed to change password' });
+            dispatch({type: 'SET_PASSWORD_ERROR', payload: 'Failed to change password'});
         }
     };
 

@@ -1,4 +1,3 @@
-
 import {
     AlertCircle,
     ArrowUpRight,
@@ -14,12 +13,12 @@ import {
     Trash2,
     XCircle
 } from 'lucide-react';
-import { usePermissions } from '@/hooks/usePermissions';
-import { MenuSkeleton } from '@/components/skeletons/menu-skeleton';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {usePermissions} from '@/hooks/usePermissions';
+import {MenuSkeleton} from '@/components/skeletons/menu-skeleton';
+import {Button} from '@/components/ui/button';
+import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle} from '@/components/ui/dialog';
+import {Input} from '@/components/ui/input';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -27,14 +26,14 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MenuItemForm } from '@/components/composed/menu-item-form';
-import { cn } from '@/lib/utils';
-import { PERMISSIONS } from '@/lib/auth/roles';
-import { useMenuPage } from '@/hooks/useMenuPage';
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card';
+import {MenuItemForm} from '@/components/composed/menu-item-form';
+import {cn} from '@/lib/utils';
+import {PERMISSIONS} from '@/lib/auth/roles';
+import {useMenuPage} from '@/hooks/useMenuPage';
 
 export default function Menu() {
-    const { hasPermission } = usePermissions();
+    const {hasPermission} = usePermissions();
     const {
         menuItemsLoading,
         menuItemsError,
@@ -71,7 +70,7 @@ export default function Menu() {
     } = useMenuPage();
 
     if (menuItemsLoading || categoriesLoading) {
-        return <MenuSkeleton />;
+        return <MenuSkeleton/>;
     }
 
     const error = menuItemsError || categoriesError;
@@ -80,7 +79,7 @@ export default function Menu() {
         return (
             <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
                 <div className="text-center">
-                    <AlertCircle className="mx-auto h-10 w-10 text-destructive" />
+                    <AlertCircle className="mx-auto h-10 w-10 text-destructive"/>
                     <p className="mt-4 text-lg font-semibold text-destructive">
                         {errorMessage instanceof Error ? errorMessage.message : 'An error occurred while loading data'}
                     </p>
@@ -115,16 +114,16 @@ export default function Menu() {
                         onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
                     >
                         {viewMode === 'grid' ? (
-                            <LayoutList className="mr-2 h-4 w-4" />
+                            <LayoutList className="mr-2 h-4 w-4"/>
                         ) : (
-                            <LayoutGrid className="mr-2 h-4 w-4" />
+                            <LayoutGrid className="mr-2 h-4 w-4"/>
                         )}
                         {viewMode === 'grid' ? 'List View' : 'Grid View'}
                     </Button>
 
                     {hasPermission(PERMISSIONS.CREATE_MENU) && (
                         <Button onClick={openNewDialog}>
-                            <Plus className="mr-2 h-4 w-4" />
+                            <Plus className="mr-2 h-4 w-4"/>
                             Add Item
                         </Button>
                     )}
@@ -134,7 +133,7 @@ export default function Menu() {
             <div className="flex flex-col gap-4 md:flex-row md:items-center">
                 <div className="flex flex-1 flex-col gap-4 sm:flex-row sm:items-center">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
                         <Input
                             placeholder="Search by name, description..."
                             value={searchQuery}
@@ -148,7 +147,7 @@ export default function Menu() {
                                 className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full p-0"
                                 onClick={() => setSearchQuery('')}
                             >
-                                <XCircle className="h-4 w-4" />
+                                <XCircle className="h-4 w-4"/>
                                 <span className="sr-only">Clear search</span>
                             </Button>
                         )}
@@ -157,8 +156,8 @@ export default function Menu() {
                     <div className="flex flex-wrap gap-2 sm:flex-nowrap">
                         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                             <SelectTrigger className="h-10 w-full sm:w-[180px]">
-                                <Tag className="mr-2 h-4 w-4 text-muted-foreground" />
-                                <SelectValue placeholder="Category" />
+                                <Tag className="mr-2 h-4 w-4 text-muted-foreground"/>
+                                <SelectValue placeholder="Category"/>
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">All Categories</SelectItem>
@@ -175,13 +174,13 @@ export default function Menu() {
                         <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
                             <SelectTrigger className="h-10 w-full sm:w-[180px]">
                                 {availabilityFilter === 'available' ? (
-                                    <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                                    <CheckCircle className="mr-2 h-4 w-4 text-green-500"/>
                                 ) : availabilityFilter === 'unavailable' ? (
-                                    <XCircle className="mr-2 h-4 w-4 text-red-500" />
+                                    <XCircle className="mr-2 h-4 w-4 text-red-500"/>
                                 ) : (
-                                    <AlertCircle className="mr-2 h-4 w-4 text-muted-foreground" />
+                                    <AlertCircle className="mr-2 h-4 w-4 text-muted-foreground"/>
                                 )}
-                                <SelectValue placeholder="Availability" />
+                                <SelectValue placeholder="Availability"/>
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">All Items</SelectItem>
@@ -190,10 +189,11 @@ export default function Menu() {
                             </SelectContent>
                         </Select>
 
-                        <Select value={sortField} onValueChange={(value) => setSortField(value as 'name' | 'price' | 'category')}>
+                        <Select value={sortField}
+                                onValueChange={(value) => setSortField(value as 'name' | 'price' | 'category')}>
                             <SelectTrigger className="h-10 w-full sm:w-[180px]">
-                                <LayoutList className="mr-2 h-4 w-4 text-muted-foreground" />
-                                <SelectValue placeholder="Sort by" />
+                                <LayoutList className="mr-2 h-4 w-4 text-muted-foreground"/>
+                                <SelectValue placeholder="Sort by"/>
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="name">Name</SelectItem>
@@ -210,9 +210,9 @@ export default function Menu() {
                             aria-label={sortOrder === 'asc' ? 'Sort descending' : 'Sort ascending'}
                         >
                             {sortOrder === 'asc' ? (
-                                <ArrowUpRight className="h-4 w-4" />
+                                <ArrowUpRight className="h-4 w-4"/>
                             ) : (
-                                <ArrowUpRight className="h-4 w-4 rotate-180" />
+                                <ArrowUpRight className="h-4 w-4 rotate-180"/>
                             )}
                         </Button>
                     </div>
@@ -252,12 +252,12 @@ export default function Menu() {
                                         )}>
                                             {item.available ? (
                                                 <>
-                                                    <CheckCircle className="h-3.5 w-3.5" />
+                                                    <CheckCircle className="h-3.5 w-3.5"/>
                                                     <span>Available</span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <XCircle className="h-3.5 w-3.5" />
+                                                    <XCircle className="h-3.5 w-3.5"/>
                                                     <span>Unavailable</span>
                                                 </>
                                             )}
@@ -271,7 +271,7 @@ export default function Menu() {
                                                     className="h-8 w-8 bg-background/90 backdrop-blur-sm hover:bg-background shadow-sm"
                                                     disabled={createMenuItemMutation.isLoading || updateMenuItemMutation.isLoading || deleteMenuItemMutation.isLoading}
                                                 >
-                                                    <MoreVertical className="h-4 w-4" />
+                                                    <MoreVertical className="h-4 w-4"/>
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
@@ -282,12 +282,12 @@ export default function Menu() {
                                                     >
                                                         {item.available ? (
                                                             <>
-                                                                <XCircle className="mr-2 h-4 w-4" />
+                                                                <XCircle className="mr-2 h-4 w-4"/>
                                                                 <span>Mark Unavailable</span>
                                                             </>
                                                         ) : (
                                                             <>
-                                                                <CheckCircle className="mr-2 h-4 w-4" />
+                                                                <CheckCircle className="mr-2 h-4 w-4"/>
                                                                 <span>Mark Available</span>
                                                             </>
                                                         )}
@@ -298,19 +298,19 @@ export default function Menu() {
                                                         onClick={() => openEditDialog(item)}
                                                         disabled={createMenuItemMutation.isLoading || updateMenuItemMutation.isLoading || deleteMenuItemMutation.isLoading}
                                                     >
-                                                        <Edit2 className="mr-2 h-4 w-4" />
+                                                        <Edit2 className="mr-2 h-4 w-4"/>
                                                         <span>Edit Item</span>
                                                     </DropdownMenuItem>
                                                 )}
                                                 {hasPermission(PERMISSIONS.DELETE_MENU) && (
                                                     <>
-                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuSeparator/>
                                                         <DropdownMenuItem
                                                             onClick={() => handleDelete(item.id)}
                                                             disabled={createMenuItemMutation.isLoading || updateMenuItemMutation.isLoading || deleteMenuItemMutation.isLoading}
                                                             className="text-destructive focus:text-destructive"
                                                         >
-                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            <Trash2 className="mr-2 h-4 w-4"/>
                                                             <span>Delete Item</span>
                                                         </DropdownMenuItem>
                                                     </>
@@ -332,7 +332,7 @@ export default function Menu() {
 
                                 <CardContent className="pb-4 pt-0">
                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Tag className="h-4 w-4" />
+                                        <Tag className="h-4 w-4"/>
                                         <span>{item.category.name}</span>
                                     </div>
                                 </CardContent>
@@ -375,12 +375,12 @@ export default function Menu() {
                                             )}>
                                                 {item.available ? (
                                                     <>
-                                                        <CheckCircle className="h-3 w-3" />
+                                                        <CheckCircle className="h-3 w-3"/>
                                                         <span>Available</span>
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <XCircle className="h-3 w-3" />
+                                                        <XCircle className="h-3 w-3"/>
                                                         <span>Unavailable</span>
                                                     </>
                                                 )}
@@ -391,7 +391,7 @@ export default function Menu() {
 
                                     <div className="flex items-center justify-between mt-2">
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                            <Tag className="h-3.5 w-3.5" />
+                                            <Tag className="h-3.5 w-3.5"/>
                                             <span>{item.category.name}</span>
                                         </div>
 
@@ -406,12 +406,12 @@ export default function Menu() {
                                                 >
                                                     {item.available ? (
                                                         <>
-                                                            <XCircle className="mr-1.5 h-3.5 w-3.5" />
+                                                            <XCircle className="mr-1.5 h-3.5 w-3.5"/>
                                                             <span>Unavailable</span>
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <CheckCircle className="mr-1.5 h-3.5 w-3.5" />
+                                                            <CheckCircle className="mr-1.5 h-3.5 w-3.5"/>
                                                             <span>Available</span>
                                                         </>
                                                     )}
@@ -425,7 +425,7 @@ export default function Menu() {
                                                     onClick={() => openEditDialog(item)}
                                                     disabled={createMenuItemMutation.isLoading || updateMenuItemMutation.isLoading || deleteMenuItemMutation.isLoading}
                                                 >
-                                                    <Edit2 className="mr-1.5 h-3.5 w-3.5" />
+                                                    <Edit2 className="mr-1.5 h-3.5 w-3.5"/>
                                                     <span>Edit</span>
                                                 </Button>
                                             )}
@@ -437,7 +437,7 @@ export default function Menu() {
                                                     onClick={() => handleDelete(item.id)}
                                                     disabled={createMenuItemMutation.isLoading || updateMenuItemMutation.isLoading || deleteMenuItemMutation.isLoading}
                                                 >
-                                                    <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                                                    <Trash2 className="mr-1.5 h-3.5 w-3.5"/>
                                                     <span>Delete</span>
                                                 </Button>
                                             )}
@@ -451,7 +451,7 @@ export default function Menu() {
 
                 {filteredItems.length === 0 && (
                     <div className="rounded-lg border border-dashed p-8 text-center">
-                        <FileText className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
+                        <FileText className="mx-auto h-12 w-12 text-muted-foreground opacity-50"/>
                         <h3 className="mt-4 text-lg font-semibold">No Menu Items Found</h3>
                         <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
                             {searchQuery
@@ -464,7 +464,7 @@ export default function Menu() {
                                 className="mt-6"
                                 onClick={openNewDialog}
                             >
-                                <Plus className="mr-2 h-4 w-4" />
+                                <Plus className="mr-2 h-4 w-4"/>
                                 Add New Item
                             </Button>
                         )}

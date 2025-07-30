@@ -1,7 +1,10 @@
 # QuickQuick Restaurant Management System
 
 ## Overview
-QuickQuick is a comprehensive restaurant management system designed to streamline and automate various aspects of restaurant operations. The frontend application is built with modern web technologies to provide a responsive and intuitive user interface for restaurant staff and management.
+
+QuickQuick is a comprehensive restaurant management system designed to streamline and automate various aspects of
+restaurant operations. The frontend application is built with modern web technologies to provide a responsive and
+intuitive user interface for restaurant staff and management.
 
 ## Features
 
@@ -56,18 +59,22 @@ QuickQuick is a comprehensive restaurant management system designed to streamlin
 ## Usage
 
 ### Web Application Development
+
 - `npm run dev` - Start the development server
 - `npm run lint` - Run ESLint to check for code issues
 - `npm run build` - Build the application for production
 - `npm run preview` - Preview the production build locally
 
 ### Desktop Application
+
 This application can also be run as a desktop application using Electron.
 
 #### Development
+
 - `npm run electron:dev` - Start the development server with Electron
 
 #### Building
+
 - `npm run electron:build` - Build the desktop application for distribution
 - `npm run electron:preview` - Preview the built desktop application
 
@@ -77,7 +84,8 @@ For detailed instructions on running and building the desktop application, see [
 
 ### React Query Hooks
 
-The application uses React Query for data fetching and state management. The React Query cache is persisted to localStorage to survive page refreshes. This provides a seamless user experience even when the page is refreshed.
+The application uses React Query for data fetching and state management. The React Query cache is persisted to
+localStorage to survive page refreshes. This provides a seamless user experience even when the page is refreshed.
 
 Custom hooks have been created for each service:
 

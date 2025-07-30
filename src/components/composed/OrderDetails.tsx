@@ -1,15 +1,15 @@
 import React from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Clock, CreditCard } from 'lucide-react';
-import { format } from 'date-fns';
-import { Order } from '@/types';
-import { OrderItemCard, OrderItemRow } from './OrderItem';
-import { useRestaurant } from '@/api/restaurant';
-import { usePermissions } from '@/hooks/usePermissions';
-import { PERMISSIONS } from '@/lib/auth/roles';
+import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
+import {Badge} from '@/components/ui/badge';
+import {Button} from '@/components/ui/button';
+import {Separator} from '@/components/ui/separator';
+import {Clock, CreditCard} from 'lucide-react';
+import {format} from 'date-fns';
+import {Order} from '@/types';
+import {OrderItemCard, OrderItemRow} from './OrderItem';
+import {useRestaurant} from '@/api/restaurant';
+import {usePermissions} from '@/hooks/usePermissions';
+import {PERMISSIONS} from '@/lib/auth/roles';
 
 interface OrderDetailsProps {
     order: Order;
@@ -31,18 +31,18 @@ interface OrderDetailsProps {
 }
 
 export const OrderDetails: React.FC<OrderDetailsProps> = ({
-    order,
-    onPayment,
-    handleQuantityChange,
-    handleItemStatusChange,
-    handleCancelItem,
-    processingItemId,
-    getOrderTotal,
-    getGstDetails,
-    getStatusBadgeClass,
-}) => {
-    const { data: restaurant } = useRestaurant();
-    const { hasPermission } = usePermissions();
+                                                              order,
+                                                              onPayment,
+                                                              handleQuantityChange,
+                                                              handleItemStatusChange,
+                                                              handleCancelItem,
+                                                              processingItemId,
+                                                              getOrderTotal,
+                                                              getGstDetails,
+                                                              getStatusBadgeClass,
+                                                          }) => {
+    const {data: restaurant} = useRestaurant();
+    const {hasPermission} = usePermissions();
     const isTrackingEnabled = restaurant?.enable_order_status_tracking || false;
     const showOrderStatusBadge = isTrackingEnabled || order.status === 'cancelled';
 
@@ -53,7 +53,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                         <CardTitle className="text-xl">Order #{order.id}</CardTitle>
                         <CardDescription className="sm:mt-0">
-                            <Clock className="inline-block h-4 w-4 mr-1" />
+                            <Clock className="inline-block h-4 w-4 mr-1"/>
                             {format(new Date(order.order_time), 'MMM d, h:mm a')}
                         </CardDescription>
                     </div>
@@ -63,7 +63,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                         </Badge>
                     )}
                 </div>
-                <Separator className="my-2" />
+                <Separator className="my-2"/>
             </CardHeader>
 
             <CardContent className="p-0 px-0 space-y-4">
@@ -71,26 +71,26 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                     <div className="hidden md:block">
                         <table className="w-full">
                             <thead>
-                                <tr className="text-left text-sm text-muted-foreground border-b">
-                                    <th className="pb-2 font-medium">Item</th>
-                                    <th className="pb-2 font-medium">Qty</th>
-                                    <th className="pb-2 font-medium">Price</th>
-                                    <th className="pb-2 font-medium">Total</th>
-                                </tr>
+                            <tr className="text-left text-sm text-muted-foreground border-b">
+                                <th className="pb-2 font-medium">Item</th>
+                                <th className="pb-2 font-medium">Qty</th>
+                                <th className="pb-2 font-medium">Price</th>
+                                <th className="pb-2 font-medium">Total</th>
+                            </tr>
                             </thead>
                             <tbody>
-                                {(order?.items || []).map((item) => (
-                                    <OrderItemRow
-                                        key={item.id}
-                                        item={item}
-                                        orderId={order.id}
-                                        processingItemId={processingItemId}
-                                        getStatusBadgeClass={getStatusBadgeClass}
-                                        handleQuantityChange={handleQuantityChange}
-                                        handleItemStatusChange={handleItemStatusChange}
-                                        handleCancelItem={handleCancelItem}
-                                    />
-                                ))}
+                            {(order?.items || []).map((item) => (
+                                <OrderItemRow
+                                    key={item.id}
+                                    item={item}
+                                    orderId={order.id}
+                                    processingItemId={processingItemId}
+                                    getStatusBadgeClass={getStatusBadgeClass}
+                                    handleQuantityChange={handleQuantityChange}
+                                    handleItemStatusChange={handleItemStatusChange}
+                                    handleCancelItem={handleCancelItem}
+                                />
+                            ))}
                             </tbody>
                         </table>
                     </div>
@@ -142,7 +142,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                             variant={'default'}
                             className="w-full sm:w-auto"
                         >
-                            <CreditCard className="mr-2 h-4 w-4" />
+                            <CreditCard className="mr-2 h-4 w-4"/>
                             Pay
                         </Button>
                     )}

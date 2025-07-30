@@ -12,13 +12,12 @@ import {
     Search,
     Trash2
 } from 'lucide-react';
-import {format as formatDate} from 'date-fns';
+import {format as formatDate, format, isToday, isYesterday, subDays} from 'date-fns';
 import {Button} from '@/components/ui/button';
-import {format, isToday, isYesterday, subDays} from 'date-fns';
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
 import {Input} from '@/components/ui/input';
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
-\
+
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -31,8 +30,9 @@ import {Badge} from '@/components/ui/badge';
 import {cn} from '@/lib/utils';
 import {toast} from '@/lib/toast';
 import {Order} from '@/types';
-import {useRestaurantStore} from '@/lib/store';
-import { FilterDropdownContainer } from './FilterDropdownContainer';
+
+import {FilterDropdownContainer} from './FilterDropdownContainer';
+import {useRestaurant} from "@/api";
 
 interface AdminOrderOverviewProps {
     orders: Order[];
@@ -52,7 +52,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                                           onItemStatusChange
                                                                       }) => {
     // Get restaurant data to check if order tracking is enabled
-    const {restaurant} = useRestaurantStore();
+    const {data:restaurant} = useRestaurant();
     const isTrackingEnabled = restaurant?.enable_order_status_tracking || false;
 
     // State for filter parameters
@@ -136,22 +136,22 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
         ].join('\n');
 
         // Create a Blob with the CSV content
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        
+        const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
+
         // Create a download link
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
-        
+
         // Set link properties
         link.setAttribute('href', url);
         link.setAttribute('download', `orders_export_${formatDate(new Date(), 'yyyy-MM-dd_HH-mm')}.csv`);
         link.style.visibility = 'hidden';
-        
+
         // Add link to document, click it, and remove it
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         // Show success toast
         toast.success("CSV export completed successfully");
     };
@@ -169,8 +169,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
     };
 
     // Filter and sort orders
-    const filteredOrders = orders
-        .filter((order) => {
+    const filteredOrders = orders.filter((order) => {
             // Status filter
             const matchesStatus = filterStatus === 'all' ? true : order.status === filterStatus;
 
@@ -462,7 +461,8 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                             )}
                                         </div>
 
-                                        <div className="mt-4 max-h-40 overflow-auto rounded-md border border-blue-100 custom-scrollbar">
+                                        <div
+                                            className="mt-4 max-h-40 overflow-auto rounded-md border border-blue-100 custom-scrollbar">
                                             <table className="w-full">
                                                 <thead className="bg-blue-50 dark:bg-blue-950 text-xs">
                                                 <tr className="text-left">

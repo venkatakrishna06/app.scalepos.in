@@ -1,12 +1,12 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle2, Loader2, Minus, Plus, XCircle } from 'lucide-react';
-import { OrderItem as OrderItemType } from '@/types';
-import { useRestaurant } from '@/api/restaurant';
-import { usePermissions } from '@/hooks/usePermissions';
-import { PERMISSIONS } from '@/lib/auth/roles';
+import {Button} from '@/components/ui/button';
+import {Badge} from '@/components/ui/badge';
+import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
+import {CheckCircle2, Loader2, Minus, Plus, XCircle} from 'lucide-react';
+import {OrderItem as OrderItemType} from '@/types';
+import {useRestaurant} from '@/api/restaurant';
+import {usePermissions} from '@/hooks/usePermissions';
+import {PERMISSIONS} from '@/lib/auth/roles';
 
 interface OrderItemProps {
     item: OrderItemType;
@@ -19,16 +19,16 @@ interface OrderItemProps {
 }
 
 export const OrderItemRow: React.FC<OrderItemProps> = ({
-    item,
-    orderId,
-    processingItemId,
-    getStatusBadgeClass,
-    handleQuantityChange,
-    handleItemStatusChange,
-    handleCancelItem
-}) => {
-    const { data: restaurant } = useRestaurant();
-    const { hasPermission } = usePermissions();
+                                                           item,
+                                                           orderId,
+                                                           processingItemId,
+                                                           getStatusBadgeClass,
+                                                           handleQuantityChange,
+                                                           handleItemStatusChange,
+                                                           handleCancelItem
+                                                       }) => {
+    const {data: restaurant} = useRestaurant();
+    const {hasPermission} = usePermissions();
     const isTrackingEnabled = restaurant?.enable_order_status_tracking || false;
     const showStatusBadge = isTrackingEnabled || item.status === 'cancelled';
 
@@ -46,9 +46,9 @@ export const OrderItemRow: React.FC<OrderItemProps> = ({
                             disabled={processingItemId === item.id}
                         >
                             {processingItemId === item.id ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
+                                <Loader2 className="h-3 w-3 animate-spin"/>
                             ) : (
-                                <Minus className="h-3 w-3" />
+                                <Minus className="h-3 w-3"/>
                             )}
                         </Button>
                         <span className="w-6 text-center">{item.quantity}</span>
@@ -60,9 +60,9 @@ export const OrderItemRow: React.FC<OrderItemProps> = ({
                             disabled={processingItemId === item.id}
                         >
                             {processingItemId === item.id ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
+                                <Loader2 className="h-3 w-3 animate-spin"/>
                             ) : (
-                                <Plus className="h-3 w-3" />
+                                <Plus className="h-3 w-3"/>
                             )}
                         </Button>
                     </div>
@@ -89,9 +89,9 @@ export const OrderItemRow: React.FC<OrderItemProps> = ({
                             disabled={processingItemId === item.id || (item.allowed_next_states && !item.allowed_next_states.includes('cancelled'))}
                         >
                             {processingItemId === item.id ? (
-                                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                <Loader2 className="h-3 w-3 animate-spin mr-1"/>
                             ) : (
-                                <XCircle className="h-3 w-3 mr-1" />
+                                <XCircle className="h-3 w-3 mr-1"/>
                             )}
                             Cancel
                         </Button>
@@ -102,7 +102,7 @@ export const OrderItemRow: React.FC<OrderItemProps> = ({
                                 disabled={processingItemId === item.id || (item.allowed_next_states && !item.allowed_next_states.includes('preparing'))}
                             >
                                 {processingItemId === item.id ? (
-                                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                    <Loader2 className="h-3 w-3 animate-spin mr-1"/>
                                 ) : (
                                     "Prepare"
                                 )}
@@ -117,9 +117,9 @@ export const OrderItemRow: React.FC<OrderItemProps> = ({
                         disabled={processingItemId === item.id || (item.allowed_next_states && !item.allowed_next_states.includes('ready'))}
                     >
                         {processingItemId === item.id ? (
-                            <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                            <Loader2 className="h-3 w-3 animate-spin mr-1"/>
                         ) : (
-                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                            <CheckCircle2 className="h-3 w-3 mr-1"/>
                         )}
                         Mark Ready
                     </Button>
@@ -131,9 +131,9 @@ export const OrderItemRow: React.FC<OrderItemProps> = ({
                         disabled={processingItemId === item.id || (item.allowed_next_states && !item.allowed_next_states.includes('served'))}
                     >
                         {processingItemId === item.id ? (
-                            <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                            <Loader2 className="h-3 w-3 animate-spin mr-1"/>
                         ) : (
-                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                            <CheckCircle2 className="h-3 w-3 mr-1"/>
                         )}
                         Mark Served
                     </Button>
@@ -144,16 +144,16 @@ export const OrderItemRow: React.FC<OrderItemProps> = ({
 };
 
 export const OrderItemCard: React.FC<OrderItemProps> = ({
-    item,
-    orderId,
-    processingItemId,
-    getStatusBadgeClass,
-    handleQuantityChange,
-    handleItemStatusChange,
-    handleCancelItem
-}) => {
-    const { data: restaurant } = useRestaurant();
-    const { hasPermission } = usePermissions();
+                                                            item,
+                                                            orderId,
+                                                            processingItemId,
+                                                            getStatusBadgeClass,
+                                                            handleQuantityChange,
+                                                            handleItemStatusChange,
+                                                            handleCancelItem
+                                                        }) => {
+    const {data: restaurant} = useRestaurant();
+    const {hasPermission} = usePermissions();
     const isTrackingEnabled = restaurant?.enable_order_status_tracking || false;
     const showStatusBadge = isTrackingEnabled || item.status === 'cancelled';
 
@@ -182,9 +182,9 @@ export const OrderItemCard: React.FC<OrderItemProps> = ({
                                     disabled={processingItemId === item.id}
                                 >
                                     {processingItemId === item.id ? (
-                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                        <Loader2 className="h-3 w-3 animate-spin"/>
                                     ) : (
-                                        <Minus className="h-3 w-3" />
+                                        <Minus className="h-3 w-3"/>
                                     )}
                                 </Button>
                                 <span className="w-6 text-center">{item.quantity}</span>
@@ -196,9 +196,9 @@ export const OrderItemCard: React.FC<OrderItemProps> = ({
                                     disabled={processingItemId === item.id}
                                 >
                                     {processingItemId === item.id ? (
-                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                        <Loader2 className="h-3 w-3 animate-spin"/>
                                     ) : (
-                                        <Plus className="h-3 w-3" />
+                                        <Plus className="h-3 w-3"/>
                                     )}
                                 </Button>
                             </div>
@@ -222,9 +222,9 @@ export const OrderItemCard: React.FC<OrderItemProps> = ({
                                     disabled={processingItemId === item.id || (item.allowed_next_states && !item.allowed_next_states.includes('cancelled'))}
                                 >
                                     {processingItemId === item.id ? (
-                                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                        <Loader2 className="h-3 w-3 animate-spin mr-1"/>
                                     ) : (
-                                        <XCircle className="h-3 w-3 mr-1" />
+                                        <XCircle className="h-3 w-3 mr-1"/>
                                     )}
                                     Cancel
                                 </Button>
@@ -235,7 +235,7 @@ export const OrderItemCard: React.FC<OrderItemProps> = ({
                                         disabled={processingItemId === item.id || (item.allowed_next_states && !item.allowed_next_states.includes('preparing'))}
                                     >
                                         {processingItemId === item.id ? (
-                                            <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                            <Loader2 className="h-3 w-3 animate-spin mr-1"/>
                                         ) : (
                                             "Prepare"
                                         )}
@@ -250,9 +250,9 @@ export const OrderItemCard: React.FC<OrderItemProps> = ({
                                 disabled={processingItemId === item.id || (item.allowed_next_states && !item.allowed_next_states.includes('ready'))}
                             >
                                 {processingItemId === item.id ? (
-                                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                    <Loader2 className="h-3 w-3 animate-spin mr-1"/>
                                 ) : (
-                                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                                    <CheckCircle2 className="h-3 w-3 mr-1"/>
                                 )}
                                 Mark Ready
                             </Button>
@@ -264,9 +264,9 @@ export const OrderItemCard: React.FC<OrderItemProps> = ({
                                 disabled={processingItemId === item.id || (item.allowed_next_states && !item.allowed_next_states.includes('served'))}
                             >
                                 {processingItemId === item.id ? (
-                                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                    <Loader2 className="h-3 w-3 animate-spin mr-1"/>
                                 ) : (
-                                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                                    <CheckCircle2 className="h-3 w-3 mr-1"/>
                                 )}
                                 Mark Served
                             </Button>

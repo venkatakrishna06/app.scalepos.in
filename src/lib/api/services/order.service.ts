@@ -1,7 +1,7 @@
-import { api } from '../axios';
-import { API_ENDPOINTS } from '../endpoints';
-import { Order, OrderItem } from '@/types';
-import { orderSchema, ordersSchema, validateApiResponse } from '@/lib/validation/apiSchemas';
+import {api} from '../axios';
+import {API_ENDPOINTS} from '../endpoints';
+import {Order, OrderItem} from '@/types';
+import {orderSchema, ordersSchema, validateApiResponse} from '@/lib/validation/apiSchemas';
 import logger from '@/lib/services/logger.service';
 
 // Define error type for better type safety
@@ -57,10 +57,8 @@ interface StatusHistoryRecord {
 const handleApiError = (error: ApiErrorResponse | Error, defaultMessage: string, context: object = {}) => {
     if ('response' in error && error.response?.data?.error) {
         const apiError = error.response.data.error;
-        logger.error(defaultMessage, { ...context, error: apiError });
         throw new Error(apiError.message || defaultMessage);
     }
-    logger.error(defaultMessage, { ...context, error });
     throw new Error(defaultMessage);
 };
 
@@ -72,202 +70,172 @@ export const orderService = {
         table_number?: number;
     }) => {
         try {
-            const finalParams = params || { period: 'day' };
+            const finalParams = params || {period: 'day'};
             if (!finalParams.period && !finalParams.start_date && !finalParams.end_date) {
                 finalParams.period = 'day';
             }
-            logger.info('Fetching orders with params:', { params: finalParams });
-            const response = await api.get<Order[]>(API_ENDPOINTS.ORDERS.LIST, { params: finalParams });
-            logger.info('Orders fetched successfully.');
+            const response = await api.get<Order[]>(API_ENDPOINTS.ORDERS.LIST, {params: finalParams});
             return validateApiResponse(response.data, ordersSchema);
         } catch (error) {
-            handleApiError(error, 'Failed to fetch orders', { params });
+            handleApiError(error, 'Failed to fetch orders', {params});
             return [];
         }
     },
 
     createOrder: async (order: Omit<Order, 'id'>) => {
         try {
-            logger.info('Creating new order.');
             const response = await api.post<Order>(API_ENDPOINTS.ORDERS.CREATE, order);
-            logger.info('Order created successfully.');
             return validateApiResponse(response.data, orderSchema);
         } catch (error) {
-            handleApiError(error, 'Failed to create order', { order });
+            handleApiError(error, 'Failed to create order', {order});
             throw error;
         }
     },
 
     updateOrder: async (id: number, order: Partial<Order>) => {
         try {
-            logger.info(`Updating order with id: ${id}`);
             const response = await api.put<Order>(API_ENDPOINTS.ORDERS.UPDATE(id), order);
-            logger.info(`Order with id: ${id} updated successfully.`);
             return validateApiResponse(response.data, orderSchema);
         } catch (error) {
-            handleApiError(error, `Failed to update order with id: ${id}`, { order });
+            handleApiError(error, `Failed to update order with id: ${id}`, {order});
             throw error;
         }
     },
 
     deleteOrder: async (id: number) => {
         try {
-            logger.info(`Deleting order with id: ${id}`);
             await api.delete(API_ENDPOINTS.ORDERS.DELETE(id));
-            logger.info(`Order with id: ${id} deleted successfully.`);
-        } catch (error) {
-            handleApiError(error, `Failed to delete order with id: ${id}`, { id });
+            } catch (error) {
+            handleApiError(error, `Failed to delete order with id: ${id}`, {id});
             throw error;
         }
     },
 
     getOrdersByTable: async (tableId: number) => {
         try {
-            logger.info(`Fetching orders for table with id: ${tableId}`);
             const response = await api.get<Order[]>(`${API_ENDPOINTS.ORDERS.LIST}?table_id=${tableId}`);
-            logger.info(`Orders for table with id: ${tableId} fetched successfully.`);
             return validateApiResponse(response.data, ordersSchema);
         } catch (error) {
-            handleApiError(error, `Failed to fetch orders for table with id: ${tableId}`, { tableId });
+            handleApiError(error, `Failed to fetch orders for table with id: ${tableId}`, {tableId});
             return [];
         }
     },
 
     updateOrderStatus: async (id: number, status: string) => {
         try {
-            logger.info(`Updating order status for order with id: ${id} to ${status}`);
             const response = await api.put<OrderStatusUpdateResponse>(
                 API_ENDPOINTS.ORDERS.UPDATE_STATUS(id),
-                { status }
+                {status}
             );
-            logger.info(`Order status for order with id: ${id} updated successfully.`);
             return response.data;
         } catch (error) {
-            handleApiError(error, `Failed to update order status for order with id: ${id}`, { id, status });
+            handleApiError(error, `Failed to update order status for order with id: ${id}`, {id, status});
             throw error;
         }
     },
 
     getOrderStatusHistory: async (id: number) => {
         try {
-            logger.info(`Fetching order status history for order with id: ${id}`);
             const response = await api.get<StatusHistoryRecord[]>(
                 API_ENDPOINTS.ORDERS.STATUS_HISTORY(id)
             );
-            logger.info(`Order status history for order with id: ${id} fetched successfully.`);
             return response.data;
         } catch (error) {
-            handleApiError(error, `Failed to fetch order status history for order with id: ${id}`, { id });
+            handleApiError(error, `Failed to fetch order status history for order with id: ${id}`, {id});
             return [];
         }
     },
 
     cancelOrder: async (id: number, reason: string) => {
         try {
-            logger.info(`Cancelling order with id: ${id}`);
             const response = await api.post<Order>(
                 API_ENDPOINTS.ORDERS.CANCEL(id),
-                { reason }
+                {reason}
             );
-            logger.info(`Order with id: ${id} cancelled successfully.`);
             return response.data;
         } catch (error) {
-            handleApiError(error, `Failed to cancel order with id: ${id}`, { id, reason });
+            handleApiError(error, `Failed to cancel order with id: ${id}`, {id, reason});
             throw error;
         }
     },
 
     getOrderCancellations: async (id: number) => {
         try {
-            logger.info(`Fetching order cancellations for order with id: ${id}`);
             const response = await api.get<CancellationRecord[]>(
                 API_ENDPOINTS.ORDERS.CANCELLATIONS(id)
             );
-            logger.info(`Order cancellations for order with id: ${id} fetched successfully.`);
             return response.data;
         } catch (error) {
-            handleApiError(error, `Failed to fetch order cancellations for order with id: ${id}`, { id });
+            handleApiError(error, `Failed to fetch order cancellations for order with id: ${id}`, {id});
             return [];
         }
     },
 
     updateOrderItem: async (orderId: number, itemId: number, updates: Partial<OrderItem>) => {
         try {
-            logger.info(`Updating order item with id: ${itemId} in order with id: ${orderId}`);
             const response = await api.put<OrderItem>(`${API_ENDPOINTS.ORDER_ITEMS.UPDATE(itemId)}`, updates);
-            logger.info(`Order item with id: ${itemId} in order with id: ${orderId} updated successfully.`);
             return response.data;
         } catch (error) {
-            handleApiError(error, `Failed to update order item with id: ${itemId}`, { orderId, itemId, updates });
+            handleApiError(error, `Failed to update order item with id: ${itemId}`, {orderId, itemId, updates});
             throw error;
         }
     },
 
     updateOrderItemStatus: async (itemId: number, status: string) => {
         try {
-            logger.info(`Updating order item status for item with id: ${itemId} to ${status}`);
             const response = await api.put<OrderItemStatusUpdateResponse>(
                 API_ENDPOINTS.ORDER_ITEMS.UPDATE_STATUS(itemId),
-                { status }
+                {status}
             );
-            logger.info(`Order item status for item with id: ${itemId} updated successfully.`);
             return response.data;
         } catch (error) {
-            handleApiError(error, `Failed to update order item status for item with id: ${itemId}`, { itemId, status });
+            handleApiError(error, `Failed to update order item status for item with id: ${itemId}`, {itemId, status});
             throw error;
         }
     },
 
     getOrderItemStatusHistory: async (itemId: number) => {
         try {
-            logger.info(`Fetching order item status history for item with id: ${itemId}`);
             const response = await api.get<StatusHistoryRecord[]>(
                 API_ENDPOINTS.ORDER_ITEMS.STATUS_HISTORY(itemId)
             );
-            logger.info(`Order item status history for item with id: ${itemId} fetched successfully.`);
             return response.data;
         } catch (error) {
-            handleApiError(error, `Failed to fetch order item status history for item with id: ${itemId}`, { itemId });
+            handleApiError(error, `Failed to fetch order item status history for item with id: ${itemId}`, {itemId});
             return [];
         }
     },
 
     cancelOrderItem: async (orderId: number, itemId: number, reason: string) => {
         try {
-            logger.info(`Cancelling order item with id: ${itemId} in order with id: ${orderId}`);
             const response = await api.post<Order>(
                 API_ENDPOINTS.ORDER_ITEMS.CANCEL(orderId, itemId),
-                { reason }
+                {reason}
             );
-            logger.info(`Order item with id: ${itemId} in order with id: ${orderId} cancelled successfully.`);
             return response.data;
         } catch (error) {
-            handleApiError(error, `Failed to cancel order item with id: ${itemId}`, { orderId, itemId, reason });
+            handleApiError(error, `Failed to cancel order item with id: ${itemId}`, {orderId, itemId, reason});
             throw error;
         }
     },
 
     getOrderItemCancellations: async (itemId: number) => {
         try {
-            logger.info(`Fetching order item cancellations for item with id: ${itemId}`);
             const response = await api.get<CancellationRecord[]>(
                 API_ENDPOINTS.ORDER_ITEMS.CANCELLATIONS(itemId)
             );
-            logger.info(`Order item cancellations for item with id: ${itemId} fetched successfully.`);
             return response.data;
         } catch (error) {
-            handleApiError(error, `Failed to fetch order item cancellations for item with id: ${itemId}`, { itemId });
+            handleApiError(error, `Failed to fetch order item cancellations for item with id: ${itemId}`, {itemId});
             return [];
         }
     },
 
     removeOrderItem: async (orderId: number, itemId: number) => {
         try {
-            logger.info(`Removing order item with id: ${itemId} from order with id: ${orderId}`);
             await api.delete(API_ENDPOINTS.ORDER_ITEMS.DELETE(itemId));
-            logger.info(`Order item with id: ${itemId} from order with id: ${orderId} removed successfully.`);
-        } catch (error) {
-            handleApiError(error, `Failed to remove order item with id: ${itemId}`, { orderId, itemId });
+            } catch (error) {
+            handleApiError(error, `Failed to remove order item with id: ${itemId}`, {orderId, itemId});
             throw error;
         }
     },

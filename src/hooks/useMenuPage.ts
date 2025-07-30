@@ -1,15 +1,24 @@
-
-import { useState, useMemo } from 'react';
-import { useMenuItems, useCategories, useCreateMenuItem, useUpdateMenuItem, useDeleteMenuItem } from '@/api/menu';
-import { MenuItem } from '@/types';
-import { toast } from '@/lib/toast';
+import {useMemo, useState} from 'react';
+import {useCategories, useCreateMenuItem, useDeleteMenuItem, useMenuItems, useUpdateMenuItem} from '@/api/menu';
+import {MenuItem} from '@/types';
+import {toast} from '@/lib/toast';
 
 type SortField = 'name' | 'price' | 'category';
 type ViewMode = 'grid' | 'list';
 
 export const useMenuPage = () => {
-    const { data: menuItems = [], isLoading: menuItemsLoading, isError: menuItemsError, error: menuItemsErrorMessage } = useMenuItems();
-    const { data: categories = [], isLoading: categoriesLoading, isError: categoriesError, error: categoriesErrorMessage } = useCategories();
+    const {
+        data: menuItems = [],
+        isLoading: menuItemsLoading,
+        isError: menuItemsError,
+        error: menuItemsErrorMessage
+    } = useMenuItems();
+    const {
+        data: categories = [],
+        isLoading: categoriesLoading,
+        isError: categoriesError,
+        error: categoriesErrorMessage
+    } = useCategories();
     const createMenuItemMutation = useCreateMenuItem();
     const updateMenuItemMutation = useUpdateMenuItem();
     const deleteMenuItemMutation = useDeleteMenuItem();
@@ -47,11 +56,11 @@ export const useMenuPage = () => {
     const handleSubmit = async (data: Omit<MenuItem, 'id' | 'available' | 'category'> & { category_id: number }) => {
         try {
             if (editingItem) {
-                await updateMenuItemMutation.mutateAsync({ id: editingItem.id, item: data });
+                await updateMenuItemMutation.mutateAsync({id: editingItem.id, item: data});
                 toast.success('Menu item updated successfully');
                 setEditingItem(null);
             } else {
-                await createMenuItemMutation.mutateAsync({ ...data, available: true });
+                await createMenuItemMutation.mutateAsync({...data, available: true});
                 toast.success('Menu item created successfully');
             }
             setShowAddDialog(false);
@@ -75,7 +84,7 @@ export const useMenuPage = () => {
             if (item) {
                 await updateMenuItemMutation.mutateAsync({
                     id,
-                    item: { available: !item.available }
+                    item: {available: !item.available}
                 });
                 toast.success('Item availability updated');
             }

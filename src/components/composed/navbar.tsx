@@ -1,12 +1,12 @@
-import { BarChart2, ClipboardList, LogOut, Menu, PlusCircle, Receipt, Settings, ShoppingBag, X } from 'lucide-react';
-import { Button } from './ui/button';
-import { PropsWithChildren } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/lib/auth/auth.store';
-import { usePermissions } from '@/hooks/usePermissions';
-import { ThemeToggle } from './theme-toggle';
-import { NotificationDropdown } from './notification-dropdown';
-import { cn } from '@/lib/utils';
+import {BarChart2, ClipboardList, LogOut, Menu, PlusCircle, Receipt, Settings, ShoppingBag, X} from 'lucide-react';
+import {Button} from './ui/button';
+import {PropsWithChildren} from 'react';
+import {useLocation, useNavigate} from 'react-router-dom';
+import {useAuthStore} from '@/lib/auth/auth.store';
+import {usePermissions} from '@/hooks/usePermissions';
+import {ThemeToggle} from './theme-toggle';
+import {NotificationDropdown} from './notification-dropdown';
+import {cn} from '@/lib/utils';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -15,20 +15,20 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useRestaurant } from '@/api/restaurant';
-import { PERMISSIONS } from '@/lib/auth/roles';
+import {useRestaurant} from '@/api/restaurant';
+import {PERMISSIONS} from '@/lib/auth/roles';
 
 interface NavbarProps extends PropsWithChildren {
     toggleSidebar: () => void;
     isSidebarOpen?: boolean;
 }
 
-export default function Navbar({ toggleSidebar, isSidebarOpen }: NavbarProps) {
+export default function Navbar({toggleSidebar, isSidebarOpen}: NavbarProps) {
     const navigate = useNavigate();
     const location = useLocation();
-    const { user, logout } = useAuthStore();
-    const { hasPermission } = usePermissions();
-    const { data: restaurant } = useRestaurant();
+    const {user, logout} = useAuthStore();
+    const {hasPermission} = usePermissions();
+    const {data: restaurant} = useRestaurant();
 
     const handleLogout = async () => {
         await logout();
@@ -51,9 +51,9 @@ export default function Navbar({ toggleSidebar, isSidebarOpen }: NavbarProps) {
                             aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
                         >
                             {isSidebarOpen ? (
-                                <X className="h-4 w-4 sm:h-5 sm:w-5" />
+                                <X className="h-4 w-4 sm:h-5 sm:w-5"/>
                             ) : (
-                                <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
+                                <Menu className="h-4 w-4 sm:h-5 sm:w-5"/>
                             )}
                         </Button>
 
@@ -65,16 +65,16 @@ export default function Navbar({ toggleSidebar, isSidebarOpen }: NavbarProps) {
                             aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
                         >
                             {isSidebarOpen ? (
-                                <Menu className="h-4 w-4 sm:h-5 sm:w-5 rotate-90" />
+                                <Menu className="h-4 w-4 sm:h-5 sm:w-5 rotate-90"/>
                             ) : (
-                                <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
+                                <Menu className="h-4 w-4 sm:h-5 sm:w-5"/>
                             )}
                         </Button>
 
                         <div
                             className="flex items-center"
                             onClick={() => navigate(hasPermission(PERMISSIONS.READ_USER) ? '/dashboard' : '/tables')}
-                            style={{ cursor: 'pointer' }}
+                            style={{cursor: 'pointer'}}
                         >
                             <h1 className="text-base sm:text-lg font-semibold truncate max-w-[120px] xs:max-w-[150px] sm:max-w-none">
                                 {restaurant?.name || 'Restaurant'}
@@ -90,7 +90,7 @@ export default function Navbar({ toggleSidebar, isSidebarOpen }: NavbarProps) {
                                         onClick={() => navigate('/tables')}
                                         className="rounded-md text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9 relative"
                                     >
-                                        <PlusCircle className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                        <PlusCircle className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4"/>
                                         <span className="hidden sm:inline">New Order</span>
                                         <span className="sm:hidden">Order</span>
                                     </Button>
@@ -100,7 +100,7 @@ export default function Navbar({ toggleSidebar, isSidebarOpen }: NavbarProps) {
                                         onClick={() => navigate('/takeaway')}
                                         className="rounded-md text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9 relative"
                                     >
-                                        <ShoppingBag className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                        <ShoppingBag className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4"/>
                                         <span>Takeaway</span>
                                     </Button>
                                     <Button
@@ -109,7 +109,7 @@ export default function Navbar({ toggleSidebar, isSidebarOpen }: NavbarProps) {
                                         onClick={() => navigate('/quick-bill')}
                                         className="rounded-md text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9 relative"
                                     >
-                                        <Receipt className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                                        <Receipt className="mr-2 h-4 w-4 sm:h-5 sm:w-5"/>
                                         <span className="hidden sm:inline">Quick Bill</span>
                                         <span className="sm:hidden">Bill</span>
                                     </Button>
@@ -122,7 +122,7 @@ export default function Navbar({ toggleSidebar, isSidebarOpen }: NavbarProps) {
                                     onClick={() => navigate('/orders')}
                                     className="rounded-md text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9 relative"
                                 >
-                                    <ClipboardList className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                    <ClipboardList className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4"/>
                                     <span>Orders</span>
                                 </Button>
                             )}
@@ -131,7 +131,7 @@ export default function Navbar({ toggleSidebar, isSidebarOpen }: NavbarProps) {
 
                     <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-2 lg:gap-3">
                         <div className="flex relative">
-                            <NotificationDropdown />
+                            <NotificationDropdown/>
                         </div>
 
                         <Button
@@ -141,10 +141,10 @@ export default function Navbar({ toggleSidebar, isSidebarOpen }: NavbarProps) {
                             className="hidden xs:flex h-8 w-8 sm:h-9 sm:w-9"
                             aria-label="Settings"
                         >
-                            <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
+                            <Settings className="h-4 w-4 sm:h-5 sm:w-5"/>
                         </Button>
 
-                        <ThemeToggle />
+                        <ThemeToggle/>
 
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -169,7 +169,7 @@ export default function Navbar({ toggleSidebar, isSidebarOpen }: NavbarProps) {
                                         </p>
                                     </div>
                                 </DropdownMenuLabel>
-                                <DropdownMenuSeparator />
+                                <DropdownMenuSeparator/>
                                 {hasPermission(PERMISSIONS.READ_USER) && (
                                     <DropdownMenuItem onClick={() => {
                                         const analyticsUrl = import.meta.env.VITE_ANALYTICS_URL || 'http://localhost:5174/';
@@ -178,22 +178,22 @@ export default function Navbar({ toggleSidebar, isSidebarOpen }: NavbarProps) {
                                             : `https://${analyticsUrl}`;
                                         window.open(absoluteUrl, '_blank', 'noopener,noreferrer');
                                     }}>
-                                        <BarChart2 className="mr-2 h-4 w-4" />
+                                        <BarChart2 className="mr-2 h-4 w-4"/>
                                         Analytics
                                     </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem onClick={() => navigate('/settings')}>
-                                    <Settings className="mr-2 h-4 w-4" />
+                                    <Settings className="mr-2 h-4 w-4"/>
                                     Settings
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => navigate('/profile')}>
-                                    <Settings className="mr-2 h-4 w-4" />
+                                    <Settings className="mr-2 h-4 w-4"/>
                                     Profile
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator />
+                                <DropdownMenuSeparator/>
                                 <DropdownMenuItem onClick={handleLogout}
-                                    className="text-destructive focus:text-destructive">
-                                    <LogOut className="mr-2 h-4 w-4" />
+                                                  className="text-destructive focus:text-destructive">
+                                    <LogOut className="mr-2 h-4 w-4"/>
                                     Log out
                                 </DropdownMenuItem>
                             </DropdownMenuContent>

@@ -1,14 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
-import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { toast } from '@/lib/toast';
-import { Order, Payment } from '@/types';
-import { useCreatePayment } from '@/api/payments';
-import { useRestaurant } from '@/api/restaurant';
-import { usePrinterConfig } from '@/api/printers';
-import { useUpdateOrderStatus, useCreateOrder } from '@/api/orders';
+import {useEffect, useRef, useState} from 'react';
+import {Dialog} from '@/components/ui/dialog';
+import {toast} from '@/lib/toast';
+import {Order, Payment} from '@/types';
+import {useCreatePayment} from '@/api/payments';
+import {useRestaurant} from '@/api/restaurant';
+import {usePrinterConfig} from '@/api/printers';
+import {useCreateOrder, useUpdateOrderStatus} from '@/api/orders';
 
 interface PaymentDialogProps {
     open: boolean;
@@ -22,7 +19,7 @@ type PaymentStep = 'method' | 'processing' | 'complete';
 
 // ... (ESCPOS constants and helper functions remain the same)
 
-export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentComplete }: PaymentDialogProps) {
+export function PaymentDialog({open, onClose, order, draftOrder, onPaymentComplete}: PaymentDialogProps) {
     const [paymentMethod, setPaymentMethod] = useState<Payment['payment_method'] | ''>('');
     const [currentStep, setCurrentStep] = useState<PaymentStep>('method');
     const [error, setError] = useState<string | null>(null);
@@ -32,8 +29,8 @@ export function PaymentDialog({ open, onClose, order, draftOrder, onPaymentCompl
     const createPaymentMutation = useCreatePayment();
     const updateOrderStatusMutation = useUpdateOrderStatus();
     const createOrderMutation = useCreateOrder();
-    const { data: restaurant } = useRestaurant();
-    const { data: printerConfig } = usePrinterConfig();
+    const {data: restaurant} = useRestaurant();
+    const {data: printerConfig} = usePrinterConfig();
 
     const orderRef = useRef(order);
     useEffect(() => {

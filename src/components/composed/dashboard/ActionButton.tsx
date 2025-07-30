@@ -1,5 +1,4 @@
-
-import { Button } from '@/components/ui/button';
+import {Button} from '@/components/ui/button';
 import React from 'react';
 
 interface ActionButtonProps {
@@ -8,7 +7,7 @@ interface ActionButtonProps {
     onClick: () => void;
 }
 
-export function ActionButton({ icon, label, onClick }: ActionButtonProps) {
+export function ActionButton({icon, label, onClick}: ActionButtonProps) {
     return (
         <Button
             variant="outline"

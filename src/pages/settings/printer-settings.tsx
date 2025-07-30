@@ -1,17 +1,27 @@
-import { useEffect, useState, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Loader2, Printer } from 'lucide-react';
-import { toast } from '@/lib/toast';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { PrinterConfig } from '@/lib/api/services/printer.service';
-import { usePrinterConfig, useAvailablePrinters, useUpdatePrinterConfig, useSendTestPrint } from '@/api/printers';
+import {useEffect, useRef, useState} from 'react';
+import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
+import {Button} from '@/components/ui/button';
+import {Loader2, Printer} from 'lucide-react';
+import {toast} from '@/lib/toast';
+import {Alert, AlertDescription} from '@/components/ui/alert';
+import {Label} from '@/components/ui/label';
+import {Checkbox} from '@/components/ui/checkbox';
+import {PrinterConfig} from '@/lib/api/services/printer.service';
+import {useAvailablePrinters, usePrinterConfig, useSendTestPrint, useUpdatePrinterConfig} from '@/api/printers';
 
 export default function PrinterSettings() {
-    const { data: printerConfig, isLoading: isLoadingConfig, isError: isErrorConfig, error: configError } = usePrinterConfig();
-    const { data: availablePrinters = [], isLoading: isLoadingPrinters, isError: isErrorPrinters, error: printersError } = useAvailablePrinters();
+    const {
+        data: printerConfig,
+        isLoading: isLoadingConfig,
+        isError: isErrorConfig,
+        error: configError
+    } = usePrinterConfig();
+    const {
+        data: availablePrinters = [],
+        isLoading: isLoadingPrinters,
+        isError: isErrorPrinters,
+        error: printersError
+    } = useAvailablePrinters();
     const updatePrinterConfigMutation = useUpdatePrinterConfig();
     const sendTestPrintMutation = useSendTestPrint();
 
@@ -79,7 +89,7 @@ export default function PrinterSettings() {
                     currentSelection = selectedBarPrinters;
                     break;
             }
-            await sendTestPrintMutation.mutateAsync({ printers: currentSelection, printerType });
+            await sendTestPrintMutation.mutateAsync({printers: currentSelection, printerType});
             toast.success(`Test print sent to ${printerType} printers`);
         } catch (_err) {
             toast.error(`Failed to send test print to ${printerType} printers`);
@@ -116,7 +126,7 @@ export default function PrinterSettings() {
         return (
             <div className="flex h-64 items-center justify-center">
                 <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <Loader2 className="h-8 w-8 animate-spin text-primary"/>
                     <span className="text-lg text-muted-foreground">Loading printer settings...</span>
                 </div>
             </div>
@@ -128,7 +138,7 @@ export default function PrinterSettings() {
             <div className="mb-6">
                 <div className="flex items-center gap-2 mb-2">
                     <div className="p-1.5 bg-primary/10 rounded-full">
-                        <Printer className="h-5 w-5 text-primary" />
+                        <Printer className="h-5 w-5 text-primary"/>
                     </div>
                     <h2 className="text-2xl font-bold tracking-tight">Printer Settings</h2>
                 </div>
@@ -158,7 +168,8 @@ export default function PrinterSettings() {
                                     onClick={() => handleTestPrint('bill')}
                                     disabled={sendTestPrintMutation.isLoading || selectedBillPrinters?.length === 0}
                                 >
-                                    {sendTestPrintMutation.isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                    {sendTestPrintMutation.isLoading ?
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
                                     Test Print
                                 </Button>
                             </div>
@@ -178,13 +189,14 @@ export default function PrinterSettings() {
                                     )}
                                 </div>
                                 {billDropdownOpen && (
-                                    <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
+                                    <div
+                                        className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
                                         {availablePrinters?.length > 0 ? (
                                             availablePrinters.map(printer => (
                                                 <div
                                                     key={printer}
                                                     className={`px-3 py-2 cursor-pointer hover:bg-muted flex items-center space-x-2 ${selectedBillPrinters.includes(printer) ? 'bg-primary/10' : ''
-                                                        }`}
+                                                    }`}
                                                     onClick={() => togglePrinter(printer, 'bill')}
                                                 >
                                                     <Checkbox
@@ -220,7 +232,8 @@ export default function PrinterSettings() {
                                     onClick={() => handleTestPrint('kot')}
                                     disabled={sendTestPrintMutation.isLoading || selectedKotPrinters?.length === 0}
                                 >
-                                    {sendTestPrintMutation.isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                    {sendTestPrintMutation.isLoading ?
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
                                     Test Print
                                 </Button>
                             </div>
@@ -240,13 +253,14 @@ export default function PrinterSettings() {
                                     )}
                                 </div>
                                 {kotDropdownOpen && (
-                                    <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
+                                    <div
+                                        className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
                                         {availablePrinters?.length > 0 ? (
                                             availablePrinters.map(printer => (
                                                 <div
                                                     key={printer}
                                                     className={`px-3 py-2 cursor-pointer hover:bg-muted flex items-center space-x-2 ${selectedKotPrinters.includes(printer) ? 'bg-primary/10' : ''
-                                                        }`}
+                                                    }`}
                                                     onClick={() => togglePrinter(printer, 'kot')}
                                                 >
                                                     <Checkbox
@@ -282,7 +296,8 @@ export default function PrinterSettings() {
                                     onClick={() => handleTestPrint('bar')}
                                     disabled={sendTestPrintMutation.isLoading || selectedBarPrinters?.length === 0}
                                 >
-                                    {sendTestPrintMutation.isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                    {sendTestPrintMutation.isLoading ?
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
                                     Test Print
                                 </Button>
                             </div>
@@ -302,13 +317,14 @@ export default function PrinterSettings() {
                                     )}
                                 </div>
                                 {barDropdownOpen && (
-                                    <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
+                                    <div
+                                        className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
                                         {availablePrinters?.length > 0 ? (
                                             availablePrinters.map(printer => (
                                                 <div
                                                     key={printer}
                                                     className={`px-3 py-2 cursor-pointer hover:bg-muted flex items-center space-x-2 ${selectedBarPrinters.includes(printer) ? 'bg-primary/10' : ''
-                                                        }`}
+                                                    }`}
                                                     onClick={() => togglePrinter(printer, 'bar')}
                                                 >
                                                     <Checkbox
@@ -337,7 +353,8 @@ export default function PrinterSettings() {
 
                         <div className="mt-6 flex justify-end">
                             <Button onClick={handleSave} disabled={updatePrinterConfigMutation.isLoading}>
-                                {updatePrinterConfigMutation.isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {updatePrinterConfigMutation.isLoading &&
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                                 Save Settings
                             </Button>
                         </div>

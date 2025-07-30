@@ -1,7 +1,6 @@
 import {app, BrowserWindow, ipcMain} from 'electron';
 import path from 'path';
 import url, {fileURLToPath} from 'url';
-import './logger.service';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

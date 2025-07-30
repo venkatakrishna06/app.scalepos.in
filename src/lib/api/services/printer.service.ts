@@ -1,5 +1,5 @@
-import { api } from '../axios';
-import { API_ENDPOINTS } from '../endpoints';
+import {api} from '../axios';
+import {API_ENDPOINTS} from '../endpoints';
 import logger from '@/lib/services/logger.service';
 
 export interface PrinterConfig {
@@ -11,31 +11,24 @@ export interface PrinterConfig {
 export const printerService = {
     getPrinterConfig: async (): Promise<PrinterConfig> => {
         try {
-            logger.info('Fetching printer configuration.');
             const response = await api.get<PrinterConfig>(API_ENDPOINTS.PRINTER_CONFIG.GET);
-            logger.info('Printer configuration fetched successfully.');
             return response.data;
         } catch (error) {
-            logger.error('Failed to fetch printer configuration:', { error });
             throw error;
         }
     },
 
     updatePrinterConfig: async (config: PrinterConfig): Promise<PrinterConfig> => {
         try {
-            logger.info('Updating printer configuration.');
             const response = await api.post<PrinterConfig>(API_ENDPOINTS.PRINTER_CONFIG.UPDATE, config);
-            logger.info('Printer configuration updated successfully.');
             return response.data;
         } catch (error) {
-            logger.error('Failed to update printer configuration:', { error, config });
             throw error;
         }
     },
 
     getAvailablePrinters: async (): Promise<string[]> => {
         try {
-            logger.info('Getting available printers from QZ Tray.');
             if (typeof window.qz === 'undefined') {
                 await new Promise<void>((resolve) => {
                     if (typeof window.qz !== 'undefined') {
@@ -64,17 +57,14 @@ export const printerService = {
             }
 
             const printers = await window.qz.printers.find();
-            logger.info('Available printers fetched successfully.', { printers });
             return printers;
         } catch (error) {
-            logger.error('Error getting available printers:', { error });
             throw error;
         }
     },
 
     sendTestPrint: async (printers: string[], printerType: 'bill' | 'kot' | 'bar'): Promise<void> => {
         try {
-            logger.info(`Sending test print to ${printerType} printers:`, { printers });
             if (typeof window.qz === 'undefined') {
                 throw new Error('QZ Tray not available');
             }
@@ -86,43 +76,22 @@ export const printerService = {
             let testContent = '';
             switch (printerType) {
                 case 'bill':
-                    testContent = 'TEST PRINT - BILL PRINTER
-
-' +
-                        'Restaurant: Test Restaurant
-' +
-                        'Date: ' + new Date().toLocaleString() + '
-
-' +
-                        'This is a test print for the bill printer.
-
-';
+                    testContent = 'TEST PRINT - BILL PRINTER' +
+                        'Restaurant: Test Restaurant' +
+                        'Date: ' + new Date().toLocaleString() + '' +
+                        'This is a test print for the bill printer.';
                     break;
                 case 'kot':
-                    testContent = 'TEST PRINT - KOT PRINTER
-
-' +
-                        'Restaurant: Test Restaurant
-' +
-                        'Date: ' + new Date().toLocaleString() + '
-
-' +
-                        'This is a test print for the KOT printer.
-
-';
+                    testContent = 'TEST PRINT - KOT PRINTER' +
+                        'Restaurant: Test Restaurant' +
+                        'Date: ' + new Date().toLocaleString() + '' +
+                        'This is a test print for the KOT printer.';
                     break;
                 case 'bar':
-                    testContent = 'TEST PRINT - BAR PRINTER
-
-' +
-                        'Restaurant: Test Restaurant
-' +
-                        'Date: ' + new Date().toLocaleString() + '
-
-' +
-                        'This is a test print for the bar printer.
-
-';
+                    testContent = 'TEST PRINT - BAR PRINTER' +
+                        'Restaurant: Test Restaurant' +
+                        'Date: ' + new Date().toLocaleString() + '' +
+                        'This is a test print for the bar printer.';
                     break;
             }
 
@@ -132,9 +101,7 @@ export const printerService = {
                     const config = window.qz.configs.create(printer);
                     const data = [testContent];
                     await window.qz.print(config, data);
-                    logger.info(`Test print sent to ${printer} successfully.`);
-                } catch (error) {
-                    logger.error(`Error printing to ${printer}:`, { error });
+                    } catch (error) {
                     failedPrinters.push({
                         name: printer,
                         error: error instanceof Error ? error.message : 'Unknown error'
@@ -150,7 +117,6 @@ export const printerService = {
                 }
             }
         } catch (error) {
-            logger.error('Failed to send test print:', { error });
             throw error;
         }
     }

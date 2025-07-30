@@ -1,12 +1,16 @@
-
-import { useState, useMemo } from 'react';
-import { usePayments } from '@/api/payments';
-import { useOrders } from '@/api/orders';
-import { Order } from '@/types';
+import {useMemo, useState} from 'react';
+import {usePayments} from '@/api/payments';
+import {useOrders} from '@/api/orders';
+import {Order} from '@/types';
 
 export const usePaymentsPage = () => {
-    const { data: payments = [], isLoading: paymentsLoading, isError: paymentsError, error: paymentsErrorMessage } = usePayments();
-    const { data: orders = [], isLoading: ordersLoading, isError: ordersError, error: ordersErrorMessage } = useOrders();
+    const {
+        data: payments = [],
+        isLoading: paymentsLoading,
+        isError: paymentsError,
+        error: paymentsErrorMessage
+    } = usePayments();
+    const {data: orders = [], isLoading: ordersLoading, isError: ordersError, error: ordersErrorMessage} = useOrders();
     const [searchQuery, setSearchQuery] = useState('');
 
     const ordersMap = useMemo(() => {

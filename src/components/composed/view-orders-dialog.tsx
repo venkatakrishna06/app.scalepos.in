@@ -1,13 +1,13 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Order } from '@/types';
-import { toast } from '@/lib/toast';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { EmptyOrdersState } from '@/components/composed/EmptyOrdersState';
-import { OrderDetails } from "@/components/composed/OrderDetails";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { useOrdersByTable, useUpdateOrderItem, useUpdateOrderItemStatus, useCancelOrderItem } from '@/api/orders';
+import {Dialog, DialogContent, DialogHeader, DialogTitle} from '@/components/ui/dialog';
+import {Order} from '@/types';
+import {toast} from '@/lib/toast';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import {EmptyOrdersState} from '@/components/composed/EmptyOrdersState';
+import {OrderDetails} from "@/components/composed/OrderDetails";
+import {Skeleton} from "@/components/ui/skeleton";
+import {Card, CardContent, CardFooter, CardHeader} from '@/components/ui/card';
+import {Separator} from '@/components/ui/separator';
+import {useCancelOrderItem, useOrdersByTable, useUpdateOrderItem, useUpdateOrderItemStatus} from '@/api/orders';
 
 interface ViewOrdersDialogProps {
     open: boolean;
@@ -16,11 +16,11 @@ interface ViewOrdersDialogProps {
     onPayment?: (order: Order) => void;
 }
 
-export function ViewOrdersDialog({ open, onClose, tableId, onPayment }: ViewOrdersDialogProps) {
+export function ViewOrdersDialog({open, onClose, tableId, onPayment}: ViewOrdersDialogProps) {
     const [processingItemId, setProcessingItemId] = useState<number | null>(null);
     const [activeOrderId, setActiveOrderId] = useState<number | null>(null);
 
-    const { data: latestOrders = [], isLoading, refetch } = useOrdersByTable(tableId || 0);
+    const {data: latestOrders = [], isLoading, refetch} = useOrdersByTable(tableId || 0);
     const updateOrderItemMutation = useUpdateOrderItem();
     const updateOrderItemStatusMutation = useUpdateOrderItemStatus();
     const cancelOrderItemMutation = useCancelOrderItem();
@@ -34,7 +34,7 @@ export function ViewOrdersDialog({ open, onClose, tableId, onPayment }: ViewOrde
     }, [open, tableId, refetch]);
 
     const activeOrders = useMemo(() =>
-        currentOrders.filter(order => order.status !== 'paid' && order.status !== 'cancelled'),
+            currentOrders.filter(order => order.status !== 'paid' && order.status !== 'cancelled'),
         [currentOrders]
     );
 
@@ -90,7 +90,7 @@ export function ViewOrdersDialog({ open, onClose, tableId, onPayment }: ViewOrde
         try {
             setProcessingItemId(itemId);
             const newQuantity = currentQuantity + delta;
-            await updateOrderItemMutation.mutateAsync({ orderId, itemId, updates: { quantity: newQuantity } });
+            await updateOrderItemMutation.mutateAsync({orderId, itemId, updates: {quantity: newQuantity}});
         } catch {
             toast.error('Failed to update order quantity');
         } finally {
@@ -103,7 +103,7 @@ export function ViewOrdersDialog({ open, onClose, tableId, onPayment }: ViewOrde
 
         try {
             setProcessingItemId(itemId);
-            await updateOrderItemStatusMutation.mutateAsync({ itemId, status: newStatus });
+            await updateOrderItemStatusMutation.mutateAsync({itemId, status: newStatus});
         } catch {
             toast.error('Failed to update item status');
         } finally {
@@ -116,7 +116,7 @@ export function ViewOrdersDialog({ open, onClose, tableId, onPayment }: ViewOrde
 
         try {
             setProcessingItemId(itemId);
-            await cancelOrderItemMutation.mutateAsync({ orderId, itemId, reason: 'Cancelled by user' });
+            await cancelOrderItemMutation.mutateAsync({orderId, itemId, reason: 'Cancelled by user'});
         } catch {
             toast.error('Failed to cancel item');
         } finally {
@@ -129,51 +129,51 @@ export function ViewOrdersDialog({ open, onClose, tableId, onPayment }: ViewOrde
             <CardHeader className="px-0 pt-0">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                        <Skeleton className="h-7 w-32" />
-                        <Skeleton className="h-5 w-40" />
+                        <Skeleton className="h-7 w-32"/>
+                        <Skeleton className="h-5 w-40"/>
                     </div>
-                    <Skeleton className="h-6 w-24" />
+                    <Skeleton className="h-6 w-24"/>
                 </div>
-                <Separator className="my-2" />
+                <Separator className="my-2"/>
             </CardHeader>
             <CardContent className="p-0 px-0 space-y-4">
                 <div className="h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
                     <div className="hidden md:block">
                         <table className="w-full">
                             <thead>
-                                <tr className="text-left text-sm text-muted-foreground border-b">
-                                    <th className="pb-2 font-medium">Item</th>
-                                    <th className="pb-2 font-medium">Qty</th>
-                                    <th className="pb-2 font-medium">Price</th>
-                                    <th className="pb-2 font-medium">Total</th>
-                                </tr>
+                            <tr className="text-left text-sm text-muted-foreground border-b">
+                                <th className="pb-2 font-medium">Item</th>
+                                <th className="pb-2 font-medium">Qty</th>
+                                <th className="pb-2 font-medium">Price</th>
+                                <th className="pb-2 font-medium">Total</th>
+                            </tr>
                             </thead>
                             <tbody>
-                                {Array.from({ length: 5 }, (_, i) => (
-                                    <tr key={i} className="border-b">
-                                        <td className="py-3"><Skeleton className="h-5 w-32" /></td>
-                                        <td className="py-3"><Skeleton className="h-5 w-8" /></td>
-                                        <td className="py-3"><Skeleton className="h-5 w-16" /></td>
-                                        <td className="py-3"><Skeleton className="h-5 w-16" /></td>
-                                    </tr>
-                                ))}
+                            {Array.from({length: 5}, (_, i) => (
+                                <tr key={i} className="border-b">
+                                    <td className="py-3"><Skeleton className="h-5 w-32"/></td>
+                                    <td className="py-3"><Skeleton className="h-5 w-8"/></td>
+                                    <td className="py-3"><Skeleton className="h-5 w-16"/></td>
+                                    <td className="py-3"><Skeleton className="h-5 w-16"/></td>
+                                </tr>
+                            ))}
                             </tbody>
                         </table>
                     </div>
                     <div className="md:hidden space-y-4">
-                        {Array.from({ length: 3 }, (_, i) => (
+                        {Array.from({length: 3}, (_, i) => (
                             <div key={i} className="border rounded-md p-3">
                                 <div className="flex justify-between mb-2">
-                                    <Skeleton className="h-5 w-32" />
-                                    <Skeleton className="h-5 w-16" />
+                                    <Skeleton className="h-5 w-32"/>
+                                    <Skeleton className="h-5 w-16"/>
                                 </div>
                                 <div className="flex justify-between mb-2">
-                                    <Skeleton className="h-4 w-20" />
-                                    <Skeleton className="h-4 w-12" />
+                                    <Skeleton className="h-4 w-20"/>
+                                    <Skeleton className="h-4 w-12"/>
                                 </div>
                                 <div className="flex justify-between">
-                                    <Skeleton className="h-6 w-24" />
-                                    <Skeleton className="h-8 w-20" />
+                                    <Skeleton className="h-6 w-24"/>
+                                    <Skeleton className="h-8 w-20"/>
                                 </div>
                             </div>
                         ))}
@@ -181,17 +181,17 @@ export function ViewOrdersDialog({ open, onClose, tableId, onPayment }: ViewOrde
                 </div>
             </CardContent>
             <CardFooter className="px-0 flex-col sm:flex-row items-start sm:items-center justify-between border-t pt-4">
-                <Skeleton className="h-5 w-40 mb-4 sm:mb-0" />
+                <Skeleton className="h-5 w-40 mb-4 sm:mb-0"/>
                 <div className="flex flex-col sm:flex-row items-end gap-4 w-full sm:w-auto">
                     <div className="text-right">
                         <div className="text-xs text-muted-foreground mb-1 space-y-0.5">
-                            <Skeleton className="h-3 w-32 ml-auto" />
-                            <Skeleton className="h-3 w-40 ml-auto" />
-                            <Skeleton className="h-3 w-40 ml-auto" />
+                            <Skeleton className="h-3 w-32 ml-auto"/>
+                            <Skeleton className="h-3 w-40 ml-auto"/>
+                            <Skeleton className="h-3 w-40 ml-auto"/>
                         </div>
-                        <Skeleton className="h-6 w-32 ml-auto" />
+                        <Skeleton className="h-6 w-32 ml-auto"/>
                     </div>
-                    <Skeleton className="h-9 w-24" />
+                    <Skeleton className="h-9 w-24"/>
                 </div>
             </CardFooter>
         </Card>
@@ -205,9 +205,9 @@ export function ViewOrdersDialog({ open, onClose, tableId, onPayment }: ViewOrde
                 </DialogHeader>
 
                 {isLoading ? (
-                    <OrderDetailsSkeleton />
+                    <OrderDetailsSkeleton/>
                 ) : activeOrders.length === 0 ? (
-                    <EmptyOrdersState />
+                    <EmptyOrdersState/>
                 ) : (
                     <OrderDetails
                         order={activeOrders[0]}

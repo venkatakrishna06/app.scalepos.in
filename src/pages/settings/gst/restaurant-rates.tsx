@@ -1,18 +1,18 @@
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Loader2 } from 'lucide-react';
-import { Restaurant } from '@/types';
-import { toast } from '@/lib/toast';
-import { useUpdateGstSettings } from '@/api/restaurant';
+import {useEffect, useState} from 'react';
+import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {Loader2} from 'lucide-react';
+import {Restaurant} from '@/types';
+import {toast} from '@/lib/toast';
+import {useUpdateGstSettings} from '@/api/restaurant';
 
 interface RestaurantGstRatesProps {
     restaurant: Restaurant;
     onUpdate: (restaurant: Restaurant) => void;
 }
 
-export function RestaurantGstRates({ restaurant, onUpdate }: RestaurantGstRatesProps) {
+export function RestaurantGstRates({restaurant, onUpdate}: RestaurantGstRatesProps) {
     const updateGstSettingsMutation = useUpdateGstSettings();
     const [sgstRate, setSgstRate] = useState<string>(restaurant.default_sgst_rate?.toString() || '');
     const [cgstRate, setCgstRate] = useState<string>(restaurant.default_cgst_rate?.toString() || '');
@@ -45,7 +45,11 @@ export function RestaurantGstRates({ restaurant, onUpdate }: RestaurantGstRatesP
                 return;
             }
 
-            const updatedRestaurant = await updateGstSettingsMutation.mutateAsync({ id: restaurant.id, sgstRate: sgst, cgstRate: cgst });
+            const updatedRestaurant = await updateGstSettingsMutation.mutateAsync({
+                id: restaurant.id,
+                sgstRate: sgst,
+                cgstRate: cgst
+            });
             onUpdate(updatedRestaurant);
             setOriginalSgstRate(sgstRate);
             setOriginalCgstRate(cgstRate);
@@ -96,7 +100,7 @@ export function RestaurantGstRates({ restaurant, onUpdate }: RestaurantGstRatesP
 
                 <div className="mt-4 flex justify-end">
                     <Button onClick={handleSave} disabled={updateGstSettingsMutation.isLoading}>
-                        {updateGstSettingsMutation.isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {updateGstSettingsMutation.isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                         Save GST Rates
                     </Button>
                 </div>

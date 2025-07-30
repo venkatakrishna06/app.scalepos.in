@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import {Link, useLocation} from 'react-router-dom';
 import {
     BarChart2,
     ChevronRight,
@@ -13,11 +13,11 @@ import {
     UserCircle,
     Users,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useAuthStore } from '@/lib/auth/auth.store';
-import { Separator } from './ui/separator';
-import { usePermissions } from '@/hooks/usePermissions';
-import { PERMISSIONS } from '@/lib/auth/roles';
+import {cn} from '@/lib/utils';
+import {useAuthStore} from '@/lib/auth/auth.store';
+import {Separator} from './ui/separator';
+import {usePermissions} from '@/hooks/usePermissions';
+import {PERMISSIONS} from '@/lib/auth/roles';
 
 interface NavigationItem {
     name: string;
@@ -30,23 +30,70 @@ interface NavigationItem {
 
 const navigationWithPermissions: NavigationItem[] = [
     // Operations category
-    { name: 'Tables', href: '/tables', icon: Table2, permissions: [PERMISSIONS.READ_TABLE], category: 'operations' },
-    { name: 'Takeaway', href: '/takeaway', icon: ShoppingBag, permissions: [PERMISSIONS.CREATE_ORDER], category: 'operations' },
-    { name: 'QuikBill', href: '/quick-bill', icon: Receipt, permissions: [PERMISSIONS.CREATE_ORDER], category: 'operations' },
-    { name: 'Orders', href: '/orders', icon: ClipboardList, permissions: [PERMISSIONS.READ_ORDER], category: 'operations' },
+    {name: 'Tables', href: '/tables', icon: Table2, permissions: [PERMISSIONS.READ_TABLE], category: 'operations'},
+    {
+        name: 'Takeaway',
+        href: '/takeaway',
+        icon: ShoppingBag,
+        permissions: [PERMISSIONS.CREATE_ORDER],
+        category: 'operations'
+    },
+    {
+        name: 'QuikBill',
+        href: '/quick-bill',
+        icon: Receipt,
+        permissions: [PERMISSIONS.CREATE_ORDER],
+        category: 'operations'
+    },
+    {
+        name: 'Orders',
+        href: '/orders',
+        icon: ClipboardList,
+        permissions: [PERMISSIONS.READ_ORDER],
+        category: 'operations'
+    },
 
     // Management category
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, permissions: [PERMISSIONS.READ_USER], category: 'management' },
-    { name: 'Menu', href: '/menu', icon: Coffee, permissions: [PERMISSIONS.READ_MENU], category: 'management' },
-    { name: 'Categories', href: '/categories', icon: Tags, permissions: [PERMISSIONS.READ_MENU], category: 'management' },
-    { name: 'Payments', href: '/payments', icon: Receipt, permissions: [PERMISSIONS.READ_PAYMENT], category: 'management' },
+    {
+        name: 'Dashboard',
+        href: '/dashboard',
+        icon: LayoutDashboard,
+        permissions: [PERMISSIONS.READ_USER],
+        category: 'management'
+    },
+    {name: 'Menu', href: '/menu', icon: Coffee, permissions: [PERMISSIONS.READ_MENU], category: 'management'},
+    {name: 'Categories', href: '/categories', icon: Tags, permissions: [PERMISSIONS.READ_MENU], category: 'management'},
+    {
+        name: 'Payments',
+        href: '/payments',
+        icon: Receipt,
+        permissions: [PERMISSIONS.READ_PAYMENT],
+        category: 'management'
+    },
 
     // Admin category
-    { name: 'Staff', href: '/staff', icon: UserCircle, permissions: [PERMISSIONS.READ_USER], category: 'admin' },
-    { name: 'User Access', href: '/user-management', icon: Users, permissions: [PERMISSIONS.READ_USER], category: 'admin' },
-    { name: 'Settings', href: '/settings', icon: Settings, permissions: [PERMISSIONS.UPDATE_SETTINGS], category: 'admin' },
+    {name: 'Staff', href: '/staff', icon: UserCircle, permissions: [PERMISSIONS.READ_USER], category: 'admin'},
     {
-        name: 'Analytics', href: '#', icon: BarChart2, permissions: [PERMISSIONS.READ_USER], category: 'admin', onClick: () => {
+        name: 'User Access',
+        href: '/user-management',
+        icon: Users,
+        permissions: [PERMISSIONS.READ_USER],
+        category: 'admin'
+    },
+    {
+        name: 'Settings',
+        href: '/settings',
+        icon: Settings,
+        permissions: [PERMISSIONS.UPDATE_SETTINGS],
+        category: 'admin'
+    },
+    {
+        name: 'Analytics',
+        href: '#',
+        icon: BarChart2,
+        permissions: [PERMISSIONS.READ_USER],
+        category: 'admin',
+        onClick: () => {
             const analyticsUrl = import.meta.env.VITE_ANALYTICS_URL || 'http://localhost:5174/';
             const absoluteUrl = analyticsUrl.startsWith('http://') || analyticsUrl.startsWith('https://')
                 ? analyticsUrl
@@ -60,10 +107,10 @@ interface SidebarProps {
     closeSidebar?: () => void;
 }
 
-export default function Sidebar({ closeSidebar }: SidebarProps) {
+export default function Sidebar({closeSidebar}: SidebarProps) {
     const location = useLocation();
-    const { user } = useAuthStore();
-    const { hasPermission } = usePermissions();
+    const {user} = useAuthStore();
+    const {hasPermission} = usePermissions();
 
     const filteredNavigation = navigationWithPermissions.filter(
         item => item.permissions.some(permission => hasPermission(permission))
@@ -138,7 +185,7 @@ export default function Sidebar({ closeSidebar }: SidebarProps) {
                 </nav>
 
                 <div className="mt-auto pt-6">
-                    <Separator className="mb-4" />
+                    <Separator className="mb-4"/>
                     <div className="px-2 flex items-center">
                         <div
                             className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground mr-3">
@@ -163,7 +210,7 @@ interface NavItemProps {
     closeSidebar?: () => void;
 }
 
-function NavItem({ item, isActive, closeSidebar }: NavItemProps) {
+function NavItem({item, isActive, closeSidebar}: NavItemProps) {
     const handleClick = () => {
         if (item.onClick) {
             item.onClick();
@@ -213,7 +260,7 @@ function NavItem({ item, isActive, closeSidebar }: NavItemProps) {
             className={className}
         >
             {content}
-            {isActive && <ChevronRight className="h-4 w-4 ml-2 opacity-70" />}
+            {isActive && <ChevronRight className="h-4 w-4 ml-2 opacity-70"/>}
         </Link>
     );
 }

@@ -1,15 +1,21 @@
-import { useState } from 'react';
-import { Calendar, Clock, Loader2, Users } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Table } from '@/types';
-import { toast } from '@/lib/toast';
-import { useUpdateTable } from '@/api/tables';
+import {Calendar, Clock, Loader2, Users} from 'lucide-react';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle
+} from '@/components/ui/dialog';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {useForm} from 'react-hook-form';
+import {zodResolver} from '@hookform/resolvers/zod';
+import {z} from 'zod';
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form';
+import {Table} from '@/types';
+import {toast} from '@/lib/toast';
+import {useUpdateTable} from '@/api/tables';
 
 interface TableReservationDialogProps {
     open: boolean;
@@ -31,7 +37,7 @@ const reservationSchema = z.object({
 
 type ReservationFormData = z.infer<typeof reservationSchema>;
 
-export function TableReservationDialog({ open, onClose, table }: TableReservationDialogProps) {
+export function TableReservationDialog({open, onClose, table}: TableReservationDialogProps) {
     const updateTableMutation = useUpdateTable();
 
     const form = useForm<ReservationFormData>({
@@ -47,7 +53,7 @@ export function TableReservationDialog({ open, onClose, table }: TableReservatio
 
     const handleReservation = async (data: ReservationFormData) => {
         try {
-            await updateTableMutation.mutateAsync({ id: table.id, table: { status: 'reserved' } });
+            await updateTableMutation.mutateAsync({id: table.id, table: {status: 'reserved'}});
 
             toast.success('Table reserved successfully', {
                 description: `Reserved for ${data.customerName} on ${data.date} at ${data.time}`,
@@ -74,13 +80,13 @@ export function TableReservationDialog({ open, onClose, table }: TableReservatio
                         <FormField
                             control={form.control}
                             name="customerName"
-                            render={({ field }) => (
+                            render={({field}) => (
                                 <FormItem>
                                     <FormLabel>Customer Name</FormLabel>
                                     <FormControl>
                                         <Input {...field} />
                                     </FormControl>
-                                    <FormMessage />
+                                    <FormMessage/>
                                 </FormItem>
                             )}
                         />
@@ -88,13 +94,13 @@ export function TableReservationDialog({ open, onClose, table }: TableReservatio
                         <FormField
                             control={form.control}
                             name="phoneNumber"
-                            render={({ field }) => (
+                            render={({field}) => (
                                 <FormItem>
                                     <FormLabel>Phone Number</FormLabel>
                                     <FormControl>
-                                        <Input {...field} type="tel" />
+                                        <Input {...field} type="tel"/>
                                     </FormControl>
-                                    <FormMessage />
+                                    <FormMessage/>
                                 </FormItem>
                             )}
                         />
@@ -103,17 +109,17 @@ export function TableReservationDialog({ open, onClose, table }: TableReservatio
                             <FormField
                                 control={form.control}
                                 name="date"
-                                render={({ field }) => (
+                                render={({field}) => (
                                     <FormItem>
                                         <FormLabel>Date</FormLabel>
                                         <FormControl>
                                             <div className="relative">
                                                 <Calendar
-                                                    className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                                <Input {...field} type="date" className="pl-9" />
+                                                    className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
+                                                <Input {...field} type="date" className="pl-9"/>
                                             </div>
                                         </FormControl>
-                                        <FormMessage />
+                                        <FormMessage/>
                                     </FormItem>
                                 )}
                             />
@@ -121,17 +127,17 @@ export function TableReservationDialog({ open, onClose, table }: TableReservatio
                             <FormField
                                 control={form.control}
                                 name="time"
-                                render={({ field }) => (
+                                render={({field}) => (
                                     <FormItem>
                                         <FormLabel>Time</FormLabel>
                                         <FormControl>
                                             <div className="relative">
                                                 <Clock
-                                                    className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                                <Input {...field} type="time" className="pl-9" />
+                                                    className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
+                                                <Input {...field} type="time" className="pl-9"/>
                                             </div>
                                         </FormControl>
-                                        <FormMessage />
+                                        <FormMessage/>
                                     </FormItem>
                                 )}
                             />
@@ -140,13 +146,13 @@ export function TableReservationDialog({ open, onClose, table }: TableReservatio
                         <FormField
                             control={form.control}
                             name="guests"
-                            render={({ field }) => (
+                            render={({field}) => (
                                 <FormItem>
                                     <FormLabel>Number of Guests</FormLabel>
                                     <FormControl>
                                         <div className="relative">
                                             <Users
-                                                className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                                className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
                                             <Input
                                                 type="number"
                                                 min={1}
@@ -157,7 +163,7 @@ export function TableReservationDialog({ open, onClose, table }: TableReservatio
                                             />
                                         </div>
                                     </FormControl>
-                                    <FormMessage />
+                                    <FormMessage/>
                                 </FormItem>
                             )}
                         />
@@ -174,7 +180,7 @@ export function TableReservationDialog({ open, onClose, table }: TableReservatio
                             <Button type="submit" disabled={updateTableMutation.isLoading}>
                                 {updateTableMutation.isLoading ? (
                                     <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
                                         Processing...
                                     </>
                                 ) : (

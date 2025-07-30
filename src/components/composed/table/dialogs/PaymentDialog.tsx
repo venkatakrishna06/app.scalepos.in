@@ -1,6 +1,5 @@
-
-import { PaymentDialog as PaymentDialogComponent } from '@/components/composed/payment-dialog';
-import { Order } from '@/types';
+import {PaymentDialog as PaymentDialogComponent} from '@/components/composed/payment-dialog';
+import {Order} from '@/types';
 
 interface PaymentDialogProps {
     open: boolean;
@@ -9,10 +8,10 @@ interface PaymentDialogProps {
 }
 
 export function PaymentDialog({
-    open,
-    onClose,
-    order,
-}: PaymentDialogProps) {
+                                  open,
+                                  onClose,
+                                  order,
+                              }: PaymentDialogProps) {
     return (
         <PaymentDialogComponent
             open={open}

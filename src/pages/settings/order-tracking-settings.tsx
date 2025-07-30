@@ -1,14 +1,14 @@
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ClipboardList, Loader2 } from 'lucide-react';
-import { toast } from '@/lib/toast';
-import { Switch } from '@/components/ui/switch';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useRestaurant, useUpdateRestaurant } from '@/api/restaurant';
+import {useEffect, useState} from 'react';
+import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
+import {Button} from '@/components/ui/button';
+import {ClipboardList, Loader2} from 'lucide-react';
+import {toast} from '@/lib/toast';
+import {Switch} from '@/components/ui/switch';
+import {Alert, AlertDescription} from '@/components/ui/alert';
+import {useRestaurant, useUpdateRestaurant} from '@/api/restaurant';
 
 export default function OrderTrackingSettings() {
-    const { data: restaurant, isLoading, isError, error: restaurantError } = useRestaurant();
+    const {data: restaurant, isLoading, isError, error: restaurantError} = useRestaurant();
     const updateRestaurantMutation = useUpdateRestaurant();
     const [trackingEnabled, setTrackingEnabled] = useState(false);
 
@@ -23,7 +23,7 @@ export default function OrderTrackingSettings() {
             if (restaurant) {
                 await updateRestaurantMutation.mutateAsync({
                     id: restaurant.id,
-                    data: { enable_order_status_tracking: trackingEnabled }
+                    data: {enable_order_status_tracking: trackingEnabled}
                 });
                 toast.success('Order tracking settings saved successfully');
             }
@@ -37,7 +37,7 @@ export default function OrderTrackingSettings() {
         return (
             <div className="flex h-64 items-center justify-center">
                 <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <Loader2 className="h-8 w-8 animate-spin text-primary"/>
                     <span className="text-lg text-muted-foreground">Loading settings...</span>
                 </div>
             </div>
@@ -49,7 +49,7 @@ export default function OrderTrackingSettings() {
             <div className="mb-6">
                 <div className="flex items-center gap-2 mb-2">
                     <div className="p-1.5 bg-primary/10 rounded-full">
-                        <ClipboardList className="h-5 w-5 text-primary" />
+                        <ClipboardList className="h-5 w-5 text-primary"/>
                     </div>
                     <h2 className="text-2xl font-bold tracking-tight">Order Tracking Settings</h2>
                 </div>
@@ -130,7 +130,7 @@ export default function OrderTrackingSettings() {
 
                     <div className="mt-6 flex justify-end">
                         <Button onClick={handleSave} disabled={updateRestaurantMutation.isLoading}>
-                            {updateRestaurantMutation.isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {updateRestaurantMutation.isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                             Save Settings
                         </Button>
                     </div>

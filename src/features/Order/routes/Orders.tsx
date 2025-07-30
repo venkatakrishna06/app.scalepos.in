@@ -1,20 +1,19 @@
-
-import { FileText } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { ViewOrdersDialog } from '@/components/composed/view-orders-dialog';
-import { AdminOrderOverview } from '@/components/composed/order/AdminOrderOverview';
-import { ServerOrderView } from '@/components/composed/order/ServerOrderView';
-import { KitchenView } from '@/components/composed/order/KitchenView';
-import { useAuthStore } from "@/lib/auth/auth.store";
-import { usePermissions } from '@/hooks/usePermissions';
-import { PERMISSIONS } from '@/lib/auth/roles';
-import { OrdersSkeleton } from '@/components/composed/orders-skeleton';
-import { useOrdersPage } from '@/hooks/useOrdersPage';
-import { ConfirmationDialog } from '@/components/composed/ConfirmationDialog';
+import {FileText} from 'lucide-react';
+import {Button} from '@/components/ui/button';
+import {ViewOrdersDialog} from '@/components/composed/view-orders-dialog';
+import {AdminOrderOverview} from '@/components/composed/order/AdminOrderOverview';
+import {ServerOrderView} from '@/components/composed/order/ServerOrderView';
+import {KitchenView} from '@/components/composed/order/KitchenView';
+import {useAuthStore} from "@/lib/auth/auth.store";
+import {usePermissions} from '@/hooks/usePermissions';
+import {PERMISSIONS} from '@/lib/auth/roles';
+import {OrdersSkeleton} from '@/components/composed/orders-skeleton';
+import {useOrdersPage} from '@/hooks/useOrdersPage';
+import {ConfirmationDialog} from '@/components/composed/ConfirmationDialog';
 
 export default function Orders() {
-    const { user } = useAuthStore();
-    const { hasPermission } = usePermissions();
+    const {user} = useAuthStore();
+    const {hasPermission} = usePermissions();
     const currentServer = user?.staff?.name;
 
     const {
@@ -38,14 +37,14 @@ export default function Orders() {
     } = useOrdersPage();
 
     if (ordersLoading) {
-        return <OrdersSkeleton />;
+        return <OrdersSkeleton/>;
     }
 
     if (ordersError) {
         return (
             <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
                 <div className="mx-auto max-w-md text-center">
-                    <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
+                    <FileText className="mx-auto h-12 w-12 text-muted-foreground"/>
                     <h3 className="mt-4 text-lg font-semibold">Error Loading Orders</h3>
                     <p className="mt-2 text-sm text-muted-foreground">
                         {ordersErrorMessage instanceof Error ? ordersErrorMessage.message : 'An error occurred while loading orders'}

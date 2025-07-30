@@ -1,6 +1,7 @@
-
-import { TableReservationDialog as TableReservationDialogComponent } from '@/components/composed/table-reservation-dialog';
-import { Table } from '@/types';
+import {
+    TableReservationDialog as TableReservationDialogComponent
+} from '@/components/composed/table-reservation-dialog';
+import {Table} from '@/types';
 
 interface TableReservationDialogProps {
     open: boolean;
@@ -9,10 +10,10 @@ interface TableReservationDialogProps {
 }
 
 export function TableReservationDialog({
-    open,
-    onClose,
-    table,
-}: TableReservationDialogProps) {
+                                           open,
+                                           onClose,
+                                           table,
+                                       }: TableReservationDialogProps) {
     return (
         <TableReservationDialogComponent
             open={open}

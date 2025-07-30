@@ -1,11 +1,10 @@
-
-import { Loader2, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useDashboard } from '@/hooks/useDashboard';
-import { Stats } from './dashboard/Stats';
-import { RecentOrders } from './dashboard/RecentOrders';
-import { PopularItems } from './dashboard/PopularItems';
-import { QuickActions } from './dashboard/QuickActions';
+import {Loader2, RefreshCw} from 'lucide-react';
+import {Button} from '@/components/ui/button';
+import {useDashboard} from '@/hooks/useDashboard';
+import {Stats} from './dashboard/Stats';
+import {RecentOrders} from './dashboard/RecentOrders';
+import {PopularItems} from './dashboard/PopularItems';
+import {QuickActions} from './dashboard/QuickActions';
 
 export function DashboardHome() {
     const {
@@ -34,9 +33,9 @@ export function DashboardHome() {
                     className="h-9 px-4"
                 >
                     {isLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        <Loader2 className="h-4 w-4 animate-spin mr-2"/>
                     ) : (
-                        <RefreshCw className="h-4 w-4 mr-2" />
+                        <RefreshCw className="h-4 w-4 mr-2"/>
                     )}
                     Refresh
                 </Button>
@@ -55,11 +54,11 @@ export function DashboardHome() {
             />
 
             <div className="grid gap-6 md:grid-cols-2">
-                <RecentOrders activeOrders={activeOrders} isLoading={isLoading} />
-                <PopularItems popularItems={popularItems} isLoading={isLoading} />
+                <RecentOrders activeOrders={activeOrders} isLoading={isLoading}/>
+                <PopularItems popularItems={popularItems} isLoading={isLoading}/>
             </div>
 
-            <QuickActions />
+            <QuickActions/>
         </div>
     );
 }

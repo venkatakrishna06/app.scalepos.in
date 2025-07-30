@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ChevronDown, Loader2, Search, XCircle } from 'lucide-react';
-import { Category } from '@/types';
-import { toast } from '@/lib/toast';
-import { Input } from '@/components/ui/input';
-import { useUpdateCategory } from '@/api/menu';
+import {useEffect, useState} from 'react';
+import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
+import {Button} from '@/components/ui/button';
+import {Checkbox} from '@/components/ui/checkbox';
+import {ChevronDown, Loader2, Search, XCircle} from 'lucide-react';
+import {Category} from '@/types';
+import {toast} from '@/lib/toast';
+import {Input} from '@/components/ui/input';
+import {useUpdateCategory} from '@/api/menu';
 
 interface CategoryGstSettingsProps {
     categories: Category[];
@@ -14,7 +14,7 @@ interface CategoryGstSettingsProps {
     onMenuItemsRefresh?: () => void;
 }
 
-export function CategoryGstSettings({ categories, onUpdate, onMenuItemsRefresh }: CategoryGstSettingsProps) {
+export function CategoryGstSettings({categories, onUpdate, onMenuItemsRefresh}: CategoryGstSettingsProps) {
     const updateCategoryMutation = useUpdateCategory();
     const [localCategories, setLocalCategories] = useState<Category[]>(categories);
     const [originalCategories, setOriginalCategories] = useState<Category[]>(categories);
@@ -84,10 +84,10 @@ export function CategoryGstSettings({ categories, onUpdate, onMenuItemsRefresh }
         setLocalCategories(
             localCategories.map((category) => {
                 if (category.id === categoryId) {
-                    return { ...category, include_in_gst: checked };
+                    return {...category, include_in_gst: checked};
                 }
                 if (descendantIds.includes(category.id)) {
-                    return { ...category, include_in_gst: checked };
+                    return {...category, include_in_gst: checked};
                 }
                 return category;
             })
@@ -105,7 +105,10 @@ export function CategoryGstSettings({ categories, onUpdate, onMenuItemsRefresh }
             );
 
             const categoryPromises = changedCategories.map((category) =>
-                updateCategoryMutation.mutateAsync({ id: category.id, category: { include_in_gst: category.include_in_gst } })
+                updateCategoryMutation.mutateAsync({
+                    id: category.id,
+                    category: {include_in_gst: category.include_in_gst}
+                })
             );
 
             await Promise.all(categoryPromises);
@@ -136,7 +139,7 @@ export function CategoryGstSettings({ categories, onUpdate, onMenuItemsRefresh }
                 )}
                 <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-center">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
                         <Input
                             placeholder="Search categories..."
                             value={searchQuery}
@@ -150,7 +153,7 @@ export function CategoryGstSettings({ categories, onUpdate, onMenuItemsRefresh }
                                 className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full p-0"
                                 onClick={() => setSearchQuery('')}
                             >
-                                <XCircle className="h-4 w-4" />
+                                <XCircle className="h-4 w-4"/>
                                 <span className="sr-only">Clear search</span>
                             </Button>
                         )}
@@ -216,7 +219,7 @@ export function CategoryGstSettings({ categories, onUpdate, onMenuItemsRefresh }
 
                 <div className="mt-4 flex justify-end">
                     <Button onClick={handleSave} disabled={updateCategoryMutation.isLoading}>
-                        {updateCategoryMutation.isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {updateCategoryMutation.isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                         Save Category Settings
                     </Button>
                 </div>

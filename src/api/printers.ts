@@ -1,6 +1,6 @@
 // src/api/printers.ts
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { printerService, PrinterConfig } from '@/lib/api/services/printer.service';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {PrinterConfig, printerService} from '@/lib/api/services/printer.service';
 
 const STALE_TIME = 1000 * 60 * 60; // 1 hour
 const CACHE_TIME = 1000 * 60 * 60; // 1 hour
@@ -19,7 +19,7 @@ export const useUpdatePrinterConfig = () => {
     return useMutation({
         mutationFn: (config: PrinterConfig) => printerService.updatePrinterConfig(config),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['printerConfig'] });
+            queryClient.invalidateQueries({queryKey: ['printerConfig']});
         },
     });
 };
@@ -35,7 +35,7 @@ export const useAvailablePrinters = () => {
 
 export const useSendTestPrint = () => {
     return useMutation({
-        mutationFn: ({ printers, printerType }: { printers: string[], printerType: 'bill' | 'kot' | 'bar' }) =>
+        mutationFn: ({printers, printerType}: { printers: string[], printerType: 'bill' | 'kot' | 'bar' }) =>
             printerService.sendTestPrint(printers, printerType),
     });
 };

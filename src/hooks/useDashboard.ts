@@ -1,10 +1,9 @@
-
-import { useMemo } from 'react';
-import { useDashboardData } from '@/api/dashboardData';
-import { toast } from '@/lib/toast';
+import {useMemo} from 'react';
+import {useDashboardData} from '@/api/dashboardData';
+import {toast} from '@/lib/toast';
 
 export const useDashboard = () => {
-    const { orders, menuItems, isLoading, isError, refetch } = useDashboardData();
+    const {orders, menuItems, isLoading, isError, refetch} = useDashboardData();
 
     if (isError) {
         toast.error('Failed to fetch dashboard data');
@@ -42,7 +41,7 @@ export const useDashboard = () => {
                 const matchingItems = orderItems.filter(orderItem => orderItem.menu_item_id === item.id);
                 return count + matchingItems.reduce((sum, orderItem) => sum + orderItem.quantity, 0);
             }, 0);
-            return { ...item, orderCount };
+            return {...item, orderCount};
         })
         .sort((a, b) => b.orderCount - a.orderCount)
         .slice(0, 5), [menuItems, orders]);

@@ -1,6 +1,5 @@
-
-import { TableManagementDialog as TableManagementDialogComponent } from '@/components/composed/table-management-dialog';
-import { Table } from '@/types';
+import {TableManagementDialog as TableManagementDialogComponent} from '@/components/composed/table-management-dialog';
+import {Table} from '@/types';
 
 interface TableManagementDialogProps {
     open: boolean;
@@ -10,11 +9,11 @@ interface TableManagementDialogProps {
 }
 
 export function TableManagementDialog({
-    open,
-    onClose,
-    action,
-    selectedTable
-}: TableManagementDialogProps) {
+                                          open,
+                                          onClose,
+                                          action,
+                                          selectedTable
+                                      }: TableManagementDialogProps) {
     return (
         <TableManagementDialogComponent
             open={open}

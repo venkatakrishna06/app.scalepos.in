@@ -100,7 +100,7 @@ api.interceptors.response.use(
                 const timeoutPromise = new Promise((_, reject) => {
                     setTimeout(() => reject(new Error('Token refresh timeout')), 15000); // 15 seconds timeout
                 });
-                
+
                 // Try to refresh the token using authService with timeout
                 const response = await Promise.race([
                     authService.refreshToken(),
@@ -130,15 +130,15 @@ api.interceptors.response.use(
                 return api(originalRequest);
             } catch (refreshError) {
                 console.error('Token refresh error in axios interceptor:', refreshError);
-                
+
                 // Check if we should retry
                 if (refreshAttempts < MAX_REFRESH_ATTEMPTS) {
                     // Increment attempts
                     refreshAttempts++;
-                    
+
                     // Reset refreshing flag to allow another attempt
                     isRefreshing = false;
-                    
+
                     // Schedule retry after delay
                     return new Promise(resolve => {
                         setTimeout(() => {

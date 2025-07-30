@@ -138,7 +138,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
             // Set persistent session preference before making the login request
             tokenService.setPersistentSession(rememberMe);
-
+debugger;
             const response = await authService.login({email, password});
 
 
@@ -146,7 +146,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             if (response.refreshToken) {
                 // This now just sets a flag indicating we have a refresh token
                 // The actual token is stored as an HttpOnly cookie by the server
-                tokenService.setRefreshToken(response.refreshToken);
+                tokenService.setRefreshToken();
             }
 
             // Save user data to storage (will use localStorage or sessionStorage based on rememberMe)
@@ -158,7 +158,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             });
         } catch (error) {
             // Check if the error is a 401 Unauthorized error
-            if (error) {
+            if (error.status === 401) {
                 toast.error('Invalid username or password');
             } else {
                 toast.error('Login failed. Please try again.');
@@ -193,7 +193,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             if (response.refreshToken) {
                 // This now just sets a flag indicating we have a refresh token
                 // The actual token is stored as an HttpOnly cookie by the server
-                tokenService.setRefreshToken(response.refreshToken);
+                tokenService.setRefreshToken();
             }
 
             // Save user data to sessionStorage

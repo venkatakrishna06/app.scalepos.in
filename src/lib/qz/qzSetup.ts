@@ -29,7 +29,7 @@ export const setupQZSecurity = async () => {
             try {
                 console.log('Data to sign:', toSign);
                 console.log('Data length:', toSign.length);
-                
+
                 const response = await fetch(`${import.meta.env.VITE_API_URL}/sign`, {
                     method: "POST",
                     headers: {
@@ -37,15 +37,15 @@ export const setupQZSecurity = async () => {
                     },
                     body: toSign
                 });
-                
+
                 if (!response.ok) {
                     throw new Error('Failed to sign payload');
                 }
-                
+
                 const signature = await response.text();
                 console.log('Signature received:', signature);
                 console.log('Signature length:', signature.length);
-                
+
                 return signature;
             } catch (error) {
                 console.error('Error signing payload:', error);

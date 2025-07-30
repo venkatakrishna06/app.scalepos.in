@@ -8,55 +8,53 @@ export const ROLES = {
 
 export const PERMISSIONS = {
     // User Management
-    CREATE_USER: 'create_user',
-    READ_USER: 'read_user',
-    UPDATE_USER: 'update_user',
-    DELETE_USER: 'delete_user',
-
+    MANAGE_USERS: 'manage-users',
     // Order Management
-    CREATE_ORDER: 'create_order',
-    READ_ORDER: 'read_order',
-    UPDATE_ORDER: 'update_order',
-    DELETE_ORDER: 'delete_order',
-
+    VIEW_ORDERS: 'view-orders',
     // Menu Management
-    CREATE_MENU: 'create_menu',
-    READ_MENU: 'read_menu',
-    UPDATE_MENU: 'update_menu',
-    DELETE_MENU: 'delete_menu',
-
+    MANAGE_MENU: 'manage-menu',
     // Table Management
-    CREATE_TABLE: 'create_table',
-    READ_TABLE: 'read_table',
-    UPDATE_TABLE: 'update_table',
-    DELETE_TABLE: 'delete_table',
-
+    VIEW_TABLES: 'view-tables',
     // Payment Management
-    CREATE_PAYMENT: 'create_payment',
-    READ_PAYMENT: 'read_payment',
-
+    VIEW_PAYMENTS: 'view-payments',
     // Settings
-    UPDATE_SETTINGS: 'update_settings',
+    VIEW_SETTINGS: 'view-settings',
+    MANAGE_CATEGORIES: 'manage-categories',
+    MANAGE_STAFF: 'manage-staff',
+    VIEW_PROFILE: 'view-profile',
+    MANAGE_GST_SETTINGS: 'manage-gst-settings',
+    MANAGE_ORDER_TRACKING_SETTINGS: 'manage-order-tracking-settings',
+    MANAGE_PRINTER_SETTINGS: 'manage-printer-settings',
+    CREATE_QUICK_BILL: 'create-quick-bill',
+    VIEW_TAKEAWAY: 'view-takeaway',
+    DASHBOARD: 'dashboard',
+
 };
 
 export const ROLE_PERMISSIONS = {
-    [ROLES.ADMIN]: Object.values(PERMISSIONS),
+    [ROLES.ADMIN]: [
+        ...Object.values(PERMISSIONS),
+        'admin',
+        'dashboard'
+    ],
     [ROLES.MANAGER]: [
-        PERMISSIONS.READ_USER,
-        PERMISSIONS.CREATE_ORDER,
-        PERMISSIONS.READ_ORDER,
-        PERMISSIONS.UPDATE_ORDER,
-        PERMISSIONS.READ_MENU,
-        PERMISSIONS.READ_TABLE,
-        PERMISSIONS.CREATE_PAYMENT,
-        PERMISSIONS.READ_PAYMENT,
+        PERMISSIONS.VIEW_ORDERS,
+        PERMISSIONS.MANAGE_MENU,
+        PERMISSIONS.VIEW_TABLES,
+        PERMISSIONS.VIEW_PAYMENTS,
+        PERMISSIONS.VIEW_SETTINGS,
+        PERMISSIONS.MANAGE_CATEGORIES,
+        PERMISSIONS.MANAGE_STAFF,
+        PERMISSIONS.VIEW_PROFILE,
+        PERMISSIONS.CREATE_QUICK_BILL,
+        PERMISSIONS.VIEW_TAKEAWAY,
     ],
     [ROLES.STAFF]: [
-        PERMISSIONS.CREATE_ORDER,
-        PERMISSIONS.READ_ORDER,
-        PERMISSIONS.READ_MENU,
-        PERMISSIONS.READ_TABLE,
-        PERMISSIONS.CREATE_PAYMENT,
-        PERMISSIONS.READ_PAYMENT,
+        PERMISSIONS.VIEW_ORDERS,
+        PERMISSIONS.VIEW_TABLES,
+        PERMISSIONS.VIEW_PAYMENTS,
+        PERMISSIONS.VIEW_PROFILE,
+        PERMISSIONS.CREATE_QUICK_BILL,
+        PERMISSIONS.VIEW_TAKEAWAY,
     ],
 };

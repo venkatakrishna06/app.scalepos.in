@@ -1,7 +1,7 @@
 // src/api/orders.ts
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { orderService } from '@/lib/api/services/order.service';
-import { Order, OrderItem } from '@/types';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {orderService} from '@/lib/api/services/order.service';
+import {Order, OrderItem} from '@/types';
 
 const STALE_TIME = 1000 * 60 * 1; // 1 minute
 const CACHE_TIME = 1000 * 60 * 30; // 30 minutes
@@ -25,7 +25,7 @@ export const useCreateOrder = () => {
     return useMutation({
         mutationFn: (order: Omit<Order, 'id'>) => orderService.createOrder(order),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['orders'] });
+            queryClient.invalidateQueries({queryKey: ['orders']});
         },
     });
 };
@@ -33,9 +33,9 @@ export const useCreateOrder = () => {
 export const useUpdateOrder = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ id, order }: { id: number, order: Partial<Order> }) => orderService.updateOrder(id, order),
+        mutationFn: ({id, order}: { id: number, order: Partial<Order> }) => orderService.updateOrder(id, order),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['orders'] });
+            queryClient.invalidateQueries({queryKey: ['orders']});
         },
     });
 };
@@ -45,14 +45,14 @@ export const useDeleteOrder = () => {
     return useMutation({
         mutationFn: (id: number) => orderService.deleteOrder(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['orders'] });
+            queryClient.invalidateQueries({queryKey: ['orders']});
         },
     });
 };
 
 export const useOrdersByTable = (tableId: number) => {
     return useQuery({
-        queryKey: ['orders', { tableId }],
+        queryKey: ['orders', {tableId}],
         queryFn: () => orderService.getOrdersByTable(tableId),
         staleTime: STALE_TIME,
         cacheTime: CACHE_TIME,
@@ -63,9 +63,9 @@ export const useOrdersByTable = (tableId: number) => {
 export const useUpdateOrderStatus = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ id, status }: { id: number, status: string }) => orderService.updateOrderStatus(id, status),
+        mutationFn: ({id, status}: { id: number, status: string }) => orderService.updateOrderStatus(id, status),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['orders'] });
+            queryClient.invalidateQueries({queryKey: ['orders']});
         },
     });
 };
@@ -83,9 +83,9 @@ export const useOrderStatusHistory = (orderId: number) => {
 export const useCancelOrder = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ id, reason }: { id: number, reason: string }) => orderService.cancelOrder(id, reason),
+        mutationFn: ({id, reason}: { id: number, reason: string }) => orderService.cancelOrder(id, reason),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['orders'] });
+            queryClient.invalidateQueries({queryKey: ['orders']});
         },
     });
 };
@@ -103,10 +103,10 @@ export const useOrderCancellations = (orderId: number) => {
 export const useUpdateOrderItem = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ orderId, itemId, updates }: { orderId: number, itemId: number, updates: Partial<OrderItem> }) =>
+        mutationFn: ({orderId, itemId, updates}: { orderId: number, itemId: number, updates: Partial<OrderItem> }) =>
             orderService.updateOrderItem(orderId, itemId, updates),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['orders'] });
+            queryClient.invalidateQueries({queryKey: ['orders']});
         },
     });
 };
@@ -114,9 +114,12 @@ export const useUpdateOrderItem = () => {
 export const useUpdateOrderItemStatus = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ itemId, status }: { itemId: number, status: string }) => orderService.updateOrderItemStatus(itemId, status),
+        mutationFn: ({itemId, status}: {
+            itemId: number,
+            status: string
+        }) => orderService.updateOrderItemStatus(itemId, status),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['orders'] });
+            queryClient.invalidateQueries({queryKey: ['orders']});
         },
     });
 };
@@ -134,10 +137,10 @@ export const useOrderItemStatusHistory = (itemId: number) => {
 export const useCancelOrderItem = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ orderId, itemId, reason }: { orderId: number, itemId: number, reason: string }) =>
+        mutationFn: ({orderId, itemId, reason}: { orderId: number, itemId: number, reason: string }) =>
             orderService.cancelOrderItem(orderId, itemId, reason),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['orders'] });
+            queryClient.invalidateQueries({queryKey: ['orders']});
         },
     });
 };
@@ -155,10 +158,10 @@ export const useOrderItemCancellations = (itemId: number) => {
 export const useRemoveOrderItem = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ orderId, itemId }: { orderId: number, itemId: number }) =>
+        mutationFn: ({orderId, itemId}: { orderId: number, itemId: number }) =>
             orderService.removeOrderItem(orderId, itemId),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['orders'] });
+            queryClient.invalidateQueries({queryKey: ['orders']});
         },
     });
 };

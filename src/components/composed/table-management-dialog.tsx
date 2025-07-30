@@ -1,16 +1,16 @@
-import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { toast } from '@/lib/toast';
-import { Table } from '@/types';
-import { useTables, useCreateTable, useMergeTables, useSplitTable } from '@/api/tables';
+import {useEffect, useState} from 'react';
+import {Loader2} from 'lucide-react';
+import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle} from '@/components/ui/dialog';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
+import {useForm} from 'react-hook-form';
+import {zodResolver} from '@hookform/resolvers/zod';
+import {z} from 'zod';
+import {Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form';
+import {toast} from '@/lib/toast';
+import {Table} from '@/types';
+import {useCreateTable, useMergeTables, useSplitTable, useTables} from '@/api/tables';
 
 interface TableManagementDialogProps {
     open: boolean;
@@ -34,12 +34,12 @@ type AddTableFormData = z.infer<typeof addTableSchema>;
 type SplitTableFormData = z.infer<typeof splitTableSchema>;
 
 export function TableManagementDialog({
-    open,
-    onClose,
-    action,
-    selectedTable,
-}: TableManagementDialogProps) {
-    const { data: tables = [] } = useTables();
+                                          open,
+                                          onClose,
+                                          action,
+                                          selectedTable,
+                                      }: TableManagementDialogProps) {
+    const {data: tables = []} = useTables();
     const createTableMutation = useCreateTable();
     const mergeTablesMutation = useMergeTables();
     const splitTableMutation = useSplitTable();
@@ -65,7 +65,7 @@ export function TableManagementDialog({
     useEffect(() => {
         if (!open) {
             setSelectedTables([]);
-            addTableForm.reset({ capacity: 4 });
+            addTableForm.reset({capacity: 4});
             splitTableForm.reset({
                 capacity: selectedTable ? Math.floor(selectedTable.capacity / 2) : 4,
             });
@@ -107,7 +107,7 @@ export function TableManagementDialog({
                             toast.error('New capacity must be less than current capacity');
                             return;
                         }
-                        await splitTableMutation.mutateAsync({ id: selectedTable.id, capacity: values.capacity });
+                        await splitTableMutation.mutateAsync({id: selectedTable.id, capacity: values.capacity});
                     })();
                     toast.success('Table split successfully');
                     onClose();
@@ -155,7 +155,7 @@ export function TableManagementDialog({
                                 <FormField
                                     control={addTableForm.control}
                                     name="capacity"
-                                    render={({ field }) => (
+                                    render={({field}) => (
                                         <FormItem>
                                             <FormLabel>Table Capacity</FormLabel>
                                             <FormControl>
@@ -170,7 +170,7 @@ export function TableManagementDialog({
                                             <FormDescription>
                                                 Enter the number of seats (1-20)
                                             </FormDescription>
-                                            <FormMessage />
+                                            <FormMessage/>
                                         </FormItem>
                                     )}
                                 />
@@ -186,7 +186,7 @@ export function TableManagementDialog({
                                     <Button type="submit" disabled={createTableMutation.isLoading}>
                                         {createTableMutation.isLoading ? (
                                             <>
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
                                                 Processing...
                                             </>
                                         ) : (
@@ -245,7 +245,7 @@ export function TableManagementDialog({
                                 >
                                     {mergeTablesMutation.isLoading ? (
                                         <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
                                             Processing...
                                         </>
                                     ) : (
@@ -270,7 +270,7 @@ export function TableManagementDialog({
                                 <FormField
                                     control={splitTableForm.control}
                                     name="capacity"
-                                    render={({ field }) => (
+                                    render={({field}) => (
                                         <FormItem>
                                             <FormLabel>New Table Capacity</FormLabel>
                                             <FormControl>
@@ -286,7 +286,7 @@ export function TableManagementDialog({
                                                 The original table will
                                                 keep {selectedTable.capacity - (field.value || 0)} seats
                                             </FormDescription>
-                                            <FormMessage />
+                                            <FormMessage/>
                                         </FormItem>
                                     )}
                                 />
@@ -303,7 +303,7 @@ export function TableManagementDialog({
                                     <Button type="submit" disabled={splitTableMutation.isLoading}>
                                         {splitTableMutation.isLoading ? (
                                             <>
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
                                                 Processing...
                                             </>
                                         ) : (

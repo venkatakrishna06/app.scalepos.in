@@ -1,27 +1,27 @@
-import { useLocation, useNavigate } from 'react-router-dom';
-import { ClipboardList, LayoutDashboard, Receipt, ShoppingBag, Table2 } from 'lucide-react';
-import { usePermissions } from '@/hooks/usePermissions';
-import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
-import { PERMISSIONS } from '@/lib/auth/roles';
+import {useLocation, useNavigate} from 'react-router-dom';
+import {ClipboardList, LayoutDashboard, Receipt, ShoppingBag, Table2} from 'lucide-react';
+import {usePermissions} from '@/hooks/usePermissions';
+import {cn} from '@/lib/utils';
+import {motion} from 'framer-motion';
+import {PERMISSIONS} from '@/lib/auth/roles';
 
 export function MobileNav() {
     const navigate = useNavigate();
     const location = useLocation();
-    const { hasPermission } = usePermissions();
+    const {hasPermission} = usePermissions();
 
     const isRouteActive = (path: string) => location.pathname === path;
 
     return (
         <motion.div
             className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg"
-            initial={{ y: 100 }}
-            animate={{ y: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            initial={{y: 100}}
+            animate={{y: 0}}
+            transition={{type: "spring", stiffness: 300, damping: 30}}
         >
             <div className="flex h-16 items-center justify-around px-1">
                 <NavButton
-                    icon={<Table2 className="h-5 w-5" />}
+                    icon={<Table2 className="h-5 w-5"/>}
                     label="Tables"
                     onClick={() => navigate('/tables')}
                     disabled={!hasPermission(PERMISSIONS.READ_TABLE)}
@@ -29,7 +29,7 @@ export function MobileNav() {
                 />
 
                 <NavButton
-                    icon={<ShoppingBag className="h-5 w-5" />}
+                    icon={<ShoppingBag className="h-5 w-5"/>}
                     label="Takeaway"
                     onClick={() => navigate('/takeaway')}
                     disabled={!hasPermission(PERMISSIONS.CREATE_ORDER)}
@@ -37,7 +37,7 @@ export function MobileNav() {
                 />
 
                 <NavButton
-                    icon={<Receipt className="h-5 w-5" />}
+                    icon={<Receipt className="h-5 w-5"/>}
                     label="QuikBill"
                     onClick={() => navigate('/quick-bill')}
                     disabled={!hasPermission(PERMISSIONS.CREATE_ORDER)}
@@ -45,7 +45,7 @@ export function MobileNav() {
                 />
 
                 <NavButton
-                    icon={<ClipboardList className="h-5 w-5" />}
+                    icon={<ClipboardList className="h-5 w-5"/>}
                     label="Orders"
                     onClick={() => navigate('/orders')}
                     disabled={!hasPermission(PERMISSIONS.READ_ORDER)}
@@ -54,7 +54,7 @@ export function MobileNav() {
 
                 {hasPermission(PERMISSIONS.READ_USER) && (
                     <NavButton
-                        icon={<LayoutDashboard className="h-5 w-5" />}
+                        icon={<LayoutDashboard className="h-5 w-5"/>}
                         label="Dashboard"
                         onClick={() => navigate('/dashboard')}
                         isActive={isRouteActive('/dashboard')}
@@ -73,7 +73,7 @@ interface NavButtonProps {
     isActive?: boolean;
 }
 
-function NavButton({ icon, label, onClick, disabled = false, isActive = false }: NavButtonProps) {
+function NavButton({icon, label, onClick, disabled = false, isActive = false}: NavButtonProps) {
     return (
         <motion.button
             className={cn(
@@ -86,14 +86,14 @@ function NavButton({ icon, label, onClick, disabled = false, isActive = false }:
             )}
             onClick={onClick}
             disabled={disabled}
-            whileTap={{ scale: 0.95 }}
-            whileHover={{ y: -2 }}
+            whileTap={{scale: 0.95}}
+            whileHover={{y: -2}}
         >
             <div className="relative">
                 <motion.div
-                    initial={{ scale: 1 }}
-                    animate={{ scale: isActive ? 1.1 : 1 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    initial={{scale: 1}}
+                    animate={{scale: isActive ? 1.1 : 1}}
+                    transition={{type: "spring", stiffness: 500, damping: 30}}
                 >
                     {icon}
                 </motion.div>
@@ -101,10 +101,10 @@ function NavButton({ icon, label, onClick, disabled = false, isActive = false }:
                     <motion.span
                         className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary"
                         layoutId="activeIndicator"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
+                        initial={{opacity: 0}}
+                        animate={{opacity: 1}}
+                        exit={{opacity: 0}}
+                        transition={{duration: 0.2}}
                     />
                 )}
             </div>

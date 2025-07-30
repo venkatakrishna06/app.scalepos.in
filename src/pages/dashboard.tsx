@@ -1,5 +1,6 @@
 import {memo} from 'react';
-import {DashboardHome} from '@/components/DashboardHome';
+import {DashboardHome} from "@/components/composed/DashboardHome.tsx";
+
 
 /**
  * Dashboard component that renders the daily reports view

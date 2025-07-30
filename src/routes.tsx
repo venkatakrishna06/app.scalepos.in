@@ -1,7 +1,7 @@
 import {useEffect} from 'react';
 import {Navigate, Route, Routes} from 'react-router-dom';
-import {useAuthStore} from '@/lib/store/auth.store';
-import {ProtectedRoute} from '@/components/auth/protected-route';
+import {useAuthStore} from '@/lib/auth/auth.store';
+import {RoleBasedRoute} from '@/components/composed/role-based-route';
 
 // Import lazy-loaded components
 import {
@@ -69,62 +69,62 @@ const AppRoutes = () => {
             <Route
                 path="/dashboard"
                 element={
-                    <ProtectedRoute requiredRole="admin">
+                    <RoleBasedRoute requiredPermission="dashboard">
                         <LazyDashboard/>
-                    </ProtectedRoute>
+                    </RoleBasedRoute>
                 }
             />
 
             <Route
                 path="/takeaway"
                 element={
-                    <ProtectedRoute requiredRoles={['admin', 'manager', 'server']}>
+                    <RoleBasedRoute requiredPermission="view-takeaway">
                         <LazyTakeaway/>
-                    </ProtectedRoute>
+                    </RoleBasedRoute>
                 }
             />
             <Route
                 path="/quick-bill"
                 element={
-                    <ProtectedRoute requiredRoles={['admin', 'manager', 'server']}>
+                    <RoleBasedRoute requiredPermission="create-quick-bill">
                         <LazyQuickBill/>
-                    </ProtectedRoute>
+                    </RoleBasedRoute>
                 }
             />
 
             <Route
                 path="/tables"
                 element={
-                    <ProtectedRoute requiredRoles={['admin', 'manager', 'server']}>
+                    <RoleBasedRoute requiredPermission="view-tables">
                         <LazyTables/>
-                    </ProtectedRoute>
+                    </RoleBasedRoute>
                 }
             />
 
             <Route
                 path="/orders"
                 element={
-                    <ProtectedRoute requiredRoles={['admin', 'manager', 'kitchen', 'server']}>
+                    <RoleBasedRoute requiredPermission="view-orders">
                         <LazyOrders/>
-                    </ProtectedRoute>
+                    </RoleBasedRoute>
                 }
             />
 
             <Route
                 path="/menu"
                 element={
-                    <ProtectedRoute requiredRoles={['admin', 'manager', 'kitchen']}>
+                    <RoleBasedRoute requiredPermission="manage-menu">
                         <LazyMenu/>
-                    </ProtectedRoute>
+                    </RoleBasedRoute>
                 }
             />
 
             <Route
                 path="/categories"
                 element={
-                    <ProtectedRoute requiredRoles={['admin', 'manager']}>
+                    <RoleBasedRoute requiredPermission="manage-categories">
                         <LazyCategories/>
-                    </ProtectedRoute>
+                    </RoleBasedRoute>
                 }
             />
 
@@ -132,61 +132,61 @@ const AppRoutes = () => {
             <Route
                 path="/staff"
                 element={
-                    <ProtectedRoute requiredRole="admin">
+                    <RoleBasedRoute requiredPermission="manage-staff">
                         <LazyStaff/>
-                    </ProtectedRoute>
+                    </RoleBasedRoute>
                 }
             />
 
             <Route
                 path="/payments"
                 element={
-                    <ProtectedRoute requiredRoles={['admin', 'manager']}>
+                    <RoleBasedRoute requiredPermission="view-payments">
                         <LazyPayments/>
-                    </ProtectedRoute>
+                    </RoleBasedRoute>
                 }
             />
 
             <Route
                 path="/user-management"
                 element={
-                    <ProtectedRoute requiredRole="admin">
+                    <RoleBasedRoute requiredPermission="manage-users">
                         <LazyUserManagement/>
-                    </ProtectedRoute>
+                    </RoleBasedRoute>
                 }/>
 
             <Route
                 path="/profile"
                 element={
-                    <ProtectedRoute requiredRoles={['admin', 'manager', 'kitchen', 'server']}>
+                    <RoleBasedRoute requiredPermission="view-profile">
                         <LazyProfile/>
-                    </ProtectedRoute>
+                    </RoleBasedRoute>
                 }
             />
 
             <Route
                 path="/settings"
                 element={
-                    <ProtectedRoute>
+                    <RoleBasedRoute requiredPermission="view-settings">
                         <LazySettings/>
-                    </ProtectedRoute>
+                    </RoleBasedRoute>
                 }
             >
                 <Route path="profile" element={<LazyProfileSettings/>}/>
                 <Route path="gst" element={
-                    <ProtectedRoute requiredRole="admin">
+                    <RoleBasedRoute requiredPermission="manage-gst-settings">
                         <LazyGstSettings/>
-                    </ProtectedRoute>
+                    </RoleBasedRoute>
                 }/>
                 <Route path="order-tracking" element={
-                    <ProtectedRoute requiredRole="admin">
+                    <RoleBasedRoute requiredPermission="manage-order-tracking-settings">
                         <LazyOrderTrackingSettings/>
-                    </ProtectedRoute>
+                    </RoleBasedRoute>
                 }/>
                 <Route path="printer" element={
-                    <ProtectedRoute requiredRole="admin">
+                    <RoleBasedRoute requiredPermission="manage-printer-settings">
                         <LazyPrinterSettings/>
-                    </ProtectedRoute>
+                    </RoleBasedRoute>
                 }/>
             </Route>
 
@@ -194,16 +194,6 @@ const AppRoutes = () => {
                 path="/gst-settings"
                 element={
                     <Navigate to="/settings/gst" replace/>
-                }
-            />
-
-            {/* Role-based protected route example */}
-            <Route
-                path="/admin"
-                element={
-                    <ProtectedRoute requiredRole="admin">
-                        <div>Admin Page (Protected, Admin Only)</div>
-                    </ProtectedRoute>
                 }
             />
 

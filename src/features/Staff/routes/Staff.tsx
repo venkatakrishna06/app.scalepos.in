@@ -1,12 +1,11 @@
-
-import { Clock, Edit2, Filter, Phone, Plus, Search, Trash2 } from 'lucide-react';
-import { StaffSkeleton } from '@/components/skeletons/staff-skeleton';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { StaffForm } from '@/components/forms/staff-form';
-import { useStaffPage } from '@/hooks/useStaffPage';
-import { ConfirmationDialog } from '@/components/composed/ConfirmationDialog';
+import {Clock, Edit2, Filter, Phone, Plus, Search, Trash2} from 'lucide-react';
+import {StaffSkeleton} from '@/components/skeletons/staff-skeleton';
+import {Button} from '@/components/ui/button';
+import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle} from '@/components/ui/dialog';
+import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu";
+import {StaffForm} from '@/components/forms/staff-form';
+import {useStaffPage} from '@/hooks/useStaffPage';
+import {ConfirmationDialog} from '@/components/composed/ConfirmationDialog';
 
 export default function Staff() {
     const {
@@ -35,7 +34,7 @@ export default function Staff() {
     } = useStaffPage();
 
     if (isLoading) {
-        return <StaffSkeleton />;
+        return <StaffSkeleton/>;
     }
 
     if (isError) {
@@ -65,7 +64,7 @@ export default function Staff() {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" size="sm" className="h-10 w-full sm:w-auto">
-                                    <Filter className="mr-2 h-4 w-4" />
+                                    <Filter className="mr-2 h-4 w-4"/>
                                     {roleFilter === 'all' ? 'All Roles' : roleFilter}
                                 </Button>
                             </DropdownMenuTrigger>
@@ -92,12 +91,12 @@ export default function Staff() {
                             disabled={createStaffMutation.isLoading || updateStaffMutation.isLoading || deleteStaffMutation.isLoading}
                             className="h-10 w-full sm:w-auto"
                         >
-                            <Plus className="mr-2 h-4 w-4" />
+                            <Plus className="mr-2 h-4 w-4"/>
                             Add Staff
                         </Button>
                     </div>
                     <div className="relative w-full sm:max-w-xs">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
                         <input
                             type="text"
                             placeholder="Search by name, role, or phone..."
@@ -122,8 +121,8 @@ export default function Staff() {
                         >
                             <div className={`absolute right-0 top-0 px-3 py-1 text-xs font-medium uppercase tracking-wider text-white 
                 ${member.role === 'admin' ? 'bg-red-500' :
-                                    member.role === 'manager' ? 'bg-blue-500' :
-                                        member.role === 'kitchen' ? 'bg-amber-500' : 'bg-green-500'}`}>
+                                member.role === 'manager' ? 'bg-blue-500' :
+                                    member.role === 'kitchen' ? 'bg-amber-500' : 'bg-green-500'}`}>
                                 {member.role}
                             </div>
 
@@ -145,13 +144,13 @@ export default function Staff() {
 
                                 <div className="space-y-3 border-t pt-3 mt-2">
                                     <div className="flex flex-wrap items-center gap-2 text-sm">
-                                        <Phone className="h-4 w-4 text-primary" />
+                                        <Phone className="h-4 w-4 text-primary"/>
                                         <span className="text-muted-foreground">Phone:</span>
                                         <span className="font-medium">{member.phone}</span>
                                     </div>
 
                                     <div className="flex flex-wrap items-center gap-2 text-sm">
-                                        <Clock className="h-4 w-4 text-primary" />
+                                        <Clock className="h-4 w-4 text-primary"/>
                                         <span className="text-muted-foreground">Shift:</span>
                                         <span className="font-medium">{member.shift}</span>
                                     </div>
@@ -165,7 +164,7 @@ export default function Staff() {
                                         onClick={() => openEditDialog(member)}
                                         disabled={createStaffMutation.isLoading || updateStaffMutation.isLoading || deleteStaffMutation.isLoading}
                                     >
-                                        <Edit2 className="mr-2 h-4 w-4" />
+                                        <Edit2 className="mr-2 h-4 w-4"/>
                                         Edit
                                     </Button>
                                     <Button
@@ -175,7 +174,7 @@ export default function Staff() {
                                         onClick={() => openDeleteDialog(member.id)}
                                         disabled={createStaffMutation.isLoading || updateStaffMutation.isLoading || deleteStaffMutation.isLoading}
                                     >
-                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        <Trash2 className="mr-2 h-4 w-4"/>
                                         Delete
                                     </Button>
                                 </div>
@@ -202,7 +201,7 @@ export default function Staff() {
                         </DialogTitle>
                         <DialogDescription className="mt-1">
                             {editingStaff
-                                ? 'Update the staff member's information below.'
+                                ? 'Update the staff members information below.'
                                 : 'Fill in the details to add a new staff member.'}
                         </DialogDescription>
                     </DialogHeader>

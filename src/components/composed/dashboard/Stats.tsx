@@ -1,7 +1,6 @@
-
-import { ClipboardList, Coffee, IndianRupee, Table2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { StatsCard } from './StatsCard';
+import {ClipboardList, Coffee, IndianRupee, Table2} from 'lucide-react';
+import {useNavigate} from 'react-router-dom';
+import {StatsCard} from './StatsCard';
 
 interface StatsProps {
     todaySales: number;
@@ -16,16 +15,16 @@ interface StatsProps {
 }
 
 export function Stats({
-    todaySales,
-    activeOrdersCount,
-    placedCount,
-    preparingCount,
-    servedCount,
-    tablesInUse,
-    menuItemsCount,
-    availableItemsCount,
-    isLoading
-}: StatsProps) {
+                          todaySales,
+                          activeOrdersCount,
+                          placedCount,
+                          preparingCount,
+                          servedCount,
+                          tablesInUse,
+                          menuItemsCount,
+                          availableItemsCount,
+                          isLoading
+                      }: StatsProps) {
     const navigate = useNavigate();
 
     return (
@@ -33,7 +32,7 @@ export function Stats({
             <StatsCard
                 title="Today's Sales"
                 value={`₹${todaySales.toFixed(2)}`}
-                icon={<IndianRupee className="h-5 w-5" />}
+                icon={<IndianRupee className="h-5 w-5"/>}
                 description="Total revenue today"
                 loading={isLoading}
                 trend="up"
@@ -43,7 +42,7 @@ export function Stats({
             <StatsCard
                 title="Active Orders"
                 value={activeOrdersCount.toString()}
-                icon={<ClipboardList className="h-5 w-5" />}
+                icon={<ClipboardList className="h-5 w-5"/>}
                 description={`${placedCount} placed, ${preparingCount} preparing, ${servedCount} served`}
                 loading={isLoading}
                 onClick={() => navigate('/orders')}
@@ -52,7 +51,7 @@ export function Stats({
             <StatsCard
                 title="Tables In Use"
                 value={tablesInUse.toString()}
-                icon={<Table2 className="h-5 w-5" />}
+                icon={<Table2 className="h-5 w-5"/>}
                 description={`${Math.round(tablesInUse / 20 * 100)}% occupancy rate`}
                 loading={isLoading}
                 onClick={() => navigate('/tables')}
@@ -61,7 +60,7 @@ export function Stats({
             <StatsCard
                 title="Menu Items"
                 value={menuItemsCount.toString()}
-                icon={<Coffee className="h-5 w-5" />}
+                icon={<Coffee className="h-5 w-5"/>}
                 description={`${availableItemsCount} available`}
                 loading={isLoading}
                 onClick={() => navigate('/menu')}

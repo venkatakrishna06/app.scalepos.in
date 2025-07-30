@@ -36,13 +36,13 @@ export function debounce<T extends (...args: any[]) => any>(
     wait: number
 ): (...args: Parameters<T>) => void {
     let timeout: ReturnType<typeof setTimeout> | null = null;
-    
-    return function(...args: Parameters<T>) {
+
+    return function (...args: Parameters<T>) {
         const later = () => {
             timeout = null;
             func(...args);
         };
-        
+
         if (timeout !== null) {
             clearTimeout(timeout);
         }
@@ -69,7 +69,7 @@ export async function deduplicateRequest<T>(
     if (inFlightRequests[key]) {
         return inFlightRequests[key];
     }
-    
+
     // Otherwise, make the request and store its promise
     try {
         inFlightRequests[key] = requestFn();
@@ -103,14 +103,14 @@ export async function cacheApiResponse<T>(
 ): Promise<T> {
     const now = Date.now();
     const cached = apiCache[key];
-    
+
     // If we have a valid cached response, return it
     if (cached && now - cached.timestamp < ttl) {
         return cached.data;
     }
-    
+
     // Otherwise, make the request and cache the result
     const data = await requestFn();
-    apiCache[key] = { data, timestamp: now };
+    apiCache[key] = {data, timestamp: now};
     return data;
 }

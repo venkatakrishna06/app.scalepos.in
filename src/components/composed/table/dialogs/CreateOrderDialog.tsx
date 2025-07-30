@@ -1,6 +1,5 @@
-
-import { CreateOrderDialog as CreateOrderDialogComponent } from '@/components/composed/create-order-dialog';
-import { Order } from '@/types';
+import {CreateOrderDialog as CreateOrderDialogComponent} from '@/components/composed/create-order-dialog';
+import {Order} from '@/types';
 
 interface CreateOrderDialogProps {
     open: boolean;
@@ -10,11 +9,11 @@ interface CreateOrderDialogProps {
 }
 
 export function CreateOrderDialog({
-    open,
-    onClose,
-    table_id,
-    existingOrder,
-}: CreateOrderDialogProps) {
+                                      open,
+                                      onClose,
+                                      table_id,
+                                      existingOrder,
+                                  }: CreateOrderDialogProps) {
     return (
         <CreateOrderDialogComponent
             open={open}

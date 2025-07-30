@@ -1,14 +1,14 @@
-import { memo, useMemo, useState } from 'react';
-import { AlertCircle, Clock, FileText, LayoutGrid, LayoutList, Plus, Search } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { CreateOrderDialog } from '@/components/composed/create-order-dialog';
-import { Order } from '@/types';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from '@/lib/utils';
-import { usePermissions } from '@/hooks/usePermissions';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { useOrders } from '@/api/orders';
+import {memo, useMemo, useState} from 'react';
+import {AlertCircle, Clock, FileText, LayoutGrid, LayoutList, Plus, Search} from 'lucide-react';
+import {Button} from '@/components/ui/button';
+import {CreateOrderDialog} from '@/components/composed/create-order-dialog';
+import {Order} from '@/types';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
+import {cn} from '@/lib/utils';
+import {usePermissions} from '@/hooks/usePermissions';
+import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
+import {Badge} from '@/components/ui/badge';
+import {useOrders} from '@/api/orders';
 
 interface DashboardOrdersProps {
     initialFilterStatus?: string;
@@ -20,8 +20,8 @@ const DashboardOrdersComponent: React.FC<DashboardOrdersProps> = () => {
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-    const { data: orders = [], isLoading: ordersLoading, isError: ordersError, error: ordersErrorMessage } = useOrders();
-    const { canCreateOrders, canCancelOrders } = usePermissions();
+    const {data: orders = [], isLoading: ordersLoading, isError: ordersError, error: ordersErrorMessage} = useOrders();
+    const {canCreateOrders, canCancelOrders} = usePermissions();
 
     const activeOrders = useMemo(() => {
         return orders.filter(order =>
@@ -59,7 +59,7 @@ const DashboardOrdersComponent: React.FC<DashboardOrdersProps> = () => {
     if (ordersError) {
         return (
             <div className="flex h-[calc(100vh-8rem)] flex-col items-center justify-center gap-4">
-                <AlertCircle className="h-10 w-10 text-destructive" />
+                <AlertCircle className="h-10 w-10 text-destructive"/>
                 <div className="text-center">
                     <p className="font-medium text-destructive">Error Loading Orders</p>
                     <p className="text-sm text-muted-foreground">
@@ -83,7 +83,7 @@ const DashboardOrdersComponent: React.FC<DashboardOrdersProps> = () => {
                 <h2 className="text-2xl font-semibold tracking-tight">Active Orders</h2>
                 <div className="flex flex-wrap items-center gap-2">
                     <div className="relative w-full sm:w-auto">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
                         <input
                             type="text"
                             placeholder="Search orders..."
@@ -94,7 +94,7 @@ const DashboardOrdersComponent: React.FC<DashboardOrdersProps> = () => {
                     </div>
                     <Select value={filterStatus} onValueChange={setFilterStatus}>
                         <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Filter by status" />
+                            <SelectValue placeholder="Filter by status"/>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Orders</SelectItem>
@@ -110,7 +110,7 @@ const DashboardOrdersComponent: React.FC<DashboardOrdersProps> = () => {
                             className={cn(viewMode === 'grid' ? 'bg-muted' : '')}
                             onClick={() => setViewMode('grid')}
                         >
-                            <LayoutGrid className="h-4 w-4" />
+                            <LayoutGrid className="h-4 w-4"/>
                         </Button>
                         <Button
                             variant="outline"
@@ -118,7 +118,7 @@ const DashboardOrdersComponent: React.FC<DashboardOrdersProps> = () => {
                             className={cn(viewMode === 'list' ? 'bg-muted' : '')}
                             onClick={() => setViewMode('list')}
                         >
-                            <LayoutList className="h-4 w-4" />
+                            <LayoutList className="h-4 w-4"/>
                         </Button>
                     </div>
                 </div>
@@ -138,7 +138,7 @@ const DashboardOrdersComponent: React.FC<DashboardOrdersProps> = () => {
             {filteredOrders.length === 0 && (
                 <div
                     className="flex h-[400px] flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-                    <FileText className="h-10 w-10 text-muted-foreground mb-2" />
+                    <FileText className="h-10 w-10 text-muted-foreground mb-2"/>
                     <h3 className="text-lg font-semibold">No Orders Found</h3>
                     <p className="text-sm text-muted-foreground mt-1">
                         {filterStatus !== 'all'
@@ -147,7 +147,7 @@ const DashboardOrdersComponent: React.FC<DashboardOrdersProps> = () => {
                     </p>
                     {canCreateOrders && (
                         <Button variant="outline" className="mt-4" onClick={() => setShowOrderDialog(true)}>
-                            <Plus className="mr-2 h-4 w-4" />
+                            <Plus className="mr-2 h-4 w-4"/>
                             Create New Order
                         </Button>
                     )}
@@ -163,7 +163,7 @@ const DashboardOrdersComponent: React.FC<DashboardOrdersProps> = () => {
     );
 };
 
-const OrderCard = memo(({ order, canCancelOrders }: { order: Order, canCancelOrders: boolean }) => {
+const OrderCard = memo(({order, canCancelOrders}: { order: Order, canCancelOrders: boolean }) => {
     return (
         <Card
             className="group relative overflow-hidden transition-shadow hover:shadow-lg"
@@ -212,7 +212,7 @@ const OrderCard = memo(({ order, canCancelOrders }: { order: Order, canCancelOrd
 
             <CardFooter className="flex items-center justify-between border-t pt-3">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4" />
+                    <Clock className="h-4 w-4"/>
                     <span>
                         {new Date(order.order_time).toLocaleTimeString()}
                     </span>

@@ -1,27 +1,15 @@
-import { memo, useCallback, useEffect, useMemo, useState, useRef } from 'react';
-import {
-    ChevronDown,
-    ChevronRight,
-    Loader2,
-    Menu as MenuIcon,
-    Minus,
-    Pencil,
-    Plus,
-    Search,
-    ShoppingCart,
-    Star,
-    X
-} from 'lucide-react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { MenuItem, Order, OrderItem } from '@/types';
-import { toast } from '@/lib/toast';
-import { useAuthStore } from "@/lib/auth/auth.store";
-import { cn, generateTokenNumber, debounce } from '@/lib/utils';
-import { useMenuItems, useCategories } from '@/api/menu';
-import { useCreateOrder, useUpdateOrder } from '@/api/orders';
-import { usePrinterConfig } from '@/api/printers';
-import { useFavoriteItems } from '@/api/analytics';
+import {memo, useCallback, useMemo, useState} from 'react';
+import {ChevronRight, Loader2} from 'lucide-react';
+import {Dialog, DialogContent} from '@/components/ui/dialog';
+import {Button} from '@/components/ui/button';
+import {Order, OrderItem} from '@/types';
+import {toast} from '@/lib/toast';
+import {useAuthStore} from "@/lib/auth/auth.store";
+import {generateTokenNumber} from '@/lib/utils';
+import {useCategories, useMenuItems} from '@/api/menu';
+import {useCreateOrder, useUpdateOrder} from '@/api/orders';
+import {usePrinterConfig} from '@/api/printers';
+import {useFavoriteItems} from '@/api/analytics';
 
 // ... (ESCPOS constants and helper functions remain the same)
 
@@ -34,20 +22,20 @@ interface CreateOrderDialogProps {
 }
 
 function CreateOrderDialogComponent({
-    open,
-    onClose,
-    table_id,
-    existingOrder,
-    orderType
-}: CreateOrderDialogProps) {
-    const { data: menuItems = [], isLoading: menuItemsLoading } = useMenuItems();
-    const { data: categories = [], isLoading: categoriesLoading } = useCategories();
-    const { data: printerConfig } = usePrinterConfig();
-    const { data: favoriteItems = [], isLoading: favoriteItemsLoading } = useFavoriteItems();
+                                        open,
+                                        onClose,
+                                        table_id,
+                                        existingOrder,
+                                        orderType
+                                    }: CreateOrderDialogProps) {
+    const {data: menuItems = [], isLoading: menuItemsLoading} = useMenuItems();
+    const {data: categories = [], isLoading: categoriesLoading} = useCategories();
+    const {data: printerConfig} = usePrinterConfig();
+    const {data: favoriteItems = [], isLoading: favoriteItemsLoading} = useFavoriteItems();
 
     const createOrderMutation = useCreateOrder();
     const updateOrderMutation = useUpdateOrder();
-    const { user } = useAuthStore();
+    const {user} = useAuthStore();
 
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -61,28 +49,28 @@ function CreateOrderDialogComponent({
     // ... (useEffect for sidebar, etc. remain the same)
 
     const mainCategories = useMemo(() =>
-        categories.filter(cat => !cat.parent_category_id),
+            categories.filter(cat => !cat.parent_category_id),
         [categories]);
 
     const subCategoriesByParent = useMemo(() =>
-        categories.reduce((acc, cat) => {
-            if (cat.parent_category_id) {
-                if (!acc[cat.parent_category_id]) {
-                    acc[cat.parent_category_id] = [];
+            categories.reduce((acc, cat) => {
+                if (cat.parent_category_id) {
+                    if (!acc[cat.parent_category_id]) {
+                        acc[cat.parent_category_id] = [];
+                    }
+                    acc[cat.parent_category_id].push(cat);
                 }
-                acc[cat.parent_category_id].push(cat);
-            }
-            return acc;
-        }, {} as Record<number, typeof categories>),
+                return acc;
+            }, {} as Record<number, typeof categories>),
         [categories]);
 
     const initialExpandedState = useMemo(() =>
-        mainCategories.reduce((acc, category) => {
-            if (subCategoriesByParent[category.id]) {
-                acc[category.id] = true;
-            }
-            return acc;
-        }, {} as Record<number, boolean>),
+            mainCategories.reduce((acc, category) => {
+                if (subCategoriesByParent[category.id]) {
+                    acc[category.id] = true;
+                }
+                return acc;
+            }, {} as Record<number, boolean>),
         [mainCategories, subCategoriesByParent]);
 
     const [expandedCategories, setExpandedCategories] = useState<Record<number, boolean>>(initialExpandedState);
@@ -125,7 +113,7 @@ function CreateOrderDialogComponent({
                     };
                 });
 
-                await updateOrderMutation.mutateAsync({ id: existingOrder.id, order: { items: itemsWithDetails } });
+                await updateOrderMutation.mutateAsync({id: existingOrder.id, order: {items: itemsWithDetails}});
             } else {
                 const newOrder = {
                     table_id: table_id,
@@ -169,17 +157,17 @@ function CreateOrderDialogComponent({
     ]);
 
     const totalAmount = useMemo(() =>
-        orderItems.reduce(
-            (sum, item) => {
-                const menuItem = menuItems.find(m => m.id === item.menu_item_id);
-                return sum + (menuItem?.price || 0) * item.quantity;
-            },
-            0
-        ),
+            orderItems.reduce(
+                (sum, item) => {
+                    const menuItem = menuItems.find(m => m.id === item.menu_item_id);
+                    return sum + (menuItem?.price || 0) * item.quantity;
+                },
+                0
+            ),
         [orderItems, menuItems]);
 
     const totalItems = useMemo(() =>
-        orderItems.reduce((sum, item) => sum + item.quantity, 0),
+            orderItems.reduce((sum, item) => sum + item.quantity, 0),
         [orderItems]);
 
     if (menuItemsLoading || categoriesLoading) {
@@ -200,13 +188,13 @@ function CreateOrderDialogComponent({
                     >
                         {(createOrderMutation.isLoading || updateOrderMutation.isLoading) ? (
                             <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
                                 <span>Processing...</span>
                             </>
                         ) : (
                             <>
                                 <span>{existingOrder ? 'Update Order' : 'Place Order'}</span>
-                                <ChevronRight className="h-5 w-5" />
+                                <ChevronRight className="h-5 w-5"/>
                             </>
                         )}
                     </Button>

@@ -1,15 +1,13 @@
+import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useCancelOrder, useOrders, useUpdateOrderItemStatus, useUpdateOrderStatus} from '@/api/orders';
+import {Order} from '@/types';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useOrders, useCancelOrder, useUpdateOrderStatus, useUpdateOrderItemStatus } from '@/api/orders';
-import { Order } from '@/types';
-import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
-import { toast } from '@/lib/toast';
-import { format as formatDate, isToday, isYesterday, subDays } from 'date-fns';
+import {toast} from '@/lib/toast';
+import {format as formatDate, isToday, isYesterday, subDays} from 'date-fns';
 
 type SortField = 'newest' | 'oldest' | 'highest' | 'lowest';
 
 export const useOrdersPage = () => {
-    const { handleError } = useErrorHandler();
     const [queryParams, setQueryParams] = useState<{
         period?: 'day' | 'week' | 'month';
         start_date?: string;
@@ -18,7 +16,13 @@ export const useOrdersPage = () => {
         order_type?: string;
     }>({});
 
-    const { data: orders = [], isLoading: ordersLoading, isError: ordersError, error: ordersErrorMessage, refetch: refetchOrders } = useOrders(queryParams);
+    const {
+        data: orders = [],
+        isLoading: ordersLoading,
+        isError: ordersError,
+        error: ordersErrorMessage,
+        refetch: refetchOrders
+    } = useOrders(queryParams);
 
     const cancelOrderMutation = useCancelOrder();
     const updateOrderStatusMutation = useUpdateOrderStatus();
@@ -53,9 +57,8 @@ export const useOrdersPage = () => {
             await refetchOrders();
             toast.success('Orders refreshed successfully');
         } catch (err) {
-            handleError(err);
         }
-    }, [refetchOrders, handleError]);
+    }, [refetchOrders]);
 
     const showCancelConfirmation = useCallback((order: Order) => {
         setOrderToCancel(order);
@@ -65,16 +68,15 @@ export const useOrdersPage = () => {
     const handleCancelOrder = useCallback(async () => {
         if (!orderToCancel) return;
         try {
-            await cancelOrderMutation.mutateAsync({ id: orderToCancel.id, reason: 'Cancelled by user' });
+            await cancelOrderMutation.mutateAsync({id: orderToCancel.id, reason: 'Cancelled by user'});
             await refetchOrders();
             setIsCancelDialogOpen(false);
             setOrderToCancel(null);
             toast.success('Order cancelled successfully');
         } catch (err) {
-            handleError(err);
             toast.error('Failed to cancel order');
         }
-    }, [orderToCancel, cancelOrderMutation, refetchOrders, handleError]);
+    }, [orderToCancel, cancelOrderMutation, refetchOrders]);
 
     const handleEditOrder = useCallback((order: Order) => {
         setSelectedOrder(order);
@@ -84,25 +86,24 @@ export const useOrdersPage = () => {
 
     const handleUpdateOrderStatus = useCallback(async (orderId: number, newStatus: Order['status']) => {
         try {
-            await updateOrderStatusMutation.mutateAsync({ id: orderId, status: newStatus });
+            await updateOrderStatusMutation.mutateAsync({id: orderId, status: newStatus});
             await refetchOrders();
             toast.success(`Order status updated to ${newStatus}`);
         } catch (err) {
-            handleError(err);
+
             toast.error('Failed to update order status');
         }
-    }, [updateOrderStatusMutation, refetchOrders, handleError]);
+    }, [updateOrderStatusMutation, refetchOrders]);
 
     const handleItemStatusChange = useCallback(async (orderId: number, itemId: number, newStatus: string) => {
         try {
-            await updateOrderItemStatusMutation.mutateAsync({ itemId, status: newStatus });
+            await updateOrderItemStatusMutation.mutateAsync({itemId, status: newStatus});
             await refetchOrders();
             toast.success('Order item status updated');
         } catch (err) {
-            handleError(err);
             toast.error('Failed to update order item status');
         }
-    }, [updateOrderItemStatusMutation, refetchOrders, handleError]);
+    }, [updateOrderItemStatusMutation, refetchOrders]);
 
     const handleCloseViewOrdersDialog = useCallback(() => {
         setIsViewOrdersDialogOpen(false);
@@ -257,11 +258,10 @@ export const useOrdersPage = () => {
         const csvContent = [
             headers.join(','),
             ...csvRows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-        ].join('
-');
+        ].join('');
 
         // Create a Blob with the CSV content
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
 
         // Create a download link
         const link = document.createElement('a');

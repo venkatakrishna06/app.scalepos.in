@@ -25,7 +25,6 @@ export function AuthGuard({children}: AuthGuardProps) {
     const refreshTokenMutation = useRefreshToken();
 
     const handleLogout = useCallback(async () => {
-        logger.info('User logged out due to token refresh failure or invalid token.');
         await logout();
         navigate('/login', {state: {from: location}, replace: true});
     }, [logout, navigate, location]);
@@ -46,7 +45,6 @@ export function AuthGuard({children}: AuthGuardProps) {
         const refreshBuffer = Math.min(300000, timeUntilExpiry / 2); // 5 minutes or halfway
         const refreshDelay = Math.max(0, timeUntilExpiry - refreshBuffer);
 
-        logger.info(`Scheduling token refresh in ${refreshDelay / 1000} seconds.`);
         refreshTimerRef.current = window.setTimeout(() => {
             attemptTokenRefresh();
         }, refreshDelay);
@@ -62,11 +60,8 @@ export function AuthGuard({children}: AuthGuardProps) {
         }
 
         setIsRefreshing(true);
-        logger.info('Attempting to refresh token.');
-
         try {
             const response = await refreshTokenMutation.mutateAsync(currentRefreshToken);
-            logger.info('Token refreshed successfully.');
             tokenBlacklistService.addToBlacklist(currentRefreshToken);
             tokenService.setToken(response.token);
             if (response.refreshToken) {
@@ -78,16 +73,13 @@ export function AuthGuard({children}: AuthGuardProps) {
             scheduleTokenRefresh();
             setIsRefreshing(false);
         } catch (error) {
-            logger.error('Token refresh error:', {error});
             if (refreshAttempts < MAX_REFRESH_ATTEMPTS) {
                 setRefreshAttempts(prev => prev + 1);
-                logger.info(`Retrying token refresh in ${RETRY_DELAY / 1000} seconds.`);
                 setTimeout(() => {
                     setIsRefreshing(false);
                     attemptTokenRefresh();
                 }, RETRY_DELAY);
             } else {
-                logger.error('Max refresh attempts reached. Logging out.');
                 handleLogout();
                 setIsRefreshing(false);
             }

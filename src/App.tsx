@@ -2,17 +2,20 @@ import {HashRouter as Router, Route, Routes} from 'react-router-dom';
 import {QueryClientProvider} from '@tanstack/react-query';
 import {persistQueryClient} from '@tanstack/react-query-persist-client';
 import {createSyncStoragePersister} from '@tanstack/query-sync-storage-persister';
-import Layout from './components/layout';
+
 import AppRoutes from './routes';
 import Login from './pages/auth/login';
 import Signup from './pages/auth/signup';
-import {ThemeProvider} from './components/theme/theme-provider';
+
 import {Toaster} from 'sonner';
-import {AuthGuard} from './components/auth/auth-guard';
+
 import {queryClient} from './lib/queryClient';
 import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
 import {useEffect} from 'react';
 import {setupQZSecurity} from './lib/qz/qzSetup';
+import {ThemeProvider} from "@/components/composed/theme-provider.tsx";
+import {AuthGuard} from "@/components/composed/auth-guard.tsx";
+import {Layout} from "lucide-react";
 
 // Set up localStorage persistence for React Query
 const localStoragePersister = createSyncStoragePersister({
@@ -38,7 +41,7 @@ function App() {
                 console.error('Failed to initialize QZ Tray security:', error);
             }
         };
-        
+
         // Only initialize if QZ is available
         if (typeof window.qz !== 'undefined') {
             initQZ();
@@ -50,7 +53,7 @@ function App() {
                     initQZ();
                 }
             }, 1000);
-            
+
             // Stop checking after 10 seconds
             setTimeout(() => clearInterval(checkQz), 10000);
         }

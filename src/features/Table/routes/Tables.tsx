@@ -1,17 +1,17 @@
+import {Merge, Plus, Search} from 'lucide-react';
 
-import { Merge, Plus, Search } from 'lucide-react';
-import { TablesSkeleton } from '@/components/skeletons/tables-skeleton';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FilterDropdownContainer } from '@/components/composed/FilterDropdownContainer';
-import { TableCard } from '@/components/composed/tableCard';
-import { useTablesPage } from '@/hooks/useTablesPage';
-import { CreateOrderDialog } from '@/components/composed/table/dialogs/CreateOrderDialog';
-import { PaymentDialog } from '@/components/composed/table/dialogs/PaymentDialog';
-import { TableManagementDialog } from '@/components/composed/table/dialogs/TableManagementDialog';
-import { ViewOrdersDialog } from '@/components/composed/table/dialogs/ViewOrdersDialog';
-import { TableReservationDialog } from '@/components/composed/table/dialogs/TableReservationDialog';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
+import {FilterDropdownContainer} from '@/components/composed/FilterDropdownContainer';
+import {TableCard} from '@/components/composed/tableCard';
+import {useTablesPage} from '@/hooks/useTablesPage';
+import {CreateOrderDialog} from '@/components/composed/table/dialogs/CreateOrderDialog';
+import {PaymentDialog} from '@/components/composed/table/dialogs/PaymentDialog';
+import {TableManagementDialog} from '@/components/composed/table/dialogs/TableManagementDialog';
+import {ViewOrdersDialog} from '@/components/composed/table/dialogs/ViewOrdersDialog';
+import {TableReservationDialog} from '@/components/composed/table/dialogs/TableReservationDialog';
+import {TablesSkeleton} from "@/components/composed/tables-skeleton.tsx";
 
 export default function Tables() {
     const {
@@ -55,7 +55,7 @@ export default function Tables() {
 
 
     if (isLoadingTables || isLoadingOrders) {
-        return <TablesSkeleton />;
+        return <TablesSkeleton/>;
     }
 
     if (isErrorTables || isErrorOrders) {
@@ -81,11 +81,11 @@ export default function Tables() {
                 <h1 className="text-2xl font-semibold tracking-tight">Order Table Wise</h1>
                 <div className="flex items-center gap-4">
                     <Button variant="outline" onClick={() => setTableManagementAction('merge')}>
-                        <Merge className="mr-2 h-4 w-4" />
+                        <Merge className="mr-2 h-4 w-4"/>
                         Merge Tables
                     </Button>
                     <Button onClick={() => setTableManagementAction('add')}>
-                        <Plus className="mr-2 h-4 w-4" />
+                        <Plus className="mr-2 h-4 w-4"/>
                         Add Table
                     </Button>
                 </div>
@@ -95,7 +95,7 @@ export default function Tables() {
                 <FilterDropdownContainer>
                     <Select value={filterStatus} onValueChange={setFilterStatus}>
                         <SelectTrigger className="w-[130px] sm:w-[180px]">
-                            <SelectValue placeholder="Filter by status" />
+                            <SelectValue placeholder="Filter by status"/>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Statuses</SelectItem>
@@ -108,7 +108,7 @@ export default function Tables() {
 
                     <Select value={filterCapacity} onValueChange={setFilterCapacity}>
                         <SelectTrigger className="w-[130px] sm:w-[180px]">
-                            <SelectValue placeholder="Filter by capacity" />
+                            <SelectValue placeholder="Filter by capacity"/>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Capacities</SelectItem>
@@ -120,7 +120,7 @@ export default function Tables() {
                 </FilterDropdownContainer>
 
                 <div className="relative w-full md:w-auto flex-1">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
                     <Input
                         placeholder="Search tables..."
                         value={searchQuery}
@@ -155,7 +155,7 @@ export default function Tables() {
                             className="mt-4"
                             onClick={() => setTableManagementAction('add')}
                         >
-                            <Plus className="mr-2 h-4 w-4" />
+                            <Plus className="mr-2 h-4 w-4"/>
                             Add Table
                         </Button>
                     </div>
@@ -166,8 +166,7 @@ export default function Tables() {
                 open={showOrderDialog}
                 onClose={() => {
                     setShowOrderDialog(false);
-                    setSelectedTableId(null);
-                    setSelectedOrder(null);
+
                 }}
                 table_id={selectedTableId || 0}
                 existingOrder={!isNewOrder ? selectedOrder : undefined}
@@ -179,7 +178,6 @@ export default function Tables() {
                     open={showPaymentDialog}
                     onClose={() => {
                         setShowPaymentDialog(false);
-                        setSelectedOrder(null);
                     }}
                     order={selectedOrder}
                 />
@@ -190,7 +188,6 @@ export default function Tables() {
                     open={showOrdersDialog}
                     onClose={() => {
                         setShowOrdersDialog(false);
-                        setSelectedTableId(null);
                     }}
                     tableId={selectedTableId}
                     onPayment={handleOrderPayment}

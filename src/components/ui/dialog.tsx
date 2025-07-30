@@ -28,10 +28,10 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
 const DialogContent = React.forwardRef<
     React.ElementRef<typeof DialogPrimitive.Content>,
-    React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { 
-        onClose?: () => void;
-        size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-    }
+    React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
+    onClose?: () => void;
+    size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+}
 >(({className, children, onClose, size = 'md', ...props}, ref) => {
     // Define size variants
     const sizeVariants = {
@@ -41,7 +41,7 @@ const DialogContent = React.forwardRef<
         xl: "max-w-xl", // 36rem (576px)
         full: "max-w-[95vw] sm:max-w-[90vw] md:max-w-[85vw] lg:max-w-[80vw]" // Responsive full width
     };
-    
+
     // Define height variants based on size
     const heightVariants = {
         sm: "max-h-[80vh]", // Smaller dialogs can be taller
@@ -50,7 +50,7 @@ const DialogContent = React.forwardRef<
         xl: "max-h-[90vh]", // Extra large dialogs
         full: "max-h-[90vh]" // Full-screen dialogs
     };
-    
+
     // Define padding variants based on size
     const paddingVariants = {
         sm: "p-4 sm:p-5", // Smaller padding for small dialogs
@@ -59,7 +59,7 @@ const DialogContent = React.forwardRef<
         xl: "p-4 sm:p-6", // Larger padding for extra large dialogs
         full: "p-3 sm:p-4" // Minimal padding for full-screen dialogs to maximize content space
     };
-    
+
     return (
         <DialogPortal>
             <DialogOverlay/>

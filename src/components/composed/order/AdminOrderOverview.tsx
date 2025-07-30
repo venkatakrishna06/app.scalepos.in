@@ -1,6 +1,5 @@
-
-import { AdminOrderOverview as AdminOrderOverviewComponent } from '@/components/composed/AdminOrderOverview';
-import { Order } from '@/types';
+import {AdminOrderOverview as AdminOrderOverviewComponent} from '@/components/composed/AdminOrderOverview';
+import {Order} from '@/types';
 
 interface AdminOrderOverviewProps {
     orders: Order[];
@@ -12,13 +11,13 @@ interface AdminOrderOverviewProps {
 }
 
 export function AdminOrderOverview({
-    orders,
-    onEditOrder,
-    onCancelOrder,
-    onRefreshOrders,
-    onUpdateOrderStatus,
-    onItemStatusChange
-}: AdminOrderOverviewProps) {
+                                       orders,
+                                       onEditOrder,
+                                       onCancelOrder,
+                                       onRefreshOrders,
+                                       onUpdateOrderStatus,
+                                       onItemStatusChange
+                                   }: AdminOrderOverviewProps) {
     return (
         <AdminOrderOverviewComponent
             orders={orders}

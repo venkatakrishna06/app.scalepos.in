@@ -1,6 +1,5 @@
 import {useState} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
-import {useAuthStore} from '@/lib/store/auth.store';
 import {Button} from '@/components/ui/button';
 import {Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
 import {Input} from "@/components/ui/input";
@@ -9,6 +8,7 @@ import {zodResolver} from "@hookform/resolvers/zod";
 import {z} from "zod";
 import {Building2, CreditCard, Loader2, Lock, Mail, MapPin, Phone} from 'lucide-react';
 import {toast} from '@/lib/toast';
+import {useAuthStore} from "@/lib/auth/auth.store.ts";
 
 const signupSchema = z.object({
     email: z.string()

@@ -1,14 +1,14 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useState } from 'react';
-import { ImageIcon, Loader2 } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from '@/lib/toast';
-import { Category } from "@/types";
+import {useForm} from "react-hook-form";
+import {zodResolver} from '@hookform/resolvers/zod';
+import {z} from 'zod';
+import {useState} from 'react';
+import {ImageIcon, Loader2} from 'lucide-react';
+import {Button} from "@/components/ui/button";
+import {Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
+import {Input} from "@/components/ui/input";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
+import {toast} from '@/lib/toast';
+import {Category} from "@/types";
 
 const menuItemSchema = z.object({
     name: z.string().min(1, 'Name is required'),
@@ -27,7 +27,7 @@ interface MenuItemFormProps {
     categories: Category[];
 }
 
-export function MenuItemForm({ onSubmit, initialData, isSubmitting, categories }: MenuItemFormProps) {
+export function MenuItemForm({onSubmit, initialData, isSubmitting, categories}: MenuItemFormProps) {
     const [imagePreviewUrl, setImagePreviewUrl] = useState(initialData?.image || '');
 
     const form = useForm<MenuItemFormData>({
@@ -59,13 +59,13 @@ export function MenuItemForm({ onSubmit, initialData, isSubmitting, categories }
                         <FormField
                             control={form.control}
                             name="name"
-                            render={({ field }) => (
+                            render={({field}) => (
                                 <FormItem>
                                     <FormLabel>Name</FormLabel>
                                     <FormControl>
                                         <Input placeholder="Enter item name" {...field} />
                                     </FormControl>
-                                    <FormMessage />
+                                    <FormMessage/>
                                 </FormItem>
                             )}
                         />
@@ -73,7 +73,7 @@ export function MenuItemForm({ onSubmit, initialData, isSubmitting, categories }
                         <FormField
                             control={form.control}
                             name="description"
-                            render={({ field }) => (
+                            render={({field}) => (
                                 <FormItem>
                                     <FormLabel>Description</FormLabel>
                                     <FormControl>
@@ -83,7 +83,7 @@ export function MenuItemForm({ onSubmit, initialData, isSubmitting, categories }
                                             className="flex min-h-[40px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                                         />
                                     </FormControl>
-                                    <FormMessage />
+                                    <FormMessage/>
                                 </FormItem>
                             )}
                         />
@@ -91,7 +91,7 @@ export function MenuItemForm({ onSubmit, initialData, isSubmitting, categories }
                         <FormField
                             control={form.control}
                             name="price"
-                            render={({ field }) => (
+                            render={({field}) => (
                                 <FormItem>
                                     <FormLabel>Price</FormLabel>
                                     <FormControl>
@@ -109,7 +109,7 @@ export function MenuItemForm({ onSubmit, initialData, isSubmitting, categories }
                                         </div>
                                     </FormControl>
                                     <FormDescription>Enter the price in rupees</FormDescription>
-                                    <FormMessage />
+                                    <FormMessage/>
                                 </FormItem>
                             )}
                         />
@@ -117,13 +117,13 @@ export function MenuItemForm({ onSubmit, initialData, isSubmitting, categories }
                         <FormField
                             control={form.control}
                             name="category_id"
-                            render={({ field }) => (
+                            render={({field}) => (
                                 <FormItem>
                                     <FormLabel>Category</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value?.toString()}>
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select a category" />
+                                                <SelectValue placeholder="Select a category"/>
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
@@ -136,7 +136,7 @@ export function MenuItemForm({ onSubmit, initialData, isSubmitting, categories }
                                                 ))}
                                         </SelectContent>
                                     </Select>
-                                    <FormMessage />
+                                    <FormMessage/>
                                 </FormItem>
                             )}
                         />
@@ -146,7 +146,7 @@ export function MenuItemForm({ onSubmit, initialData, isSubmitting, categories }
                         <FormField
                             control={form.control}
                             name="image"
-                            render={({ field }) => (
+                            render={({field}) => (
                                 <FormItem>
                                     <FormLabel>Image URL</FormLabel>
                                     <div className="mb-4 overflow-hidden rounded-lg border bg-background">
@@ -159,7 +159,7 @@ export function MenuItemForm({ onSubmit, initialData, isSubmitting, categories }
                                             />
                                         ) : (
                                             <div className="flex aspect-square items-center justify-center bg-muted">
-                                                <ImageIcon className="h-10 w-10 text-muted-foreground" />
+                                                <ImageIcon className="h-10 w-10 text-muted-foreground"/>
                                             </div>
                                         )}
                                     </div>
@@ -171,7 +171,7 @@ export function MenuItemForm({ onSubmit, initialData, isSubmitting, categories }
                                         />
                                     </FormControl>
 
-                                    <FormMessage />
+                                    <FormMessage/>
                                 </FormItem>
                             )}
                         />
@@ -179,7 +179,7 @@ export function MenuItemForm({ onSubmit, initialData, isSubmitting, categories }
                 </div>
 
                 <Button disabled={isSubmitting} type="submit" className="w-full">
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                     {initialData ? 'Update' : 'Create'} Menu Item
                 </Button>
             </form>

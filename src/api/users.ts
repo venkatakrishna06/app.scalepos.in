@@ -1,7 +1,7 @@
 // src/api/users.ts
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { userService } from '@/lib/api/services/user.service';
-import { User } from '@/types';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {userService} from '@/lib/api/services/user.service';
+import {User} from '@/types';
 
 const STALE_TIME = 1000 * 60 * 5; // 5 minutes
 const CACHE_TIME = 1000 * 60 * 60; // 1 hour
@@ -30,7 +30,7 @@ export const useCreateUser = () => {
     return useMutation({
         mutationFn: (user: Omit<User, 'id'>) => userService.createUser(user),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['users'] });
+            queryClient.invalidateQueries({queryKey: ['users']});
         },
     });
 };
@@ -38,9 +38,9 @@ export const useCreateUser = () => {
 export const useUpdateUser = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ id, user }: { id: number, user: Partial<User> }) => userService.updateUser(id, user),
+        mutationFn: ({id, user}: { id: number, user: Partial<User> }) => userService.updateUser(id, user),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['users'] });
+            queryClient.invalidateQueries({queryKey: ['users']});
         },
     });
 };
@@ -50,7 +50,7 @@ export const useDeleteUser = () => {
     return useMutation({
         mutationFn: (id: number) => userService.deleteUser(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['users'] });
+            queryClient.invalidateQueries({queryKey: ['users']});
         },
     });
 };

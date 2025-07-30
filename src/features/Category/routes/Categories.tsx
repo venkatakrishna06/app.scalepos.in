@@ -1,15 +1,13 @@
-
-import { AlertCircle, Edit2, FolderTree, Loader2, Plus, Search, Trash2 } from 'lucide-react';
-import { CategoriesSkeleton } from '@/components/skeletons/categories-skeleton';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
-import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from '@/components/ui/badge';
-import { useCategoriesPage } from '@/hooks/useCategoriesPage';
+import {AlertCircle, Edit2, FolderTree, Loader2, Plus, Search, Trash2} from 'lucide-react';
+import {CategoriesSkeleton} from '@/components/skeletons/categories-skeleton';
+import {Button} from '@/components/ui/button';
+import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle} from '@/components/ui/dialog';
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
+import {Input} from "@/components/ui/input";
+import {Card, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
+import {Badge} from '@/components/ui/badge';
+import {useCategoriesPage} from '@/hooks/useCategoriesPage';
 
 export default function Categories() {
     const {
@@ -38,14 +36,14 @@ export default function Categories() {
     } = useCategoriesPage();
 
     if (isLoading) {
-        return <CategoriesSkeleton />;
+        return <CategoriesSkeleton/>;
     }
 
     if (isError) {
         return (
             <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
                 <div className="text-center">
-                    <AlertCircle className="mx-auto h-10 w-10 text-destructive" />
+                    <AlertCircle className="mx-auto h-10 w-10 text-destructive"/>
                     <p className="mt-4 text-lg font-semibold text-destructive">{error?.message || 'An error occurred'}</p>
                     <Button
                         variant="outline"
@@ -71,7 +69,7 @@ export default function Categories() {
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     <Button onClick={() => openNewDialog()}>
-                        <Plus className="mr-2 h-4 w-4" />
+                        <Plus className="mr-2 h-4 w-4"/>
                         Add Category
                     </Button>
                 </div>
@@ -79,7 +77,7 @@ export default function Categories() {
 
             <div className="flex flex-col gap-4 md:flex-row md:items-center">
                 <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
                     <Input
                         placeholder="Search categories..."
                         value={searchQuery}
@@ -93,7 +91,7 @@ export default function Categories() {
                     onValueChange={setCategoryTypeFilter}
                 >
                     <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Category Type" />
+                        <SelectValue placeholder="Category Type"/>
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Categories</SelectItem>
@@ -107,7 +105,7 @@ export default function Categories() {
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {filteredCategories.length === 0 ? (
                         <div className="col-span-full rounded-lg border border-dashed p-8 text-center">
-                            <FolderTree className="mx-auto h-8 w-8 text-muted-foreground" />
+                            <FolderTree className="mx-auto h-8 w-8 text-muted-foreground"/>
                             <h3 className="mt-2 text-lg font-semibold">No Categories Found</h3>
                             <p className="mt-1 text-sm text-muted-foreground">
                                 {categoryTypeFilter === 'main' ? 'No main categories found.' :
@@ -119,7 +117,7 @@ export default function Categories() {
                                 className="mt-4"
                                 onClick={() => openNewDialog()}
                             >
-                                <Plus className="mr-2 h-4 w-4" />
+                                <Plus className="mr-2 h-4 w-4"/>
                                 Add Category
                             </Button>
                         </div>
@@ -155,7 +153,7 @@ export default function Categories() {
                                             onClick={() => openEditDialog(category)}
                                             disabled={createCategoryMutation.isLoading || updateCategoryMutation.isLoading || deleteCategoryMutation.isLoading}
                                         >
-                                            <Edit2 className="mr-2 h-4 w-4" />
+                                            <Edit2 className="mr-2 h-4 w-4"/>
                                             Edit
                                         </Button>
                                         <Button
@@ -164,7 +162,7 @@ export default function Categories() {
                                             onClick={() => handleDelete(category.id)}
                                             disabled={createCategoryMutation.isLoading || updateCategoryMutation.isLoading || deleteCategoryMutation.isLoading}
                                         >
-                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            <Trash2 className="mr-2 h-4 w-4"/>
                                             Delete
                                         </Button>
                                     </CardFooter>
@@ -196,13 +194,13 @@ export default function Categories() {
                             <FormField
                                 control={form.control}
                                 name="name"
-                                render={({ field }) => (
+                                render={({field}) => (
                                     <FormItem>
                                         <FormLabel>Name</FormLabel>
                                         <FormControl>
                                             <Input placeholder="Enter category name" {...field} />
                                         </FormControl>
-                                        <FormMessage />
+                                        <FormMessage/>
                                     </FormItem>
                                 )}
                             />
@@ -210,7 +208,7 @@ export default function Categories() {
                             <FormField
                                 control={form.control}
                                 name="parent_category_id"
-                                render={({ field }) => (
+                                render={({field}) => (
                                     <FormItem>
                                         <FormLabel>Main Category</FormLabel>
                                         <FormControl>
@@ -230,7 +228,7 @@ export default function Categories() {
                                                 ))}
                                             </select>
                                         </FormControl>
-                                        <FormMessage />
+                                        <FormMessage/>
                                     </FormItem>
                                 )}
                             />
@@ -248,10 +246,11 @@ export default function Categories() {
                                 >
                                     Cancel
                                 </Button>
-                                <Button type="submit" disabled={createCategoryMutation.isLoading || updateCategoryMutation.isLoading}>
+                                <Button type="submit"
+                                        disabled={createCategoryMutation.isLoading || updateCategoryMutation.isLoading}>
                                     {createCategoryMutation.isLoading || updateCategoryMutation.isLoading ? (
                                         <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
                                             {editingCategory ? 'Updating...' : 'Creating...'}
                                         </>
                                     ) : (

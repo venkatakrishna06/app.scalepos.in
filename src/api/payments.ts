@@ -1,7 +1,7 @@
 // src/api/payments.ts
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { paymentService } from '@/lib/api/services/payment.service';
-import { Payment } from '@/types';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {paymentService} from '@/lib/api/services/payment.service';
+import {Payment} from '@/types';
 
 const STALE_TIME = 1000 * 60 * 5; // 5 minutes
 const CACHE_TIME = 1000 * 60 * 60; // 1 hour
@@ -20,7 +20,7 @@ export const useCreatePayment = () => {
     return useMutation({
         mutationFn: (payment: Omit<Payment, 'id'>) => paymentService.createPayment(payment),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['payments'] });
+            queryClient.invalidateQueries({queryKey: ['payments']});
         },
     });
 };
@@ -28,16 +28,19 @@ export const useCreatePayment = () => {
 export const useUpdatePayment = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ id, payment }: { id: number, payment: Partial<Payment> }) => paymentService.updatePayment(id, payment),
+        mutationFn: ({id, payment}: {
+            id: number,
+            payment: Partial<Payment>
+        }) => paymentService.updatePayment(id, payment),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['payments'] });
+            queryClient.invalidateQueries({queryKey: ['payments']});
         },
     });
 };
 
 export const usePaymentsByOrder = (orderId: number) => {
     return useQuery({
-        queryKey: ['payments', { orderId }],
+        queryKey: ['payments', {orderId}],
         queryFn: () => paymentService.getPaymentsByOrder(orderId),
         staleTime: STALE_TIME,
         gcTime: CACHE_TIME,

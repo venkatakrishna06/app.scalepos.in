@@ -1,16 +1,16 @@
-import { ReactNode } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuthStore } from '@/lib/auth/auth.store';
-import { usePermissions } from '@/hooks/usePermissions';
+import {ReactNode} from 'react';
+import {Navigate, useLocation} from 'react-router-dom';
+import {useAuthStore} from '@/lib/auth/auth.store';
+import {usePermissions} from '@/hooks/usePermissions';
 
 interface RoleBasedRouteProps {
     children: ReactNode;
     requiredPermission: string;
 }
 
-export const RoleBasedRoute = ({ children, requiredPermission }: RoleBasedRouteProps) => {
-    const { isAuthenticated, loading } = useAuthStore();
-    const { hasPermission } = usePermissions();
+export const RoleBasedRoute = ({children, requiredPermission}: RoleBasedRouteProps) => {
+    const {isAuthenticated, loading} = useAuthStore();
+    const {hasPermission} = usePermissions();
     const location = useLocation();
 
     if (loading) {
@@ -18,11 +18,11 @@ export const RoleBasedRoute = ({ children, requiredPermission }: RoleBasedRouteP
     }
 
     if (!isAuthenticated) {
-        return <Navigate to="/login" state={{ from: location }} replace />;
+        return <Navigate to="/login" state={{from: location}} replace/>;
     }
 
     if (!hasPermission(requiredPermission)) {
-        return <Navigate to="/unauthorized" replace />;
+        return <Navigate to="/unauthorized" replace/>;
     }
 
     return <>{children}</>;

@@ -1,19 +1,19 @@
-import { ReactNode, useEffect, useState } from 'react';
+import {ReactNode, useEffect, useState} from 'react';
 import Sidebar from './sidebar';
 import Navbar from './navbar';
-import { MobileNav } from './MobileNav';
-import { cn } from '@/lib/utils';
-import { useWebSocket } from '@/hooks';
-import { useAuthStore } from '@/lib/auth/auth.store';
+import {MobileNav} from './MobileNav';
+import {cn} from '@/lib/utils';
+import {useWebSocket} from '@/hooks';
+import {useAuthStore} from '@/lib/auth/auth.store';
 
 interface LayoutProps {
     children: ReactNode;
 }
 
-export default function Layout({ children }: LayoutProps) {
+export default function Layout({children}: LayoutProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
-    const { isAuthenticated } = useAuthStore();
+    const {isAuthenticated} = useAuthStore();
     useWebSocket();
 
     useEffect(() => {
@@ -54,7 +54,7 @@ export default function Layout({ children }: LayoutProps) {
                         ? "lg:w-44 xl:w-52 w-[280px] translate-x-0 shadow-xl"
                         : "w-[280px] -translate-x-full lg:w-0 lg:translate-x-0"
                 )}>
-                    <Sidebar closeSidebar={toggleSidebar} />
+                    <Sidebar closeSidebar={toggleSidebar}/>
                 </div>
 
                 <main className={cn(
@@ -72,7 +72,7 @@ export default function Layout({ children }: LayoutProps) {
             </div>
 
             {isMobile && (
-                <MobileNav />
+                <MobileNav/>
             )}
         </div>
     );

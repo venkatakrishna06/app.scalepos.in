@@ -1,9 +1,8 @@
-
-import { Calendar, CreditCard, Search } from 'lucide-react';
-import { PaymentsSkeleton } from '@/components/skeletons/payments-skeleton';
-import { Button } from '@/components/ui/button';
-import { format } from 'date-fns';
-import { usePaymentsPage } from '@/hooks/usePaymentsPage';
+import {Calendar, CreditCard, Search} from 'lucide-react';
+import {PaymentsSkeleton} from '@/components/skeletons/payments-skeleton';
+import {Button} from '@/components/ui/button';
+import {format} from 'date-fns';
+import {usePaymentsPage} from '@/hooks/usePaymentsPage';
 
 export default function Payments() {
     const {
@@ -21,7 +20,7 @@ export default function Payments() {
 
 
     if (paymentsLoading || ordersLoading) {
-        return <PaymentsSkeleton />;
+        return <PaymentsSkeleton/>;
     }
 
     if (paymentsError || ordersError) {
@@ -48,7 +47,7 @@ export default function Payments() {
                 <h1 className="text-2xl font-semibold">Payment History</h1>
                 <div className="flex items-center gap-4">
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
                         <input
                             type="text"
                             placeholder="Search by order, table, method..."
@@ -58,7 +57,7 @@ export default function Payments() {
                         />
                     </div>
                     <Button variant="outline">
-                        <Calendar className="mr-2 h-4 w-4" />
+                        <Calendar className="mr-2 h-4 w-4"/>
                         Filter by Date
                     </Button>
                 </div>
@@ -68,42 +67,43 @@ export default function Payments() {
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
-                            <tr className="border-b bg-muted/50">
-                                <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Order ID</th>
-                                <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Table</th>
-                                <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Amount</th>
-                                <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Method</th>
-                                <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Date</th>
-                                <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
-                            </tr>
+                        <tr className="border-b bg-muted/50">
+                            <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Order ID</th>
+                            <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Table</th>
+                            <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Amount</th>
+                            <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Method</th>
+                            <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Date</th>
+                            <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            {filteredPayments.map((payment) => {
-                                const order = getOrderDetails(payment.order_id);
-                                return (
-                                    <tr key={payment.id} className="border-b">
-                                        <td className="px-6 py-4 font-medium">Order #{payment.order_id}</td>
-                                        <td className="px-6 py-4 font-medium">
-                                            {order?.order_type === 'dine-in' ? `Table ${order.table?.table_number}` : order?.order_type === 'takeaway' ? 'Takeaway' : 'Quick Bill'}
-                                        </td>
-                                        <td className="px-6 py-4 font-medium">₹{payment.amount_paid.toFixed(2)}</td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                <CreditCard className="h-4 w-4 text-muted-foreground" />
-                                                {payment.payment_method.charAt(0).toUpperCase() + payment.payment_method.slice(1)}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-muted-foreground">
-                                            {format(new Date(payment.paid_at), 'yyyy-MM-dd HH:mm')}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
+                        {filteredPayments.map((payment) => {
+                            const order = getOrderDetails(payment.order_id);
+                            return (
+                                <tr key={payment.id} className="border-b">
+                                    <td className="px-6 py-4 font-medium">Order #{payment.order_id}</td>
+                                    <td className="px-6 py-4 font-medium">
+                                        {order?.order_type === 'dine-in' ? `Table ${order.table?.table_number}` : order?.order_type === 'takeaway' ? 'Takeaway' : 'Quick Bill'}
+                                    </td>
+                                    <td className="px-6 py-4 font-medium">₹{payment.amount_paid.toFixed(2)}</td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                            <CreditCard className="h-4 w-4 text-muted-foreground"/>
+                                            {payment.payment_method.charAt(0).toUpperCase() + payment.payment_method.slice(1)}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-sm text-muted-foreground">
+                                        {format(new Date(payment.paid_at), 'yyyy-MM-dd HH:mm')}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                            <span
+                                                className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
                                                 {payment.status?.charAt(0).toUpperCase() + payment.status?.slice(1) || 'Completed'}
                                             </span>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
+                                    </td>
+                                </tr>
+                            );
+                        })}
                         </tbody>
                     </table>
                 </div>

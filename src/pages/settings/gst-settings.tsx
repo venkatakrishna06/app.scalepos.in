@@ -1,18 +1,36 @@
-import { useState } from 'react';
-import { RestaurantGstRates } from './gst/restaurant-rates';
-import { CategoryGstSettings } from './gst/category-settings';
-import { MenuItemGstSettings } from './gst/menu-item-settings';
-import { AlertCircle, Loader2, Percent, RefreshCw } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { useRestaurant } from '@/api/restaurant';
-import { useMenuItems, useCategories } from '@/api/menu';
+import {useState} from 'react';
+import {RestaurantGstRates} from './gst/restaurant-rates';
+import {CategoryGstSettings} from './gst/category-settings';
+import {MenuItemGstSettings} from './gst/menu-item-settings';
+import {AlertCircle, Loader2, Percent, RefreshCw} from 'lucide-react';
+import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
+import {Alert, AlertDescription} from '@/components/ui/alert';
+import {Button} from '@/components/ui/button';
+import {useRestaurant} from '@/api/restaurant';
+import {useCategories, useMenuItems} from '@/api/menu';
 
 export default function GstSettings() {
-    const { data: restaurant, isLoading: isLoadingRestaurant, isError: isErrorRestaurant, error: restaurantError, refetch: refetchRestaurant } = useRestaurant();
-    const { data: menuItems = [], isLoading: isLoadingMenuItems, isError: isErrorMenuItems, error: menuItemsError, refetch: refetchMenuItems } = useMenuItems();
-    const { data: categories = [], isLoading: isLoadingCategories, isError: isErrorCategories, error: categoriesError, refetch: refetchCategories } = useCategories();
+    const {
+        data: restaurant,
+        isLoading: isLoadingRestaurant,
+        isError: isErrorRestaurant,
+        error: restaurantError,
+        refetch: refetchRestaurant
+    } = useRestaurant();
+    const {
+        data: menuItems = [],
+        isLoading: isLoadingMenuItems,
+        isError: isErrorMenuItems,
+        error: menuItemsError,
+        refetch: refetchMenuItems
+    } = useMenuItems();
+    const {
+        data: categories = [],
+        isLoading: isLoadingCategories,
+        isError: isErrorCategories,
+        error: categoriesError,
+        refetch: refetchCategories
+    } = useCategories();
     const [activeTab, setActiveTab] = useState('categories');
 
     const isLoading = isLoadingRestaurant || isLoadingMenuItems || isLoadingCategories;
@@ -29,7 +47,7 @@ export default function GstSettings() {
         return (
             <div className="flex h-64 items-center justify-center">
                 <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <Loader2 className="h-8 w-8 animate-spin text-primary"/>
                     <span className="text-lg text-muted-foreground">Loading GST settings...</span>
                 </div>
             </div>
@@ -41,7 +59,7 @@ export default function GstSettings() {
             <div className="mb-6">
                 <div className="flex items-center gap-2 mb-2">
                     <div className="p-1.5 bg-primary/10 rounded-full">
-                        <Percent className="h-5 w-5 text-primary" />
+                        <Percent className="h-5 w-5 text-primary"/>
                     </div>
                     <h2 className="text-2xl font-bold tracking-tight">GST Settings</h2>
                 </div>
@@ -52,7 +70,7 @@ export default function GstSettings() {
 
             {isError && (
                 <Alert variant="destructive" className="mb-6">
-                    <AlertCircle className="h-4 w-4" />
+                    <AlertCircle className="h-4 w-4"/>
                     <AlertDescription>{error?.message || 'Failed to load GST settings. Please try again.'}</AlertDescription>
                 </Alert>
             )}
@@ -65,7 +83,7 @@ export default function GstSettings() {
                     disabled={isLoading}
                     className="flex items-center gap-1"
                 >
-                    <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                    <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}/>
                     Refresh Data
                 </Button>
             </div>

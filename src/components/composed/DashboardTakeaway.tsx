@@ -1,33 +1,14 @@
-import { memo, useCallback, useEffect, useMemo, useState, useRef } from 'react';
-import {
-    AlertCircle,
-    ChevronDown,
-    ChevronRight,
-    Info,
-    Loader2,
-    Menu as MenuIcon,
-    Minus,
-    Pencil,
-    Plus,
-    Search,
-    ShoppingCart,
-    Star,
-    X
-} from 'lucide-react';
-import { TakeawaySkeleton } from '@/components/skeletons/takeaway-skeleton';
-import { Button } from '@/components/ui/button';
-import { MenuItem, Order, OrderItem } from '@/types';
-import { cn, debounce } from '@/lib/utils';
-import { useAuthStore } from "@/lib/store/auth.store";
-import { toast } from '@/lib/toast';
-import { Card } from '@/components/ui/card';
-import { motion } from 'framer-motion';
-import { useMenuItems, useCategories } from '@/api/menu';
-import { useCreateOrder, useUpdateOrderStatus } from '@/api/orders';
-import { useCreatePayment } from '@/api/payments';
-import { useRestaurant } from '@/api/restaurant';
-import { usePrinterConfig } from '@/api/printers';
-import { MenuItemAnalytics } from '@/types/analytics';
+import {memo, useCallback, useMemo, useState} from 'react';
+import {TakeawaySkeleton} from '@/components/skeletons/takeaway-skeleton';
+import {OrderItem} from '@/types';
+import {useAuthStore} from "@/lib/store/auth.store";
+import {toast} from '@/lib/toast';
+import {useCategories, useMenuItems} from '@/api/menu';
+import {useCreateOrder, useUpdateOrderStatus} from '@/api/orders';
+import {useCreatePayment} from '@/api/payments';
+import {useRestaurant} from '@/api/restaurant';
+import {usePrinterConfig} from '@/api/printers';
+import {MenuItemAnalytics} from '@/types/analytics';
 
 // ... (ESCPOS constants and helper functions remain the same)
 
@@ -37,9 +18,9 @@ interface DashboardTakeawayProps {
 }
 
 const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
-    onOrderCreated,
-    type
-}) => {
+                                                                          onOrderCreated,
+                                                                          type
+                                                                      }) => {
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -54,40 +35,40 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
     const [cashGiven, setCashGiven] = useState<string>('');
     const [showTaxDetails, setShowTaxDetails] = useState(false);
 
-    const { data: menuItems = [], isLoading: menuItemsLoading } = useMenuItems();
-    const { data: categories = [], isLoading: categoriesLoading } = useCategories();
-    const { data: restaurant } = useRestaurant();
-    const { data: printerConfig } = usePrinterConfig();
+    const {data: menuItems = [], isLoading: menuItemsLoading} = useMenuItems();
+    const {data: categories = [], isLoading: categoriesLoading} = useCategories();
+    const {data: restaurant} = useRestaurant();
+    const {data: printerConfig} = usePrinterConfig();
     const createOrderMutation = useCreateOrder();
     const createPaymentMutation = useCreatePayment();
     const updateOrderStatusMutation = useUpdateOrderStatus();
-    const { user } = useAuthStore();
+    const {user} = useAuthStore();
 
     // ... (useEffect for sidebar, fetch favourites, etc. remain the same)
 
     const mainCategories = useMemo(() =>
-        categories.filter(cat => !cat.parent_category_id),
+            categories.filter(cat => !cat.parent_category_id),
         [categories]);
 
     const subCategoriesByParent = useMemo(() =>
-        categories.reduce((acc, cat) => {
-            if (cat.parent_category_id) {
-                if (!acc[cat.parent_category_id]) {
-                    acc[cat.parent_category_id] = [];
+            categories.reduce((acc, cat) => {
+                if (cat.parent_category_id) {
+                    if (!acc[cat.parent_category_id]) {
+                        acc[cat.parent_category_id] = [];
+                    }
+                    acc[cat.parent_category_id].push(cat);
                 }
-                acc[cat.parent_category_id].push(cat);
-            }
-            return acc;
-        }, {} as Record<number, typeof categories>),
+                return acc;
+            }, {} as Record<number, typeof categories>),
         [categories]);
 
     const initialExpandedState = useMemo(() =>
-        mainCategories.reduce((acc, category) => {
-            if (subCategoriesByParent[category.id]) {
-                acc[category.id] = true;
-            }
-            return acc;
-        }, {} as Record<number, boolean>),
+            mainCategories.reduce((acc, category) => {
+                if (subCategoriesByParent[category.id]) {
+                    acc[category.id] = true;
+                }
+                return acc;
+            }, {} as Record<number, boolean>),
         [mainCategories, subCategoriesByParent]);
 
     const [expandedCategories, setExpandedCategories] = useState<Record<number, boolean>>(initialExpandedState);
@@ -118,7 +99,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
     // ... (handleQuantityChange, getItemQuantity, handleEditNote, handleSaveNote remain the same)
 
     const totalItems = useMemo(() =>
-        orderItems.reduce((sum, item) => sum + item.quantity, 0),
+            orderItems.reduce((sum, item) => sum + item.quantity, 0),
         [orderItems]);
 
     const calculateOrderTotals = (items: OrderItem[]) => {
@@ -143,7 +124,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
     };
 
     const gstDetails = useMemo(() => {
-        const { subTotal, sgstAmount, cgstAmount, totalAmount } = calculateOrderTotals(orderItems);
+        const {subTotal, sgstAmount, cgstAmount, totalAmount} = calculateOrderTotals(orderItems);
         return {
             subTotal,
             sgstAmount,
@@ -205,7 +186,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
             };
 
             await createPaymentMutation.mutateAsync(payment);
-            await updateOrderStatusMutation.mutateAsync({ id: createdOrder.id, status: 'paid' });
+            await updateOrderStatusMutation.mutateAsync({id: createdOrder.id, status: 'paid'});
 
             // handlePrintBill(createdOrder);
             toast.success('Order placed and payment completed successfully');
@@ -227,7 +208,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({
     }, [orderItems, user, type, paymentMethod, gstDetails, createOrderMutation, createPaymentMutation, updateOrderStatusMutation, onOrderCreated]);
 
     if (menuItemsLoading || categoriesLoading) {
-        return <TakeawaySkeleton type={type as 'takeaway' | 'quick-bill'} />;
+        return <TakeawaySkeleton type={type as 'takeaway' | 'quick-bill'}/>;
     }
 
     return (

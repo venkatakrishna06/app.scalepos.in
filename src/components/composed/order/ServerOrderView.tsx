@@ -1,7 +1,6 @@
-
-import { ServerOrderView as ServerOrderViewComponent } from '@/components/composed/ServerOrderView';
-import { Order } from '@/types';
-import { toast } from '@/lib/toast';
+import {ServerOrderView as ServerOrderViewComponent} from '@/components/composed/ServerOrderView';
+import {Order} from '@/types';
+import {toast} from '@/lib/toast';
 
 interface ServerOrderViewProps {
     orders: Order[];
@@ -11,11 +10,11 @@ interface ServerOrderViewProps {
 }
 
 export function ServerOrderView({
-    orders,
-    currentServer,
-    onMarkItemAsServed,
-    onMarkOrderAsPaid
-}: ServerOrderViewProps) {
+                                    orders,
+                                    currentServer,
+                                    onMarkItemAsServed,
+                                    onMarkOrderAsPaid
+                                }: ServerOrderViewProps) {
     return (
         <ServerOrderViewComponent
             orders={orders}

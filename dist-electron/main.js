@@ -1,4 +1,4 @@
-import { app, ipcMain, BrowserWindow } from "electron";
+import { app, BrowserWindow } from "electron";
 import path from "path";
 import url, { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
@@ -9,8 +9,6 @@ function createWindow() {
     width: 1200,
     height: 800,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
       preload: path.join(__dirname, "preload.js")
     },
     icon: path.join(__dirname, "../public/vite.svg")
@@ -42,7 +40,4 @@ app.whenReady().then(() => {
 });
 app.on("window-all-closed", function() {
   if (process.platform !== "darwin") app.quit();
-});
-ipcMain.on("app-ready", (event) => {
-  console.log("App is ready");
 });

@@ -1,10 +1,12 @@
 # Restaurant Management System - Desktop Application
 
-This document provides instructions on how to run and build the Restaurant Management System as a desktop application using Electron.
+This document provides instructions on how to run and build the Restaurant Management System as a desktop application
+using Electron.
 
 ## Prerequisites
 
 Before you begin, ensure you have the following installed:
+
 - [Node.js](https://nodejs.org/) (v14 or later)
 - npm (usually comes with Node.js)
 
@@ -22,7 +24,8 @@ To run the application in development mode:
    npm run electron:dev
    ```
 
-   This command will start both the Vite development server and Electron. Any changes you make to the code will be hot-reloaded.
+   This command will start both the Vite development server and Electron. Any changes you make to the code will be
+   hot-reloaded.
 
 ## Building the Application
 
@@ -95,4 +98,6 @@ If you encounter any issues:
 
 ## API Configuration
 
-The application connects to the backend API specified in the `.env` file. By default, it connects to `http://localhost:8080`. If your API is running on a different URL, update the `VITE_API_URL` variable in the `.env` file.
+The application connects to the backend API specified in the `.env` file. By default, it connects to
+`http://localhost:8080`. If your API is running on a different URL, update the `VITE_API_URL` variable in the `.env`
+file.

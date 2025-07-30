@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { Bell } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { Notification } from '@/types';
+import {useState} from 'react';
+import {Bell} from 'lucide-react';
+import {formatDistanceToNow} from 'date-fns';
+import {Notification} from '@/types';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -9,13 +9,13 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
-import { useNotifications, useMarkAsRead, useMarkAllAsRead, useClearNotifications } from '@/api/notifications';
+import {Button} from '@/components/ui/button';
+import {useNavigate} from 'react-router-dom';
+import {useClearNotifications, useMarkAllAsRead, useMarkAsRead, useNotifications} from '@/api/notifications';
 
 export function NotificationDropdown() {
     const navigate = useNavigate();
-    const { data: notifications = [] } = useNotifications();
+    const {data: notifications = []} = useNotifications();
     const markAsReadMutation = useMarkAsRead();
     const markAllAsReadMutation = useMarkAllAsRead();
     const clearNotificationsMutation = useClearNotifications();
@@ -47,7 +47,7 @@ export function NotificationDropdown() {
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-5 w-5" />
+                    <Bell className="h-5 w-5"/>
                     {unreadCount > 0 && (
                         <span
                             className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
@@ -60,16 +60,17 @@ export function NotificationDropdown() {
                 <div className="flex justify-between items-center p-2">
                     <h3 className="font-semibold">Notifications</h3>
                     <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => markAllAsReadMutation.mutate()} disabled={unreadCount === 0}>
+                        <Button variant="ghost" size="sm" onClick={() => markAllAsReadMutation.mutate()}
+                                disabled={unreadCount === 0}>
                             Mark all read
                         </Button>
                         <Button variant="ghost" size="sm" onClick={() => clearNotificationsMutation.mutate()}
-                            disabled={notifications.length === 0}>
+                                disabled={notifications.length === 0}>
                             Clear all
                         </Button>
                     </div>
                 </div>
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator/>
 
                 {recentNotifications.length === 0 ? (
                     <div className="p-4 text-center text-muted-foreground">
@@ -86,7 +87,7 @@ export function NotificationDropdown() {
                                 <div className="flex justify-between items-start">
                                     <span className="font-medium">{notification.message}</span>
                                     <span className="text-xs text-muted-foreground">
-                                        {formatDistanceToNow(notification.timestamp, { addSuffix: true })}
+                                        {formatDistanceToNow(notification.timestamp, {addSuffix: true})}
                                     </span>
                                 </div>
                                 {notification.details && (

@@ -1,5 +1,5 @@
 // src/api/notifications.ts
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 
 const STALE_TIME = 1000 * 60 * 1; // 1 minute
 const CACHE_TIME = 1000 * 60 * 5; // 5 minutes
@@ -54,7 +54,7 @@ export const useMarkAsRead = () => {
     return useMutation({
         mutationFn: (id: number) => markAsRead(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['notifications'] });
+            queryClient.invalidateQueries({queryKey: ['notifications']});
         },
     });
 };
@@ -64,7 +64,7 @@ export const useMarkAllAsRead = () => {
     return useMutation({
         mutationFn: () => markAllAsRead(),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['notifications'] });
+            queryClient.invalidateQueries({queryKey: ['notifications']});
         },
     });
 };
@@ -74,7 +74,7 @@ export const useClearNotifications = () => {
     return useMutation({
         mutationFn: () => clearNotifications(),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['notifications'] });
+            queryClient.invalidateQueries({queryKey: ['notifications']});
         },
     });
 };

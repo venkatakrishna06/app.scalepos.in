@@ -1,13 +1,14 @@
 import React from 'react';
 import {SuspenseWrapper} from '@/components/suspense/SuspenseWrapper';
 import {ErrorCategory, errorService} from '@/lib/services/error.service';
-import {TablesSkeleton} from '@/components/skeletons/tables-skeleton';
-import {OrdersSkeleton} from '@/components/skeletons/orders-skeleton';
-import {MenuSkeleton} from '@/components/skeletons/menu-skeleton';
-import {CategoriesSkeleton} from '@/components/skeletons/categories-skeleton';
-import {StaffSkeleton} from '@/components/skeletons/staff-skeleton';
-import {PaymentsSkeleton} from '@/components/skeletons/payments-skeleton';
-import {UserManagementSkeleton} from '@/components/skeletons/user-management-skeleton';
+import {TablesSkeleton} from "@/components/composed/tables-skeleton.tsx";
+import {OrdersSkeleton} from "@/components/composed/orders-skeleton.tsx";
+import {MenuSkeleton} from "@/components/composed/menu-skeleton.tsx";
+import {CategoriesSkeleton} from "@/components/composed/categories-skeleton.tsx";
+import {StaffSkeleton} from "@/components/composed/staff-skeleton.tsx";
+import {PaymentsSkeleton} from "@/components/composed/payments-skeleton.tsx";
+import {UserManagementSkeleton} from "@/components/composed/user-management-skeleton.tsx";
+
 
 // Lazy load pages to reduce initial bundle size
 const Dashboard = React.lazy(() => import('@/pages/dashboard'));

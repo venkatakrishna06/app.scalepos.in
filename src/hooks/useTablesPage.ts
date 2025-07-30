@@ -1,15 +1,24 @@
-
-import { useState, useMemo } from 'react';
-import { useTables, useDeleteTable, useUpdateTable } from '@/api/tables';
-import { useOrders } from '@/api/orders';
-import { Order, Table } from '@/types';
-import { toast } from '@/lib/toast';
+import {useMemo, useState} from 'react';
+import {useDeleteTable, useTables, useUpdateTable} from '@/api/tables';
+import {useOrders} from '@/api/orders';
+import {Order, Table} from '@/types';
+import {toast} from '@/lib/toast';
 
 export const useTablesPage = () => {
-    const { data: tables = [], isLoading: isLoadingTables, isError: isErrorTables, error: tablesErrorMessage } = useTables();
+    const {
+        data: tables = [],
+        isLoading: isLoadingTables,
+        isError: isErrorTables,
+        error: tablesErrorMessage
+    } = useTables();
     const deleteTableMutation = useDeleteTable();
     const updateTableMutation = useUpdateTable();
-    const { data: orders = [], isLoading: isLoadingOrders, isError: isErrorOrders, error: ordersErrorMessage } = useOrders();
+    const {
+        data: orders = [],
+        isLoading: isLoadingOrders,
+        isError: isErrorOrders,
+        error: ordersErrorMessage
+    } = useOrders();
 
     const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -98,7 +107,7 @@ export const useTablesPage = () => {
 
     const handleStatusChange = async (tableId: number, status: Table['status']) => {
         try {
-            await updateTableMutation.mutateAsync({ id: tableId, table: { status } });
+            await updateTableMutation.mutateAsync({id: tableId, table: {status}});
             toast.success(`Table status updated to ${status}`);
         } catch (err) {
             toast.error(`Failed to update table status to ${status}`, {
