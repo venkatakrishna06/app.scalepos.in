@@ -1,6 +1,7 @@
 import {app, BrowserWindow, ipcMain} from 'electron';
 import path from 'path';
 import url, {fileURLToPath} from 'url';
+import './logger.service';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,8 +15,6 @@ function createWindow() {
     width: 1200,
     height: 800,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
       preload: path.join(__dirname, 'preload.js')
     },
     icon: path.join(__dirname, '../public/vite.svg')
@@ -62,9 +61,4 @@ app.whenReady().then(() => {
 // Quit when all windows are closed, except on macOS
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit();
-});
-
-// Handle IPC messages from renderer process
-ipcMain.on('app-ready', (event) => {
-  console.log('App is ready');
 });

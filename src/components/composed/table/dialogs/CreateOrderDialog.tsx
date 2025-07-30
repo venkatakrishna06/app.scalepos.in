@@ -6,7 +6,7 @@ interface CreateOrderDialogProps {
     open: boolean;
     onClose: () => void;
     table_id: number;
-    existingOrder?: Order;
+    existingOrder?: Order; 
 }
 
 export function CreateOrderDialog({

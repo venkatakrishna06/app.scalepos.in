@@ -40,10 +40,10 @@ export const authService = {
         }
     },
 
-    refreshToken: async () => {
+    refreshToken: async (refreshToken: string) => {
         try {
             logger.info('Attempting to refresh token.');
-            const response = await api.post<AuthResponse>(API_ENDPOINTS.AUTH.REFRESH, {});
+            const response = await api.post<AuthResponse>(API_ENDPOINTS.AUTH.REFRESH, { refreshToken });
             logger.info('Token refreshed successfully.');
             return response.data;
         } catch (error) {

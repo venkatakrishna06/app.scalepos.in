@@ -1,10 +1,10 @@
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/lib/auth/auth.store';
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { tokenService } from '@/lib/services/token.service';
-import { tokenBlacklistService } from '@/lib/services/token-blacklist.service';
+import {Navigate, useLocation, useNavigate} from 'react-router-dom';
+import {useAuthStore} from '@/lib/auth/auth.store';
+import {useCallback, useEffect, useRef, useState} from 'react';
+import {tokenService} from '@/lib/services/token.service';
+import {tokenBlacklistService} from '@/lib/services/token-blacklist.service';
 import logger from '@/lib/services/logger.service';
-import { useRefreshToken } from '@/api/auth';
+import {useRefreshToken} from '@/api/auth';
 
 interface AuthGuardProps {
     children: React.ReactNode;
@@ -12,10 +12,10 @@ interface AuthGuardProps {
 
 const MAX_REFRESH_ATTEMPTS = 3;
 const RETRY_DELAY = 5000; // 5 seconds
-const TOKEN_REFRESH_TIMEOUT = 15000; // 15 seconds
 
-export function AuthGuard({ children }: AuthGuardProps) {
-    const { isAuthenticated, token, logout, setToken } = useAuthStore();
+
+export function AuthGuard({children}: AuthGuardProps) {
+    const {isAuthenticated, token, logout, setToken} = useAuthStore();
     const location = useLocation();
     const navigate = useNavigate();
     const refreshTimerRef = useRef<number | null>(null);
@@ -27,7 +27,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
     const handleLogout = useCallback(async () => {
         logger.info('User logged out due to token refresh failure or invalid token.');
         await logout();
-        navigate('/login', { state: { from: location }, replace: true });
+        navigate('/login', {state: {from: location}, replace: true});
     }, [logout, navigate, location]);
 
     const scheduleTokenRefresh = useCallback(() => {
@@ -70,14 +70,15 @@ export function AuthGuard({ children }: AuthGuardProps) {
             tokenBlacklistService.addToBlacklist(currentRefreshToken);
             tokenService.setToken(response.token);
             if (response.refreshToken) {
-                 tokenService.setRefreshToken(response.refreshToken);
+                tokenService.setRefreshToken(response.refreshToken);
             }
 
             setToken(response.token);
             setRefreshAttempts(0);
             scheduleTokenRefresh();
+            setIsRefreshing(false);
         } catch (error) {
-            logger.error('Token refresh error:', { error });
+            logger.error('Token refresh error:', {error});
             if (refreshAttempts < MAX_REFRESH_ATTEMPTS) {
                 setRefreshAttempts(prev => prev + 1);
                 logger.info(`Retrying token refresh in ${RETRY_DELAY / 1000} seconds.`);
@@ -88,10 +89,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
             } else {
                 logger.error('Max refresh attempts reached. Logging out.');
                 handleLogout();
-            }
-        } finally {
-            if (refreshAttempts >= MAX_REFRESH_ATTEMPTS) {
-                 setIsRefreshing(false);
+                setIsRefreshing(false);
             }
         }
     }, [isRefreshing, handleLogout, setToken, scheduleTokenRefresh, refreshAttempts, refreshTokenMutation]);
@@ -109,7 +107,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
     }, [isAuthenticated, scheduleTokenRefresh]);
 
     if (!isAuthenticated) {
-        return <Navigate to="/login" state={{ from: location }} replace />;
+        return <Navigate to="/login" state={{from: location}} replace/>;
     }
 
     return <>{children}</>;

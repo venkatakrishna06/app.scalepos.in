@@ -33,6 +33,12 @@ export const useLogout = () => {
     });
 };
 
+export const useRefreshToken = () => {
+    return useMutation({
+        mutationFn: (refreshToken: string) => authService.refreshToken(refreshToken),
+    });
+};
+
 export const useUpdateProfile = () => {
     const queryClient = useQueryClient();
     return useMutation({
