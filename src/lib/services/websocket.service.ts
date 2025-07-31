@@ -195,7 +195,7 @@ class WebSocketService {
    * Handle menu item update message
    */
   private handleMenuItemUpdate(data: MenuItem | DeletedEntityData): void {
-    queryClient.invalidateQueries({queryKey: ['menu', 'items']});
+    queryClient.invalidateQueries({queryKey: ['menuItems']});
   }
 
   /**
