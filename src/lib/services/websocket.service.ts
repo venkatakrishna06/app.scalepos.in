@@ -3,7 +3,12 @@ import {queryClient} from '../queryClient';
 import {MenuItem, Order, Table} from '@/types';
 
 // Define types for WebSocket messages
-type WebSocketMessageType = 'table_update' | 'order_update' | 'menu_item_update' | 'order_item_status_update';
+type WebSocketMessageType =
+    | 'table_update'
+    | 'order_update'
+    | 'order_create'
+    | 'menu_item_update'
+    | 'order_item_status_update';
 
 interface DeletedEntityData {
   id: number;
@@ -105,6 +110,10 @@ class WebSocketService {
 
     this.isConnecting = false;
     this.reconnectAttempts = 0;
+    const token = tokenService.getToken();
+    if (token && this.socket?.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify({type: 'authenticate', token}));
+    }
   }
 
   /**
@@ -118,6 +127,7 @@ class WebSocketService {
         case 'table_update':
           this.handleTableUpdate(message.data as Table | DeletedEntityData);
           break;
+        case 'order_create':
         case 'order_update':
           this.handleOrderUpdate(message.data as Order | DeletedEntityData);
           break;
@@ -202,7 +212,7 @@ class WebSocketService {
    * Handle order item status update message
    */
   private handleOrderItemStatusUpdate(data: OrderItemStatusUpdateData): void {
-    queryClient.invalidateQueries({queryKey: ['orders']});
+    queryClient.invalidateQueries({queryKey: ['orders', {period: 'day'}]});
   }
 
 }

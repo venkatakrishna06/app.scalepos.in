@@ -286,7 +286,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({ onOrderC
 
     const debouncedPlaceOrder = useCallback(debounce(handlePlaceOrder, 500), [handlePlaceOrder]);
 
-    if (menuItemsLoading || categoriesLoading || favoriteItemsLoading) {
+    if (menuItemsLoading || categoriesLoading ) {
         return <TakeawaySkeleton type={type} />;
     }
 
