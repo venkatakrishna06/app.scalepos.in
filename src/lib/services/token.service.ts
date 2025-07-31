@@ -1,92 +1,77 @@
-import {jwtDecode} from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 
 interface DecodedToken {
     exp: number;
-    sub: string;
-
-    // Using Record<string, unknown> instead of any for better type safety
-    [key: string]: unknown;
+    // ... other properties from your JWT payload
 }
 
 class TokenService {
-    private readonly TOKEN_KEY = 'auth_token';
-    private readonly REFRESH_TOKEN_KEY = 'refresh_token';
-    private readonly REMEMBER_ME_KEY = 'remember_me';
+    private TOKEN_KEY = 'auth_token';
+    private REFRESH_TOKEN_KEY = 'refresh_token_flag';
+    private PERSISTENT_SESSION_KEY = 'persistent_session';
 
-    // Check if user has chosen to be remembered
+    // --- Session Persistence ---
+
+    setPersistentSession(isPersistent: boolean): void {
+        localStorage.setItem(this.PERSISTENT_SESSION_KEY, String(isPersistent));
+    }
+
     isPersistentSession(): boolean {
-
-        return localStorage.getItem(this.REMEMBER_ME_KEY) === "true";
+        return localStorage.getItem(this.PERSISTENT_SESSION_KEY) === 'true';
     }
 
-    // Set remember me preference
-    setPersistentSession(remember: boolean): void {
-        if (remember) {
-            localStorage.setItem(this.REMEMBER_ME_KEY, 'true');
-        } else {
-            localStorage.removeItem(this.REMEMBER_ME_KEY);
-        }
+    private getStorage(): Storage {
+        return this.isPersistentSession() ? localStorage : sessionStorage;
     }
 
-    // Get token from appropriate storage based on remember me preference
+    // --- Access Token ---
+
     getToken(): string | null {
-        return this.isPersistentSession()
-            ? localStorage.getItem(this.TOKEN_KEY)
-            : sessionStorage.getItem(this.TOKEN_KEY);
+        return this.getStorage().getItem(this.TOKEN_KEY);
     }
 
-    // Set token in appropriate storage based on remember me preference
     setToken(token: string): void {
-        if (this.isPersistentSession()) {
-            localStorage.setItem(this.TOKEN_KEY, token);
-        } else {
-            sessionStorage.setItem(this.TOKEN_KEY, token);
-        }
+        this.getStorage().setItem(this.TOKEN_KEY, token);
     }
 
-    // Remove token from both storages to ensure it's completely cleared
     removeToken(): void {
         localStorage.removeItem(this.TOKEN_KEY);
         sessionStorage.removeItem(this.TOKEN_KEY);
     }
 
-    // For HttpOnly cookies, we can't access them via JavaScript
-    // This method returns a boolean indicating if we're in a session that should have a refresh token
-    getRefreshToken(): boolean {
-        // We can't access HttpOnly cookies, but we can track if we should have one
-        // This helps with UI state management (e.g., showing login button)
-        // const refreshTokenFlag = this.isPersistentSession()
-        //   ? localStorage.getItem(this.REFRESH_TOKEN_KEY)
-        //   : sessionStorage.getItem(this.REFRESH_TOKEN_KEY);
-        // Return true if the flag exists and is set to 'true'
-        // return refreshTokenFlag === 'true';
-        return true;
-        // The actual token is sent automatically with requests via HttpOnly cookie
-    }
-
-    // Set refresh token - for HttpOnly cookies, this is handled by the server
-    // We just store a flag to indicate that we have a valid refresh token
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    setRefreshToken(): void {
-        // Store a flag indicating we have a refresh token
-        // The actual token is stored as an HttpOnly cookie by the server
-        // refreshToken parameter is ignored as we don't store the actual token
-        if (this.isPersistentSession()) {
-            localStorage.setItem(this.REFRESH_TOKEN_KEY, 'true');
-        } else {
-            sessionStorage.setItem(this.REFRESH_TOKEN_KEY, 'true');
+    getTokenExpiryTime(): number | null {
+        const token = this.getToken();
+        if (!token) return null;
+        try {
+            const decoded = jwtDecode<DecodedToken>(token);
+            return decoded.exp;
+        } catch {
+            return null;
         }
     }
 
-    // Remove refresh token flag from storage
-    // The actual HttpOnly cookie needs to be cleared by the server
-    removeRefreshToken(): void {
-        localStorage.removeItem(this.REFRESH_TOKEN_KEY);
-        sessionStorage.removeItem(this.REFRESH_TOKEN_KEY);
-        // The actual cookie will be cleared by the server on logout
+    // --- Refresh Token Flag ---
+
+    getRefreshToken(): boolean {
+        // We can't access HttpOnly cookies, but we can track if we should have one.
+        // This helps with UI state management and refresh logic.
+        return this.getStorage().getItem(this.REFRESH_TOKEN_KEY) === 'true';
     }
 
-    // Clear all tokens from both storages
+    setRefreshToken(): void {
+        // Store a flag indicating we have a refresh token.
+        // The actual token is an HttpOnly cookie handled by the server.
+        this.getStorage().setItem(this.REFRESH_TOKEN_KEY, 'true');
+    }
+
+    removeRefreshToken(): void {
+        // Remove the refresh token flag from storage.
+        localStorage.removeItem(this.REFRESH_TOKEN_KEY);
+        sessionStorage.removeItem(this.REFRESH_TOKEN_KEY);
+    }
+
+    // --- General ---
+
     clearTokens(): void {
         this.removeToken();
         this.removeRefreshToken();
@@ -99,55 +84,9 @@ class TokenService {
         try {
             const decoded = jwtDecode<DecodedToken>(token);
             const currentTime = Date.now() / 1000;
-
-            // Check if token is expired
             return decoded.exp > currentTime;
         } catch {
-            // If token can't be decoded, consider it invalid
             return false;
-        }
-    }
-
-    isTokenExpiringSoon(thresholdMinutes: number = 15): boolean {
-        const token = this.getToken();
-        if (!token) return false;
-
-        try {
-            const decoded = jwtDecode<DecodedToken>(token);
-            const currentTime = Date.now() / 1000;
-            const thresholdSeconds = thresholdMinutes * 60;
-
-            // Check if token will expire within the threshold time
-            return decoded.exp > currentTime && decoded.exp - currentTime < thresholdSeconds;
-        } catch {
-            // If token can't be decoded, consider it invalid
-            return true;
-        }
-    }
-
-    getTokenExpiryTime(): number | null {
-        const token = this.getToken();
-        if (!token) return null;
-
-        try {
-            const decoded = jwtDecode<DecodedToken>(token);
-            return decoded.exp;
-        } catch {
-            // If token can't be decoded, return null
-            return null;
-        }
-    }
-
-    getUserIdFromToken(): string | null {
-        const token = this.getToken();
-        if (!token) return null;
-
-        try {
-            const decoded = jwtDecode<DecodedToken>(token);
-            return decoded.sub;
-        } catch {
-            // If token can't be decoded, return null
-            return null;
         }
     }
 }

@@ -9,12 +9,14 @@ interface RoleBasedRouteProps {
 }
 
 export const RoleBasedRoute = ({children, requiredPermission}: RoleBasedRouteProps) => {
-    const {isAuthenticated, loading} = useAuthStore();
+    // Use isInitializing instead of loading for the initial check
+    const {isAuthenticated, isInitializing} = useAuthStore();
     const {hasPermission} = usePermissions();
     const location = useLocation();
 
-    if (loading) {
-        return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    // Show a loading screen only during the initial authentication process
+    if (isInitializing) {
+        return <div className="flex items-center justify-center h-screen">Authenticating...</div>;
     }
 
     if (!isAuthenticated) {

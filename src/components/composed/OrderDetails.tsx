@@ -136,16 +136,6 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                             className="text-lg">₹{getOrderTotal(order).toFixed(2)}</span></p>
                     </div>
 
-                    {onPayment && hasPermission(PERMISSIONS.CREATE_PAYMENT) && (
-                        <Button
-                            onClick={() => onPayment(order)}
-                            variant={'default'}
-                            className="w-full sm:w-auto"
-                        >
-                            <CreditCard className="mr-2 h-4 w-4"/>
-                            Pay
-                        </Button>
-                    )}
                 </div>
             </CardFooter>
         </Card>

@@ -4,7 +4,7 @@ import { API_ENDPOINTS } from '../endpoints';
 import logger from '@/lib/services/logger.service';
 
 export const authService = {
-    login: async (credentials: LoginCredentials) => {
+    login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
         try {
             const response = await api.post<AuthResponse>(API_ENDPOINTS.AUTH.LOGIN, credentials);
             return response.data;
@@ -13,10 +13,9 @@ export const authService = {
         }
     },
 
-    signup: async (data: SignupData) => {
+    signup: async (data: SignupData): Promise<AuthResponse> => {
         try {
             const response = await api.post<AuthResponse>(API_ENDPOINTS.AUTH.SIGNUP, data);
-
             return response.data;
         } catch (error) {
 
@@ -24,36 +23,48 @@ export const authService = {
         }
     },
 
-    logout: async () => {
+    logout: async (): Promise<void> => {
         try {
+
             await api.post(API_ENDPOINTS.AUTH.LOGOUT);
-            } catch (error) {
-            throw error;
+        } catch (error) {
+
+            // Don't throw, allow logout to proceed on the client
         }
     },
 
-    refreshToken: async (refreshToken: string) => {
+    refreshToken: async (): Promise<AuthResponse> => {
         try {
-            const response = await api.post<AuthResponse>(API_ENDPOINTS.AUTH.REFRESH, { refreshToken });
+
+            // The refresh token is sent as an HttpOnly cookie, so no payload is needed.
+            const response = await api.post<AuthResponse>(API_ENDPOINTS.AUTH.REFRESH, {});
+
             return response.data;
         } catch (error) {
+
             throw error;
         }
     },
 
-    updateProfile: async (data: Partial<User>) => {
+    updateProfile: async (data: Partial<User>): Promise<User> => {
         try {
+
             const response = await api.put<User>(API_ENDPOINTS.AUTH.PROFILE, data);
+
             return response.data;
         } catch (error) {
+
             throw error;
         }
     },
 
-    changePassword: async (currentPassword: string, newPassword: string) => {
+    changePassword: async (currentPassword: string, newPassword: string): Promise<void> => {
         try {
+
             await api.post(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, { currentPassword, newPassword });
-            } catch (error) {
+
+        } catch (error) {
+
             throw error;
         }
     },
