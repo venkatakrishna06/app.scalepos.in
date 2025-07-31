@@ -11,7 +11,7 @@ export const useMenuItems = () => {
         queryKey: ['menuItems'],
         queryFn: menuService.getItems,
         staleTime: STALE_TIME,
-        cacheTime: CACHE_TIME,
+        gcTime: CACHE_TIME,
     });
 };
 
@@ -50,7 +50,7 @@ export const useCategories = () => {
         queryKey: ['categories'],
         queryFn: menuService.getCategories,
         staleTime: STALE_TIME,
-        cacheTime: CACHE_TIME,
+        gcTime: CACHE_TIME,
     });
 };
 

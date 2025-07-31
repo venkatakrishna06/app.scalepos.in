@@ -11,7 +11,7 @@ export const useStaff = () => {
         queryKey: ['staff'],
         queryFn: staffService.getStaff,
         staleTime: STALE_TIME,
-        cacheTime: CACHE_TIME,
+        gcTime: CACHE_TIME,
     });
 };
 

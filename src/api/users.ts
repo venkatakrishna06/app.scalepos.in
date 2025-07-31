@@ -11,7 +11,7 @@ export const useUsers = () => {
         queryKey: ['users'],
         queryFn: userService.getUsers,
         staleTime: STALE_TIME,
-        cacheTime: CACHE_TIME,
+        gcTime: CACHE_TIME,
     });
 };
 
@@ -20,7 +20,7 @@ export const useUser = (id: number) => {
         queryKey: ['user', id],
         queryFn: () => userService.getUser(id),
         staleTime: STALE_TIME,
-        cacheTime: CACHE_TIME,
+        gcTime: CACHE_TIME,
         enabled: !!id,
     });
 };

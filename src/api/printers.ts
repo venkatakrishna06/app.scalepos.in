@@ -10,7 +10,7 @@ export const usePrinterConfig = () => {
         queryKey: ['printerConfig'],
         queryFn: printerService.getPrinterConfig,
         staleTime: STALE_TIME,
-        cacheTime: CACHE_TIME,
+        gcTime: CACHE_TIME,
     });
 };
 
@@ -29,7 +29,7 @@ export const useAvailablePrinters = () => {
         queryKey: ['availablePrinters'],
         queryFn: printerService.getAvailablePrinters,
         staleTime: STALE_TIME,
-        cacheTime: CACHE_TIME,
+        gcTime: CACHE_TIME,
     });
 };
 

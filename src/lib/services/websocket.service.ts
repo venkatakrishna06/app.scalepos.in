@@ -1,211 +1,171 @@
-import {tokenService} from './token.service';
-import {queryClient} from '../queryClient';
-import {MenuItem, Order, Table} from '@/types';
+import { tokenService } from './token.service';
+import { toast } from '@/lib/toast';
 
-// Define types for WebSocket messages
-type WebSocketMessageType = 'table_update' | 'order_update' | 'menu_item_update' | 'order_item_status_update';
+// Define event types
+export type WebSocketEventType = 'order_created' | 'order_updated' | 'order_deleted' | 'order_status_changed';
 
-interface DeletedEntityData {
-    id: number;
-    deleted: true;
+// Define event data interface
+export interface WebSocketEvent {
+  type: WebSocketEventType;
+  data: {
+    order?: Order;
+    orderId?: number;
+    status?: string;
+    [key: string]: unknown;
+  };
 }
 
-interface OrderItemStatusUpdateData {
-    id:number;
-    order_id: number;
-    status: 'placed' | 'preparing' | 'served' | 'cancelled';
-}
+// Import Order type
+import { Order } from '@/types';
 
-interface WebSocketMessage<T = Table | Order | MenuItem | DeletedEntityData | OrderItemStatusUpdateData> {
-    type: WebSocketMessageType;
-    data: T;
-    restaurant_id: number;
-}
+// Define event handler type
+export type WebSocketEventHandler = (event: WebSocketEvent) => void;
 
-/**
- * WebSocket service for handling real-time updates
- *
- * This service manages:
- * - WebSocket connection establishment and authentication
- * - Reconnection logic
- * - Message handling for different entity types (tables, orders, menu items)
- * - Integration with the application state management
- */
 class WebSocketService {
-    private socket: WebSocket | null = null;
-    private reconnectTimeout: NodeJS.Timeout | null = null;
-    private reconnectAttempts = 0;
-    private maxReconnectAttempts = 5;
-    private reconnectDelay = 3000; // 3 seconds
-    private isConnecting = false;
+  private socket: WebSocket | null = null;
+  private eventHandlers: Map<WebSocketEventType, WebSocketEventHandler[]> = new Map();
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectDelay = 3000; // 3 seconds
+  private reconnectTimeoutId: number | null = null;
+  private isConnecting = false;
 
-    /**
-     * Initialize the WebSocket connection
-     */
-    public connect(): void {
-        if (this.socket?.readyState === WebSocket.OPEN || this.isConnecting) {
-            return; // Already connected or connecting
-        }
-
-        this.isConnecting = true;
-        const token = tokenService.getToken();
-
-        if (!token) {
-
-            this.isConnecting = false;
-            return;
-        }
-
-        const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsBaseURL = baseURL.replace(/^https?:/, wsProtocol);
-        const wsURL = `${wsBaseURL}/ws?token=${token}`;
-
-        try {
-            this.socket = new WebSocket(wsURL);
-
-            this.socket.onopen = this.handleOpen.bind(this);
-            this.socket.onmessage = this.handleMessage.bind(this);
-            this.socket.onclose = this.handleClose.bind(this);
-            this.socket.onerror = this.handleError.bind(this);
-        } catch (error) {
-
-            this.isConnecting = false;
-            this.scheduleReconnect();
-        }
+  // Connect to the WebSocket server
+  connect(): void {
+    if (this.socket?.readyState === WebSocket.OPEN || this.isConnecting) {
+      return;
     }
 
-    /**
-     * Disconnect the WebSocket
-     */
-    public disconnect(): void {
-        if (this.socket) {
-            this.socket.close();
-            this.socket = null;
-        }
+    this.isConnecting = true;
 
-        if (this.reconnectTimeout) {
-            clearTimeout(this.reconnectTimeout);
-            this.reconnectTimeout = null;
-        }
+    // Get the API URL from environment variables
+    const apiUrl = import.meta.env.VITE_API_URL;
+    if (!apiUrl) {
+      console.error('API URL not found in environment variables');
+      this.isConnecting = false;
+      return;
     }
 
-    /**
-     * Check if the WebSocket is connected
-     * @returns True if the WebSocket is connected, false otherwise
-     */
-    public isConnected(): boolean {
-        return this.socket !== null && this.socket.readyState === WebSocket.OPEN;
+    // Convert HTTP URL to WebSocket URL
+    const wsUrl = apiUrl.replace(/^http/, 'ws') + '/ws';
+
+    try {
+      this.socket = new WebSocket(wsUrl);
+
+      this.socket.onopen = this.handleOpen.bind(this);
+      this.socket.onmessage = this.handleMessage.bind(this);
+      this.socket.onclose = this.handleClose.bind(this);
+      this.socket.onerror = this.handleError.bind(this);
+    } catch (error) {
+      console.error('Error connecting to WebSocket server:', error);
+      this.isConnecting = false;
+      this.scheduleReconnect();
+    }
+  }
+
+  // Disconnect from the WebSocket server
+  disconnect(): void {
+    if (this.socket) {
+      this.socket.close();
+      this.socket = null;
     }
 
-    /**
-     * Handle WebSocket open event
-     */
-    private handleOpen(): void {
-
-        this.isConnecting = false;
-        this.reconnectAttempts = 0;
+    if (this.reconnectTimeoutId !== null) {
+      window.clearTimeout(this.reconnectTimeoutId);
+      this.reconnectTimeoutId = null;
     }
 
-    /**
-     * Handle WebSocket message event
-     */
-    private handleMessage(event: MessageEvent): void {
-        try {
-            const message = JSON.parse(event.data) as WebSocketMessage;
+    this.reconnectAttempts = 0;
+    this.isConnecting = false;
+  }
 
-            switch (message.type) {
-                case 'table_update':
-                    this.handleTableUpdate(message.data as Table | DeletedEntityData);
-                    break;
-                case 'order_update':
-                    this.handleOrderUpdate(message.data as Order | DeletedEntityData);
-                    break;
-                case 'menu_item_update':
-                    this.handleMenuItemUpdate(message.data as MenuItem | DeletedEntityData);
-                    break;
-                case 'order_item_status_update':
-                    this.handleOrderItemStatusUpdate(message.data as OrderItemStatusUpdateData);
-                    break;
-                default:
-
-            }
-        } catch (error) {
-
-        }
+  // Add an event handler
+  on(eventType: WebSocketEventType, handler: WebSocketEventHandler): void {
+    if (!this.eventHandlers.has(eventType)) {
+      this.eventHandlers.set(eventType, []);
     }
 
-    /**
-     * Handle WebSocket close event
-     */
-    private handleClose(event: CloseEvent): void {
-
-        this.socket = null;
-        this.isConnecting = false;
-
-        // Only attempt to reconnect if it wasn't a normal closure
-        if (event.code !== 1000) {
-            this.scheduleReconnect();
-        }
+    const handlers = this.eventHandlers.get(eventType);
+    if (handlers && !handlers.includes(handler)) {
+      handlers.push(handler);
     }
+  }
 
-    /**
-     * Handle WebSocket error event
-     */
-    private handleError(event: Event): void {
-
-        this.isConnecting = false;
+  // Remove an event handler
+  off(eventType: WebSocketEventType, handler: WebSocketEventHandler): void {
+    const handlers = this.eventHandlers.get(eventType);
+    if (handlers) {
+      const index = handlers.indexOf(handler);
+      if (index !== -1) {
+        handlers.splice(index, 1);
+      }
     }
+  }
 
-    /**
-     * Schedule a reconnection attempt
-     */
-    private scheduleReconnect(): void {
-        if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+  // Handle WebSocket open event
+  private handleOpen(): void {
+    // Use console.info for informational messages in production
+    console.info('WebSocket connection established');
+    this.reconnectAttempts = 0;
+    this.isConnecting = false;
 
-            return;
-        }
-
-        if (this.reconnectTimeout) {
-            clearTimeout(this.reconnectTimeout);
-        }
-
-        this.reconnectTimeout = setTimeout(() => {
-
-            this.reconnectAttempts++;
-            this.connect();
-        }, this.reconnectDelay);
+    // Send authentication token
+    const token = tokenService.getToken();
+    if (token && this.socket) {
+      this.socket.send(JSON.stringify({ type: 'authenticate', token }));
     }
+  }
 
-    /**
-     * Handle table update message
-     */
-    private handleTableUpdate(data: Table | DeletedEntityData): void {
-        queryClient.invalidateQueries({queryKey: ['tables']});
+  // Handle WebSocket message event
+  private handleMessage(event: MessageEvent): void {
+    try {
+      const wsEvent = JSON.parse(event.data) as WebSocketEvent;
+      
+      // Dispatch event to registered handlers
+      const handlers = this.eventHandlers.get(wsEvent.type);
+      if (handlers) {
+        handlers.forEach(handler => handler(wsEvent));
+      }
+    } catch (error) {
+      console.error('Error parsing WebSocket message:', error);
     }
+  }
 
-    /**
-     * Handle order update message
-     */
-    private handleOrderUpdate(data: Order | DeletedEntityData): void {
-        queryClient.invalidateQueries({queryKey: ['orders']});
+  // Handle WebSocket close event
+  private handleClose(event: CloseEvent): void {
+    console.info(`WebSocket connection closed: ${event.code} ${event.reason}`);
+    this.socket = null;
+    this.isConnecting = false;
+    this.scheduleReconnect();
+  }
+
+  // Handle WebSocket error event
+  private handleError(event: Event): void {
+    console.error('WebSocket error:', event);
+    this.isConnecting = false;
+    // Attempt to reconnect on error
+    this.scheduleReconnect();
+  }
+
+  // Schedule a reconnection attempt
+  private scheduleReconnect(): void {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++;
+      const delay = this.reconnectDelay * Math.pow(1.5, this.reconnectAttempts - 1);
+      
+      console.info(`Scheduling WebSocket reconnection attempt ${this.reconnectAttempts} in ${delay}ms`);
+      
+      this.reconnectTimeoutId = window.setTimeout(() => {
+        this.reconnectTimeoutId = null;
+        this.connect();
+      }, delay);
+    } else {
+      console.error(`Maximum WebSocket reconnection attempts (${this.maxReconnectAttempts}) reached`);
+      // Notify the user that real-time updates are not available
+      toast.error('Real-time order updates are currently unavailable. Please refresh the page manually.');
     }
-
-    /**
-     * Handle menu item update message
-     */
-    private handleMenuItemUpdate(data: MenuItem | DeletedEntityData): void {
-        queryClient.invalidateQueries({queryKey: ['menu', 'items']});
-    }
-
-    /**
-     * Handle order item status update message
-     */
-    private handleOrderItemStatusUpdate(data: OrderItemStatusUpdateData): void {
-        queryClient.invalidateQueries({queryKey: ['orders']});
-    }
-
+  }
 }
 
-// Create a singleton instance
+// Create and export a singleton instance
 export const websocketService = new WebSocketService();

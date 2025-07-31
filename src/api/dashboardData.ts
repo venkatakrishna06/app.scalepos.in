@@ -11,7 +11,7 @@ export const useDashboardData = () => {
         queryKey: ['orders', {period: 'day'}],
         queryFn: () => orderService.getOrders({period: 'day'}),
         staleTime: STALE_TIME,
-        cacheTime: CACHE_TIME,
+        gcTime: CACHE_TIME,
     });
 
     const {
@@ -23,7 +23,7 @@ export const useDashboardData = () => {
         queryKey: ['menuItems'],
         queryFn: menuService.getItems,
         staleTime: STALE_TIME,
-        cacheTime: CACHE_TIME,
+        gcTime: CACHE_TIME,
     });
 
     const isLoading = isLoadingOrders || isLoadingMenuItems;

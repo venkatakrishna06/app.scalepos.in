@@ -16,7 +16,7 @@ export const useOrders = (params?: {
         queryKey: ['orders', params],
         queryFn: () => orderService.getOrders(params),
         staleTime: STALE_TIME,
-        cacheTime: CACHE_TIME,
+        gcTime: CACHE_TIME,
     });
 };
 
@@ -55,7 +55,7 @@ export const useOrdersByTable = (tableId: number) => {
         queryKey: ['orders', {tableId}],
         queryFn: () => orderService.getOrdersByTable(tableId),
         staleTime: STALE_TIME,
-        cacheTime: CACHE_TIME,
+        gcTime: CACHE_TIME,
         enabled: !!tableId,
     });
 };
@@ -75,7 +75,7 @@ export const useOrderStatusHistory = (orderId: number) => {
         queryKey: ['orderStatusHistory', orderId],
         queryFn: () => orderService.getOrderStatusHistory(orderId),
         staleTime: STALE_TIME,
-        cacheTime: CACHE_TIME,
+        gcTime: CACHE_TIME,
         enabled: !!orderId,
     });
 };
@@ -95,7 +95,7 @@ export const useOrderCancellations = (orderId: number) => {
         queryKey: ['orderCancellations', orderId],
         queryFn: () => orderService.getOrderCancellations(orderId),
         staleTime: STALE_TIME,
-        cacheTime: CACHE_TIME,
+        gcTime: CACHE_TIME,
         enabled: !!orderId,
     });
 };
@@ -129,7 +129,7 @@ export const useOrderItemStatusHistory = (itemId: number) => {
         queryKey: ['orderItemStatusHistory', itemId],
         queryFn: () => orderService.getOrderItemStatusHistory(itemId),
         staleTime: STALE_TIME,
-        cacheTime: CACHE_TIME,
+        gcTime: CACHE_TIME,
         enabled: !!itemId,
     });
 };
@@ -150,7 +150,7 @@ export const useOrderItemCancellations = (itemId: number) => {
         queryKey: ['orderItemCancellations', itemId],
         queryFn: () => orderService.getOrderItemCancellations(itemId),
         staleTime: STALE_TIME,
-        cacheTime: CACHE_TIME,
+        gcTime: CACHE_TIME,
         enabled: !!itemId,
     });
 };
