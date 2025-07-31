@@ -4,7 +4,6 @@ import {Order} from '@/types';
 
 import {toast} from '@/lib/toast';
 import {format as formatDate, isToday, isYesterday, subDays} from 'date-fns';
-import {websocketService, WebSocketEvent} from '@/lib/services/websocket.service';
 
 type SortField = 'newest' | 'oldest' | 'highest' | 'lowest';
 
@@ -18,7 +17,7 @@ export const useOrdersPage = () => {
     }>({});
 
     const {
-        data: orders,
+        data: orders = [],
         isLoading: ordersLoading,
         isError: ordersError,
         error: ordersErrorMessage,
@@ -43,7 +42,6 @@ export const useOrdersPage = () => {
     const [sortBy, setSortBy] = useState<SortField>('newest');
     const [activeTab, setActiveTab] = useState<string>('all');
 
-    // Effect to update selected order when orders change
     useEffect(() => {
         if (orders.length > 0 && selectedOrderId && isViewOrdersDialogOpen) {
             const updatedOrder = orders.find(order => order.id === selectedOrderId);
@@ -53,63 +51,12 @@ export const useOrdersPage = () => {
         }
     }, [orders, selectedOrderId, isViewOrdersDialogOpen]);
 
-    // Effect to connect to WebSocket and set up event listeners
-    useEffect(() => {
-        // Connect to WebSocket server
-        websocketService.connect();
-
-        // Define event handlers
-        const handleOrderCreated = (event: WebSocketEvent) => {
-            if (event.data.order) {
-                refetchOrders();
-                toast.info('New order received');
-            }
-        };
-
-        const handleOrderUpdated = (event: WebSocketEvent) => {
-            if (event.data.order) {
-                refetchOrders();
-                toast.info('Order updated');
-            }
-        };
-
-        const handleOrderDeleted = (event: WebSocketEvent) => {
-            if (event.data.orderId) {
-                refetchOrders();
-                toast.info('Order deleted');
-            }
-        };
-
-        const handleOrderStatusChanged = (event: WebSocketEvent) => {
-            if (event.data.order) {
-                refetchOrders();
-                toast.info(`Order status changed to ${event.data.status || 'unknown'}`);
-            }
-        };
-
-        // Register event handlers
-        websocketService.on('order_created', handleOrderCreated);
-        websocketService.on('order_updated', handleOrderUpdated);
-        websocketService.on('order_deleted', handleOrderDeleted);
-        websocketService.on('order_status_changed', handleOrderStatusChanged);
-
-        // Clean up on unmount
-        return () => {
-            websocketService.off('order_created', handleOrderCreated);
-            websocketService.off('order_updated', handleOrderUpdated);
-            websocketService.off('order_deleted', handleOrderDeleted);
-            websocketService.off('order_status_changed', handleOrderStatusChanged);
-        };
-    }, [refetchOrders]);
-
     const refreshOrders = useCallback(async () => {
         try {
             setQueryParams({});
             await refetchOrders();
             toast.success('Orders refreshed successfully');
-        } catch (error) {
-            console.error('Error refreshing orders:', error);
-            toast.error('Failed to refresh orders');
+        } catch (err) {
         }
     }, [refetchOrders]);
 
@@ -126,8 +73,7 @@ export const useOrdersPage = () => {
             setIsCancelDialogOpen(false);
             setOrderToCancel(null);
             toast.success('Order cancelled successfully');
-        } catch (error) {
-            console.error('Error cancelling order:', error);
+        } catch (err) {
             toast.error('Failed to cancel order');
         }
     }, [orderToCancel, cancelOrderMutation, refetchOrders]);
@@ -143,8 +89,8 @@ export const useOrdersPage = () => {
             await updateOrderStatusMutation.mutateAsync({id: orderId, status: newStatus});
             await refetchOrders();
             toast.success(`Order status updated to ${newStatus}`);
-        } catch (error) {
-            console.error('Error updating order status:', error);
+        } catch (err) {
+
             toast.error('Failed to update order status');
         }
     }, [updateOrderStatusMutation, refetchOrders]);
@@ -154,8 +100,7 @@ export const useOrdersPage = () => {
             await updateOrderItemStatusMutation.mutateAsync({itemId, status: newStatus});
             await refetchOrders();
             toast.success('Order item status updated');
-        } catch (error) {
-            console.error('Error updating order item status:', error);
+        } catch (err) {
             toast.error('Failed to update order item status');
         }
     }, [updateOrderItemStatusMutation, refetchOrders]);
