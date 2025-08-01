@@ -289,7 +289,7 @@ export function ViewOrdersDialog({open, onClose, tableId, onPayment}: ViewOrders
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col" onClose={onClose}>
                 <DialogHeader className="mb-1">
                     <DialogTitle className="text-lg">
                         {tableId ? `Table ${tableId} - Orders` : 'Order Details'}

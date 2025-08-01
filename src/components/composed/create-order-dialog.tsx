@@ -146,7 +146,7 @@ function CreateOrderDialogComponent({
     // Component State
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState('');
-    const [orderItems, setOrderItems] = useState<OrderItem[]>(existingOrder?.items || []);
+    const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editingItemId, setEditingItemId] = useState<number | null>(null);
     const [itemNote, setItemNote] = useState<string>('');
@@ -177,6 +177,7 @@ function CreateOrderDialogComponent({
     // Reset state when dialog opens/closes
     useEffect(() => {
         if (open) {
+            setOrderItems([]);
             setCurrentOrderType(table_id ? 'dine-in' : initialOrderType || 'takeaway');
 
         } else {
@@ -501,9 +502,10 @@ function CreateOrderDialogComponent({
             };
 
             if (existingOrder) {
-                await updateOrderMutation.mutateAsync({ 
-                    id: existingOrder.id, 
-                    order: { items: orderData.items } as any 
+                const updatedItems = [...existingOrder.items, ...orderData.items];
+                await updateOrderMutation.mutateAsync({
+                    id: existingOrder.id,
+                    order: { items: updatedItems } as any
                 });
                 toast.success(`Order for ${table_id ? `Table ${table_id}` : currentOrderType} updated.`);
                 
