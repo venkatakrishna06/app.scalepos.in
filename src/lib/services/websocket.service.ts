@@ -1,5 +1,4 @@
 // src/lib/services/websocket.service.ts
-
 import { tokenService } from './token.service';
 import { queryClient } from '../queryClient';
 import { MenuItem, Order, Table } from '@/types';
@@ -8,11 +7,11 @@ import { MenuItem, Order, Table } from '@/types';
  * Types of messages that the server may send over the WebSocket.
  */
 type WebSocketMessageType =
-    | 'table_update'
-    | 'order_update'
-    | 'order_create'
-    | 'menu_item_update'
-    | 'order_item_status_update';
+  | 'table_update'
+  | 'order_update'
+  | 'order_create'
+  | 'menu_item_update'
+  | 'order_item_status_update';
 
 interface DeletedEntityData {
   id: number;
@@ -26,7 +25,7 @@ interface OrderItemStatusUpdateData {
 }
 
 interface WebSocketMessage<
-    T = Table | Order | MenuItem | DeletedEntityData | OrderItemStatusUpdateData,
+  T = Table | Order | MenuItem | DeletedEntityData | OrderItemStatusUpdateData,
 > {
   type: WebSocketMessageType;
   data: T;
@@ -39,11 +38,11 @@ interface WebSocketMessage<
  * This service:
  *  • Establishes an authenticated WebSocket connection.
  *  • Handles reconnection when the socket closes unexpectedly.
- *  • Parses incoming messages and invalidates the appropriate React Query caches.
+ *  • Parses incoming messages and updates the appropriate React Query caches.
  */
 class WebSocketService {
   private socket: WebSocket | null = null;
-  private reconnectTimeout: NodeJS.Timeout | null = null;
+  private reconnectTimeout: number | null = null;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 3000; // 3 seconds
@@ -56,20 +55,16 @@ class WebSocketService {
     if (this.socket?.readyState === WebSocket.OPEN || this.isConnecting) {
       return; // Already connected or connecting
     }
-
     this.isConnecting = true;
     const token = tokenService.getToken();
-
     if (!token) {
       this.isConnecting = false;
       return;
     }
-
     const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsBaseURL = baseURL.replace(/^https?:/, wsProtocol);
     const wsURL = `${wsBaseURL}/ws?token=${token}`;
-
     try {
       this.socket = new WebSocket(wsURL);
       this.socket.onopen = this.handleOpen.bind(this);
@@ -77,6 +72,7 @@ class WebSocketService {
       this.socket.onclose = this.handleClose.bind(this);
       this.socket.onerror = this.handleError.bind(this);
     } catch (error) {
+      console.error('WebSocket connection error:', error);
       this.isConnecting = false;
       this.scheduleReconnect();
     }
@@ -108,6 +104,7 @@ class WebSocketService {
    * Sends an authenticate message to the server.
    */
   private handleOpen(): void {
+    console.log('WebSocket connection established.');
     this.isConnecting = false;
     this.reconnectAttempts = 0;
     const token = tokenService.getToken();
@@ -122,7 +119,7 @@ class WebSocketService {
   private handleMessage(event: MessageEvent): void {
     try {
       const message = JSON.parse(event.data) as WebSocketMessage;
-
+      console.log('Received WebSocket message:', message);
       switch (message.type) {
         case 'table_update':
           this.handleTableUpdate(message.data as Table | DeletedEntityData);
@@ -132,19 +129,20 @@ class WebSocketService {
           this.handleOrderUpdate(message.data as Order | DeletedEntityData);
           break;
         case 'menu_item_update':
-          this.handleMenuItemUpdate(message.data as MenuItem | DeletedEntityData);
+          this.handleMenuItemUpdate(
+            message.data as MenuItem | DeletedEntityData,
+          );
           break;
         case 'order_item_status_update':
           this.handleOrderItemStatusUpdate(
-              message.data as OrderItemStatusUpdateData,
+            message.data as OrderItemStatusUpdateData,
           );
           break;
         default:
-          // Unknown message type – ignore for now
-          break;
+          console.warn('Unknown WebSocket message type:', message.type);
       }
-    } catch {
-      // Ignore JSON parse errors or unexpected message structures
+    } catch (error) {
+      console.error('Error handling WebSocket message:', error);
     }
   }
 
@@ -152,6 +150,7 @@ class WebSocketService {
    * Handle WebSocket close event and schedule reconnection if needed.
    */
   private handleClose(event: CloseEvent): void {
+    console.log('WebSocket connection closed:', event.reason);
     this.socket = null;
     this.isConnecting = false;
     if (event.code !== 1000) {
@@ -162,7 +161,8 @@ class WebSocketService {
   /**
    * Handle WebSocket error event.
    */
-  private handleError(): void {
+  private handleError(event: Event): void {
+    console.error('WebSocket error:', event);
     this.isConnecting = false;
   }
 
@@ -171,48 +171,97 @@ class WebSocketService {
    */
   private scheduleReconnect(): void {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.error('WebSocket max reconnect attempts reached.');
       return;
     }
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
     }
+    // @ts-ignore
     this.reconnectTimeout = setTimeout(() => {
       this.reconnectAttempts++;
+      console.log(`WebSocket reconnecting... attempt ${this.reconnectAttempts}`);
       this.connect();
     }, this.reconnectDelay);
   }
 
   /**
    * Handle a table update or deletion.
-   * Invalidates every React Query cache whose key starts with 'tables'.
+   * Updates the React Query cache for tables.
    */
   private handleTableUpdate(data: Table | DeletedEntityData): void {
-    queryClient.invalidateQueries({
-      predicate: (query) =>
-          Array.isArray(query.queryKey) && query.queryKey[0] === 'tables',
+    const queryKey = ['tables'];
+    queryClient.setQueriesData({ queryKey }, (oldData: any) => {
+      if (!Array.isArray(oldData)) return oldData;
+
+      if ('deleted' in data && data.deleted) {
+        return oldData.filter((table: Table) => table.id !== data.id);
+      } else {
+        const tableData = data as Table;
+        const index = oldData.findIndex((table: Table) => table.id === tableData.id);
+        if (index !== -1) {
+          const newArray = [...oldData];
+          newArray[index] = tableData;
+          return newArray;
+        } else {
+          return [...oldData, tableData];
+        }
+      }
     });
+
+    queryClient.invalidateQueries({ queryKey });
   }
 
   /**
    * Handle an order creation or update.
-   * Invalidates every React Query cache whose key starts with 'orders'.
+   * Updates the React Query cache for orders.
    */
   private handleOrderUpdate(data: Order | DeletedEntityData): void {
-    queryClient.invalidateQueries({
-      predicate: (query) =>
-          Array.isArray(query.queryKey) && query.queryKey[0] === 'orders',
+    const queryKey = ['orders'];
+    queryClient.setQueriesData({ queryKey }, (oldData: any) => {
+        if (!Array.isArray(oldData)) return oldData;
+
+        if ('deleted' in data && data.deleted) {
+            return oldData.filter((order: Order) => order.id !== data.id);
+        } else {
+            const orderData = data as Order;
+            const index = oldData.findIndex((order: Order) => order.id === orderData.id);
+            if (index !== -1) {
+                const newArray = [...oldData];
+                newArray[index] = orderData;
+                return newArray;
+            } else {
+                return [...oldData, orderData];
+            }
+        }
     });
+    queryClient.invalidateQueries({ queryKey });
   }
 
   /**
    * Handle a menu item update or deletion.
-   * Invalidates every React Query cache whose key starts with 'menuItems'.
+   * Updates the React Query cache for menu items.
    */
   private handleMenuItemUpdate(data: MenuItem | DeletedEntityData): void {
-    queryClient.invalidateQueries({
-      predicate: (query) =>
-          Array.isArray(query.queryKey) && query.queryKey[0] === 'menuItems',
+    const queryKey = ['menuItems'];
+    queryClient.setQueriesData({ queryKey }, (oldData: any) => {
+      if (!Array.isArray(oldData)) return oldData;
+
+      if ('deleted' in data && data.deleted) {
+        return oldData.filter((item: MenuItem) => item.id !== data.id);
+      } else {
+        const menuItemData = data as MenuItem;
+        const index = oldData.findIndex((item: MenuItem) => item.id === menuItemData.id);
+        if (index !== -1) {
+            const newArray = [...oldData];
+            newArray[index] = menuItemData;
+            return newArray;
+        } else {
+            return [...oldData, menuItemData];
+        }
+      }
     });
+    queryClient.invalidateQueries({ queryKey });
   }
 
   /**
@@ -220,18 +269,26 @@ class WebSocketService {
    * Invalidates the specific order detail and all order lists.
    */
   private handleOrderItemStatusUpdate(
-      data: OrderItemStatusUpdateData,
+    data: OrderItemStatusUpdateData,
   ): void {
-    // First invalidate the specific order detail (if cached)
-    queryClient.invalidateQueries({
-      queryKey: ['orders', 'detail', data.order_id],
-    });
+    const queryKey = ['orders'];
+    queryClient.setQueriesData({ queryKey }, (oldData: any): any => {
+      if (!Array.isArray(oldData)) return oldData;
 
-    // Then invalidate every list of orders
-    queryClient.invalidateQueries({
-      predicate: (query) =>
-          Array.isArray(query.queryKey) && query.queryKey[0] === 'orders',
+      return oldData.map((order: Order) => {
+        if (order.id === data.order_id) {
+          const newItems = order.items.map(item => {
+            if (item.id === data.id) {
+              return { ...item, status: data.status };
+            }
+            return item;
+          });
+          return { ...order, items: newItems };
+        }
+        return order;
+      });
     });
+    queryClient.invalidateQueries({ queryKey });
   }
 }
 
