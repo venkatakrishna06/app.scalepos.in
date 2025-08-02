@@ -659,61 +659,12 @@ function CreateOrderDialogComponent({
                             <div className="flex flex-col gap-1">
                                 {/* Main Categories with Expandable Subcategories */}
                                 {mainCategories.map(category => (
-                                    <div key={category.id} className="category-group">
+                                    <div key={category.id}>
                                         <div className="flex items-center w-full">
-                                            {subCategoriesByParent[category.id] && (
-                                                <button
-                                                    onClick={() => toggleCategory(category.id)}
-                                                    className="p-1 rounded hover:bg-accent"
-                                                >
-                                                    {expandedCategories[category.id] ? (
-                                                        <ChevronDown className="h-3 w-3 transition-transform"/>
-                                                    ) : (
-                                                        <ChevronRight className="h-3 w-3 transition-transform"/>
-                                                    )}
-                                                </button>
-                                            )}
-                                            <button
-                                                className={cn(
-                                                    "flex-1 rounded-md p-2 text-left text-sm",
-                                                    selectedCategory === category.id.toString()
-                                                        ? 'bg-primary text-primary-foreground'
-                                                        : 'hover:bg-accent hover:text-accent-foreground'
-                                                )}
-                                                onClick={() => {
-                                                    if (subCategoriesByParent[category.id]) {
-                                                        // If this category has subcategories, toggle expansion
-                                                        toggleCategory(category.id);
-                                                    } else {
-                                                        // If no subcategories, filter by this category
-                                                        setSelectedCategory(category.id.toString());
-                                                    }
-                                                }}
-                                            >
-                                                {category.name}
-                                            </button>
+                                            {subCategoriesByParent[category.id] && <button onClick={() => toggleCategory(category.id)} className="p-1">{expandedCategories[category.id] ? <ChevronDown className="h-3 w-3"/> : <ChevronRight className="h-3 w-3"/>}</button>}
+                                            <button className={cn("flex-1 rounded-md p-2 text-left text-sm", selectedCategory === String(category.id) ? 'bg-primary text-primary-foreground' : 'hover:bg-accent')} onClick={() => setSelectedCategory(String(category.id))}>{category.name}</button>
                                         </div>
-
-                                        {/* Subcategories section */}
-                                        {expandedCategories[category.id] && subCategoriesByParent[category.id] && (
-                                            <div
-                                                className="ml-5 mt-1 space-y-1 border-l-2 border-muted-foreground/20 pl-1">
-                                                {subCategoriesByParent[category.id].map(subCategory => (
-                                                    <button
-                                                        key={subCategory.id}
-                                                        className={cn(
-                                                            "w-full rounded-md p-2 text-left text-sm",
-                                                            selectedCategory === subCategory.id.toString()
-                                                                ? 'bg-primary text-primary-foreground'
-                                                                : 'hover:bg-accent hover:text-accent-foreground'
-                                                        )}
-                                                        onClick={() => setSelectedCategory(subCategory.id.toString())}
-                                                    >
-                                                        {subCategory.name}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        )}
+                                        {expandedCategories[category.id] && subCategoriesByParent[category.id] && <div className="ml-5 mt-1 pl-1 border-l-2">{subCategoriesByParent[category.id].map(sub => <button key={sub.id} className={cn("w-full rounded-md p-2 text-left text-sm", selectedCategory === String(sub.id) ? 'bg-primary text-primary-foreground' : 'hover:bg-accent')} onClick={() => setSelectedCategory(String(sub.id))}>{sub.name}</button>)}</div>}
                                     </div>
                                 ))}
                             </div>

@@ -96,6 +96,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     logout: async () => {
         tokenService.clearTokens();
+        sessionStorage.clear()
         saveUserToStorage(null);
         delete api.defaults.headers.common['Authorization'];
         set({ user: null, isAuthenticated: false, loading: false, token: null, isInitializing: false });

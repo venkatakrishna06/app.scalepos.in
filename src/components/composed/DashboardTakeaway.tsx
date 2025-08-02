@@ -328,15 +328,58 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({ onOrderC
             {/* Main Content */}
             <div className="flex flex-1 flex-col md:flex-row overflow-hidden">
                 <div className={cn("flex-1 flex flex-col overflow-hidden", isCartOpen ? "hidden md:flex" : "flex")}>
-                    <div className="p-2 shrink-0"><div className="relative"><Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2" /><input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="h-9 w-full rounded-md border pl-8" /></div></div>
-                    <div className="flex-1 overflow-y-auto p-2">
-                        <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-                            {filteredItems.map(item => (
-                                <Card key={item.id} className={cn("p-2", item.available ? 'cursor-pointer' : 'opacity-50')} onClick={() => handleQuantityChange(item, 1)}>
-                                    <p className="font-semibold text-sm">{item.name}</p>
-                                    <div className="flex justify-between items-center text-xs"><span>₹{item.price}</span>{getItemQuantity(item.id) > 0 && <span className="bg-primary text-primary-foreground rounded-full px-2 text-xs"> {getItemQuantity(item.id)}</span>}</div>
-                                </Card>
-                            ))}
+                    <div className="sticky top-0 z-10 bg-background p-2 xs:p-3 sm:p-3 shrink-0">
+                        <div className="relative">
+                            <Search
+                                className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
+                            <input
+                                type="text"
+                                placeholder="Search by name..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="h-9 w-full rounded-md border bg-background pl-8 pr-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            />
+                        </div>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-2 pt-0 custom-scrollbar">
+                        <div className="grid gap-2 grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 auto-rows-max">
+                            {filteredItems.length > 0 ? filteredItems.map(item => (
+                                <div
+                                    key={item.id}
+                                    className={`relative p-2 rounded-md border bg-card ${item.available ? 'cursor-pointer hover:bg-accent/50' : 'cursor-not-allowed opacity-75'} transition-colors`}
+                                    onClick={() => item.available && handleQuantityChange(item, 1)}
+                                >
+                                    {!item.available && (
+                                        <div className="absolute -top-1 -right-1 z-10">
+                                            <div
+                                                className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md shadow-sm">
+                                                Unavailable
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-medium leading-tight text-sm line-clamp-2">{item.name}</h3>
+                                        <div className="mt-1 flex items-center justify-between">
+                                            <span
+                                                className="text-sm font-semibold">₹{item.price.toFixed(2)}</span>
+                                            {getItemQuantity(item.id) > 0 && (
+                                                <span
+                                                    className="px-2 py-0.5 bg-primary/10 rounded-full text-xs font-medium text-primary">
+                                                    Qty: {getItemQuantity(item.id)}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )) : (
+                                <div
+                                    className="col-span-full flex flex-col items-center justify-center py-10 text-center">
+                                    <Search className="h-10 w-10 text-muted-foreground mb-3"/>
+                                    <p className="text-muted-foreground">No menu items found</p>
+                                    <p className="text-xs text-muted-foreground mt-1">Try adjusting your
+                                        search or category</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
