@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {useRestaurant} from '@/api/restaurant';
 import {PERMISSIONS} from '@/lib/auth/roles';
+import {PermissionGuard} from './permission-guard';
 
 interface NavbarProps extends PropsWithChildren {
     toggleSidebar: () => void;
@@ -82,7 +83,7 @@ export default function Navbar({toggleSidebar, isSidebarOpen}: NavbarProps) {
                         </div>
 
                         <div className="hidden md:flex items-center gap-1 sm:gap-2 rounded-lg bg-muted p-1">
-                            {hasPermission(PERMISSIONS.CREATE_ORDER) && (
+                            <PermissionGuard permission={PERMISSIONS.CREATE_ORDER}>
                                 <>
                                     <Button
                                         variant={isRouteActive('/tables') ? "default" : "ghost"}
@@ -114,8 +115,8 @@ export default function Navbar({toggleSidebar, isSidebarOpen}: NavbarProps) {
                                         <span className="sm:hidden">Bill</span>
                                     </Button>
                                 </>
-                            )}
-                            {hasPermission(PERMISSIONS.READ_ORDER) && (
+                            </PermissionGuard>
+                            <PermissionGuard permission={PERMISSIONS.READ_ORDER}>
                                 <Button
                                     variant={isRouteActive('/orders') ? "default" : "ghost"}
                                     size="sm"
@@ -125,7 +126,7 @@ export default function Navbar({toggleSidebar, isSidebarOpen}: NavbarProps) {
                                     <ClipboardList className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4"/>
                                     <span>Orders</span>
                                 </Button>
-                            )}
+                            </PermissionGuard>
                         </div>
                     </div>
 
@@ -170,7 +171,7 @@ export default function Navbar({toggleSidebar, isSidebarOpen}: NavbarProps) {
                                     </div>
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator/>
-                                {hasPermission(PERMISSIONS.READ_USER) && (
+                                <PermissionGuard permission={PERMISSIONS.READ_USER}>
                                     <DropdownMenuItem onClick={() => {
                                         const analyticsUrl = import.meta.env.VITE_ANALYTICS_URL || 'http://localhost:5174/';
                                         const absoluteUrl = analyticsUrl.startsWith('http://') || analyticsUrl.startsWith('https://')
@@ -181,7 +182,7 @@ export default function Navbar({toggleSidebar, isSidebarOpen}: NavbarProps) {
                                         <BarChart2 className="mr-2 h-4 w-4"/>
                                         Analytics
                                     </DropdownMenuItem>
-                                )}
+                                </PermissionGuard>
                                 <DropdownMenuItem onClick={() => navigate('/settings')}>
                                     <Settings className="mr-2 h-4 w-4"/>
                                     Settings

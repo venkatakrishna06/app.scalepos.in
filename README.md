@@ -94,8 +94,20 @@ Custom hooks have been created for each service:
 - `useMenu` - Menu management operations
 - `useTable` - Table management operations
 - `usePayment` - Payment processing operations
+- `usePermissions` - Permission checking and role-based access control
 
 For detailed documentation on these hooks, see [src/lib/hooks/README.md](./src/lib/hooks/README.md).
+
+### Permission System
+
+The application implements a comprehensive role-based permission system that controls access to features and UI elements based on user roles. Key components include:
+
+- Role-based permission assignments
+- The `usePermissions` hook for permission checking
+- The `PermissionGuard` component for conditional UI rendering
+- The `RoleBasedRoute` component for route protection
+
+For detailed documentation on the permission system, see [src/docs/PERMISSIONS.md](./src/docs/PERMISSIONS.md).
 
 For detailed application documentation, please see [DOCUMENTATION.md](./DOCUMENTATION.md).
 

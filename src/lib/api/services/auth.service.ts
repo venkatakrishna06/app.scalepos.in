@@ -1,11 +1,11 @@
 import { api } from '../axios';
 import { AuthResponse, LoginCredentials, SignupData, User } from '@/types/auth';
 import { API_ENDPOINTS } from '../endpoints';
-import logger from '@/lib/services/logger.service';
 
 export const authService = {
     login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
         try {
+            debugger
             const response = await api.post<AuthResponse>(API_ENDPOINTS.AUTH.LOGIN, credentials);
             return response.data;
         } catch (error) {

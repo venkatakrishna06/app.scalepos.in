@@ -6,14 +6,12 @@ import {ServerOrderView} from '@/components/composed/order/ServerOrderView';
 import {KitchenView} from '@/components/composed/order/KitchenView';
 import {useAuthStore} from "@/lib/auth/auth.store";
 import {usePermissions} from '@/hooks/usePermissions';
-import {PERMISSIONS} from '@/lib/auth/roles';
 import {OrdersSkeleton} from '@/components/composed/orders-skeleton';
 import {useOrdersPage} from '@/hooks/useOrdersPage';
 import {ConfirmationDialog} from '@/components/composed/ConfirmationDialog';
 
 export default function Orders() {
     const {user} = useAuthStore();
-    const {hasPermission} = usePermissions();
     const currentServer = user?.staff?.name;
 
     const {
@@ -35,6 +33,7 @@ export default function Orders() {
         handleItemStatusChange,
         handleCloseViewOrdersDialog,
     } = useOrdersPage();
+    const {isAdmin, isManager, isServer, isKitchen} = usePermissions();
 
     if (ordersLoading) {
         return <OrdersSkeleton/>;
@@ -66,7 +65,7 @@ export default function Orders() {
 
     return (
         <div className="space-y-6">
-            {hasPermission(PERMISSIONS.UPDATE_ORDER) && (
+            {isAdmin()  && (
                 <AdminOrderOverview
                     orders={orders}
                     onEditOrder={handleEditOrder}
@@ -77,7 +76,7 @@ export default function Orders() {
                 />
             )}
 
-            {hasPermission(PERMISSIONS.CREATE_PAYMENT) && (
+            {isServer() && (
                 <ServerOrderView
                     orders={orders}
                     currentServer={currentServer || ''}
@@ -86,7 +85,7 @@ export default function Orders() {
                 />
             )}
 
-            {hasPermission(PERMISSIONS.READ_ORDER) && (
+            {isKitchen() && (
                 <KitchenView
                     orders={orders}
                     onItemStatusChange={handleItemStatusChange}

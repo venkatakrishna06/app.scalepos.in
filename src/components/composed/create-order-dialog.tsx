@@ -23,6 +23,8 @@ import {useCategories, useMenuItems} from "@/api/menu";
 import {useCreateOrder, useUpdateOrder} from "@/api/orders";
 import {useFavoriteItems} from "@/api/analytics";
 import {usePrinterConfig} from "@/api/printers";
+import {PermissionGuard} from './permission-guard';
+import {PERMISSIONS} from '@/lib/auth/roles';
 
 // Add QZ Tray type definitions
 declare global {
@@ -496,7 +498,6 @@ function CreateOrderDialogComponent({
                 staff_id: user?.staff_id,
                 status: 'placed' as const,
                 order_type: table_id ? 'dine-in' : currentOrderType,
-                token_number: !table_id ? tokenNumber : undefined,
                 items: orderItems.map(({ id, ...rest }) => rest), // Remove temp ID
                 total_amount: totalAmount
             };
@@ -789,32 +790,34 @@ function CreateOrderDialogComponent({
                                                                 )}
                                                             </div>
                                                             <div className="flex items-center gap-1">
-                                                                <button
-                                                                    className="border rounded-md h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent"
-                                                                    onClick={() => handleCartQuantityChange(item.menu_item_id, -1)}
-                                                                    disabled={isSubmitting}
-                                                                >
-                                                                    <Minus className="h-3 w-3"/>
-                                                                </button>
-                                                                <span
-                                                                    className="w-5 text-center text-sm">{item.quantity}</span>
-                                                                <button
-                                                                    className="border rounded-md h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent"
-                                                                    onClick={() => handleCartQuantityChange(item.menu_item_id, 1)}
-                                                                    disabled={isSubmitting}
-                                                                >
-                                                                    <Plus className="h-3 w-3"/>
-                                                                </button>
-                                                                <button
-                                                                    className="border rounded-md h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent ml-1"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleEditNote(item.id, item.notes || '');
-                                                                    }}
-                                                                    disabled={isSubmitting}
-                                                                >
-                                                                    <Pencil className="h-3 w-3"/>
-                                                                </button>
+                                                                <PermissionGuard permission={PERMISSIONS.UPDATE_ORDER}>
+                                                                    <button
+                                                                        className="border rounded-md h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent"
+                                                                        onClick={() => handleCartQuantityChange(item.menu_item_id, -1)}
+                                                                        disabled={isSubmitting}
+                                                                    >
+                                                                        <Minus className="h-3 w-3"/>
+                                                                    </button>
+                                                                    <span
+                                                                        className="w-5 text-center text-sm">{item.quantity}</span>
+                                                                    <button
+                                                                        className="border rounded-md h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent"
+                                                                        onClick={() => handleCartQuantityChange(item.menu_item_id, 1)}
+                                                                        disabled={isSubmitting}
+                                                                    >
+                                                                        <Plus className="h-3 w-3"/>
+                                                                    </button>
+                                                                    <button
+                                                                        className="border rounded-md h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent ml-1"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleEditNote(item.id, item.notes || '');
+                                                                        }}
+                                                                        disabled={isSubmitting}
+                                                                    >
+                                                                        <Pencil className="h-3 w-3"/>
+                                                                    </button>
+                                                                </PermissionGuard>
                                                             </div>
                                                         </div>
 
@@ -854,23 +857,25 @@ function CreateOrderDialogComponent({
                                                 <span
                                                     className="text-lg font-semibold text-primary">₹{totalAmount.toFixed(2)}</span>
                                             </div>
-                                            <Button
-                                                className="w-full justify-between py-4 text-base"
-                                                onClick={debouncedSubmitOrder}
-                                                disabled={orderItems.length === 0 || isSubmitting}
-                                            >
-                                                {isSubmitting ? (
-                                                    <>
-                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                                                        <span>Processing...</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <span>{existingOrder ? 'Update Order' : 'Place Order'}</span>
-                                                        <ChevronRight className="h-5 w-5"/>
-                                                    </>
-                                                )}
-                                            </Button>
+                                            <PermissionGuard permission={PERMISSIONS.CREATE_ORDER}>
+                                                <Button
+                                                    className="w-full justify-between py-4 text-base"
+                                                    onClick={debouncedSubmitOrder}
+                                                    disabled={orderItems.length === 0 || isSubmitting}
+                                                >
+                                                    {isSubmitting ? (
+                                                        <>
+                                                            <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                                            <span>Processing...</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span>{existingOrder ? 'Update Order' : 'Place Order'}</span>
+                                                            <ChevronRight className="h-5 w-5"/>
+                                                        </>
+                                                    )}
+                                                </Button>
+                                            </PermissionGuard>
                                         </div>
                                     </div>
                                 </div>

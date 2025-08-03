@@ -21,7 +21,7 @@ interface DeletedEntityData {
 interface OrderItemStatusUpdateData {
   id: number;
   order_id: number;
-  status: 'placed' | 'preparing' | 'served' | 'cancelled';
+  status: 'placed' | 'preparing'|'ready' | 'served'  |'cancelled';
 }
 
 interface WebSocketMessage<
@@ -177,7 +177,6 @@ class WebSocketService {
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
     }
-    // @ts-ignore
     this.reconnectTimeout = setTimeout(() => {
       this.reconnectAttempts++;
       console.log(`WebSocket reconnecting... attempt ${this.reconnectAttempts}`);

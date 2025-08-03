@@ -112,9 +112,24 @@ export default function Sidebar({closeSidebar}: SidebarProps) {
     const {user} = useAuthStore();
     const {hasPermission} = usePermissions();
 
-    const filteredNavigation = navigationWithPermissions.filter(
+    // Filter navigation items based on permissions and role
+    const { isServer, isKitchen } = usePermissions();
+    
+    let filteredNavigation = navigationWithPermissions.filter(
         item => item.permissions.some(permission => hasPermission(permission))
     );
+    
+    // Server should only see operations category
+    if (isServer()) {
+        filteredNavigation = filteredNavigation.filter(item => item.category === 'operations');
+    }
+    
+    // Kitchen should only see orders and menu
+    if (isKitchen()) {
+        filteredNavigation = filteredNavigation.filter(item => 
+            item.name === 'Orders' || item.name === 'Menu'
+        );
+    }
 
     const operationsItems = filteredNavigation.filter(item => item.category === 'operations');
     const managementItems = filteredNavigation.filter(item => item.category === 'management');

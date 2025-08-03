@@ -1,13 +1,15 @@
 import React, {useState} from 'react';
 import {Check, CreditCard, FileText, Printer, Search, User} from 'lucide-react';
 import {Button} from '@/components/ui/button';
-import {format, isToday, isYesterday} from 'date-fns';
+import {formatDateWithContext} from '@/lib/date-utils';
 import {Input} from '@/components/ui/input';
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
 import {Badge} from '@/components/ui/badge';
 import {cn} from '@/lib/utils';
 import {Order} from '@/types';
+import {PermissionGuard} from './permission-guard';
+import {PERMISSIONS} from '@/lib/auth/roles';
 
 interface ServerOrderViewProps {
     orders: Order[];
@@ -21,7 +23,7 @@ export const ServerOrderView: React.FC<ServerOrderViewProps> = ({
                                                                     orders,
                                                                     currentServer,
                                                                     onMarkItemAsServed,
-                                                                    onMarkOrderAsPaid,
+                                                                    // onMarkOrderAsPaid, // Currently not used
                                                                     onPrintBill
                                                                 }) => {
     // State for filter parameters
@@ -56,14 +58,7 @@ export const ServerOrderView: React.FC<ServerOrderViewProps> = ({
 
     // Get order date display
     const getOrderDateDisplay = (dateString: string) => {
-        const date = new Date(dateString);
-        if (isToday(date)) {
-            return `Today, ${format(date, 'h:mm a')}`;
-        } else if (isYesterday(date)) {
-            return `Yesterday, ${format(date, 'h:mm a')}`;
-        } else {
-            return format(date, 'MMM d, h:mm a');
-        }
+        return formatDateWithContext(dateString);
     };
 
     // Filter orders assigned to the current server
@@ -206,15 +201,17 @@ export const ServerOrderView: React.FC<ServerOrderViewProps> = ({
                                                         </td>
                                                         <td className="p-2">
                                                             {item.status === 'ready' && (
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="h-6 px-2 text-xs text-green-700 hover:bg-green-100"
-                                                                    onClick={() => onMarkItemAsServed(order.id, item.id)}
-                                                                    disabled={item.allowed_next_states && !item.allowed_next_states.includes('served')}
-                                                                >
-                                                                    <Check className="mr-1 h-3 w-3"/> Mark Served
-                                                                </Button>
+                                                                <PermissionGuard permission={PERMISSIONS.SERVE_ORDER}>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="h-6 px-2 text-xs text-green-700 hover:bg-green-100"
+                                                                        onClick={() => onMarkItemAsServed(order.id, item.id)}
+                                                                        disabled={item.allowed_next_states && !item.allowed_next_states.includes('served')}
+                                                                    >
+                                                                        <Check className="mr-1 h-3 w-3"/> Mark Served
+                                                                    </Button>
+                                                                </PermissionGuard>
                                                             )}
                                                         </td>
                                                     </tr>
@@ -355,15 +352,17 @@ export const ServerOrderView: React.FC<ServerOrderViewProps> = ({
 
                                 <CardFooter
                                     className="flex items-center justify-between border-t border-green-100 bg-green-50/50 dark:bg-green-950/50 pt-3">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => onPrintBill(order.id)}
-                                        className="border-green-300 hover:bg-green-100 text-green-700"
-                                    >
-                                        <Printer className="mr-2 h-4 w-4"/>
-                                        Print Bill
-                                    </Button>
+                                    <PermissionGuard permission={PERMISSIONS.READ_PAYMENT}>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => onPrintBill(order.id)}
+                                            className="border-green-300 hover:bg-green-100 text-green-700"
+                                        >
+                                            <Printer className="mr-2 h-4 w-4"/>
+                                            Print Bill
+                                        </Button>
+                                    </PermissionGuard>
 
                                     <div className="text-right">
                                         <p className="text-xs text-green-600">Total Amount</p>

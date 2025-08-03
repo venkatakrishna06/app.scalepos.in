@@ -1,6 +1,6 @@
 import {Calendar, CreditCard, Search} from 'lucide-react';
 import {Button} from '@/components/ui/button';
-import {format} from 'date-fns';
+import {formatDateISO} from '@/lib/date-utils';
 import {usePaymentsPage} from '@/hooks/usePaymentsPage';
 import {PaymentsSkeleton} from "@/components/composed/payments-skeleton.tsx";
 
@@ -93,7 +93,7 @@ export default function Payments() {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-sm text-muted-foreground">
-                                        {format(new Date(payment.paid_at), 'yyyy-MM-dd HH:mm')}
+                                        {formatDateISO(payment.paid_at)}
                                     </td>
                                     <td className="px-6 py-4">
                                             <span

@@ -1,6 +1,6 @@
 import {useState} from 'react';
 import {Bell} from 'lucide-react';
-import {formatDistanceToNow} from 'date-fns';
+import {formatRelativeTime} from '@/lib/date-utils';
 import {Notification} from '@/types';
 import {
     DropdownMenu,
@@ -87,7 +87,7 @@ export function NotificationDropdown() {
                                 <div className="flex justify-between items-start">
                                     <span className="font-medium">{notification.message}</span>
                                     <span className="text-xs text-muted-foreground">
-                                        {formatDistanceToNow(notification.timestamp, {addSuffix: true})}
+                                        {formatRelativeTime(notification.timestamp)}
                                     </span>
                                 </div>
                                 {notification.details && (

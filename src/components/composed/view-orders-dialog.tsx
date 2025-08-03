@@ -1,7 +1,7 @@
 import {Dialog, DialogContent, DialogHeader, DialogTitle} from '@/components/ui/dialog';
 import {Order} from '@/types';
 import {toast} from '@/lib/toast';
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import  {useCallback, useEffect, useMemo, useState} from 'react';
 import {EmptyOrdersState} from '@/components/composed/EmptyOrdersState';
 import {OrderDetails} from "@/components/composed/OrderDetails";
 import {Skeleton} from "@/components/ui/skeleton";
@@ -10,7 +10,7 @@ import {Separator} from '@/components/ui/separator';
 import {useCancelOrderItem, useOrdersByTable, useUpdateOrderItem, useUpdateOrderItemStatus} from '@/api/orders';
 import {AlertCircle, Clock, CreditCard, RefreshCw} from 'lucide-react';
 import {Button} from '@/components/ui/button';
-import {format} from 'date-fns';
+import {formatTime} from '@/lib/date-utils';
 import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert';
 import {usePermissions} from '@/hooks/usePermissions';
 import {PERMISSIONS} from '@/lib/auth/roles';
@@ -249,7 +249,7 @@ export function ViewOrdersDialog({open, onClose, tableId, onPayment}: ViewOrders
                         <h3 className="font-medium">Order #{order.id}</h3>
                         <div className="flex items-center text-xs text-muted-foreground mt-1">
                             <Clock className="h-3 w-3 mr-1" />
-                            {format(new Date(order.order_time), 'MMM d, h:mm a')}
+                            {formatTime(order.order_time)}
                         </div>
                     </div>
                     <div className="text-right">

@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {CheckCircle2, Clock, Coffee, FileText, Search, Utensils} from 'lucide-react';
 import {Button} from '@/components/ui/button';
-import {format} from 'date-fns';
+import {formatTime} from '@/lib/date-utils';
 import {Input} from '@/components/ui/input';
 import {Card, CardContent, CardHeader} from '@/components/ui/card';
 import {Badge} from '@/components/ui/badge';
@@ -32,10 +32,7 @@ export const KitchenView: React.FC<KitchenViewProps> = ({
         }
     };
 
-    // Format time
-    const formatTime = (dateString: string) => {
-        return format(new Date(dateString), 'h:mm a');
-    };
+    // Format time function is now imported from date-utils
 
     // Extract all items with status 'placed' or 'preparing' from all orders
     const kitchenItems = orders.flatMap(order => {

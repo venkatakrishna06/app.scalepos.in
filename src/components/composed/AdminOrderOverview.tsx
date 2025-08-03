@@ -12,7 +12,8 @@ import {
     Search,
     Trash2
 } from 'lucide-react';
-import {format as formatDate, format, isToday, isYesterday, subDays} from 'date-fns';
+import {subDays, isToday, isYesterday} from 'date-fns';
+import {formatDateWithContext, formatDateISO, formatDateForFilename} from '@/lib/date-utils';
 import {Button} from '@/components/ui/button';
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
 import {Input} from '@/components/ui/input';
@@ -33,6 +34,8 @@ import {Order} from '@/types';
 
 import {FilterDropdownContainer} from './FilterDropdownContainer';
 import {useRestaurant} from "@/api";
+import {PermissionGuard} from './permission-guard';
+import {PERMISSIONS} from '@/lib/auth/roles';
 
 interface AdminOrderOverviewProps {
     orders: Order[];
@@ -120,7 +123,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                 order.order_type,
                 order.order_type === 'dine-in' ? `Table ${order.table_id || 'Unknown'}` : `Token ${order.token_number || 'N/A'}`,
                 order.status,
-                formatDate(new Date(order.order_time), 'yyyy-MM-dd HH:mm:ss'),
+                formatDateISO(order.order_time),
                 order.customer || 'N/A',
                 order.server || 'N/A',
                 order.payment_method || 'N/A',
@@ -144,7 +147,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
 
         // Set link properties
         link.setAttribute('href', url);
-        link.setAttribute('download', `orders_export_${formatDate(new Date(), 'yyyy-MM-dd_HH-mm')}.csv`);
+        link.setAttribute('download', `orders_export_${formatDateForFilename(new Date())}.csv`);
         link.style.visibility = 'hidden';
 
         // Add link to document, click it, and remove it
@@ -158,14 +161,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
 
     // Get order date display
     const getOrderDateDisplay = (dateString: string) => {
-        const date = new Date(dateString);
-        if (isToday(date)) {
-            return `Today, ${format(date, 'h:mm a')}`;
-        } else if (isYesterday(date)) {
-            return `Yesterday, ${format(date, 'h:mm a')}`;
-        } else {
-            return format(date, 'MMM d, h:mm a');
-        }
+        return formatDateWithContext(dateString);
     };
 
     // Filter and sort orders
@@ -176,7 +172,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
             // Timeframe filter
             let matchesTimeframe = true;
             if (filterTimeframe !== 'all') {
-                const orderDate = new Date(order.order_time);
+                const orderDate = new Date(order.order_time.replace(/Z$/, ''));
                 const now = new Date();
 
                 switch (filterTimeframe) {
@@ -277,24 +273,26 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                         Refresh
                     </Button>
 
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="border-blue-300 hover:bg-blue-50">
-                                <Download className="mr-2 h-4 w-4 text-blue-600"/>
-                                Export
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={exportOrdersToCSV}>
-                                Export as CSV
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator/>
-                            <DropdownMenuItem onClick={() => toast.success("Print started")}>
-                                <Printer className="mr-2 h-4 w-4"/>
-                                Print Orders
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <PermissionGuard permission={PERMISSIONS.READ_ORDER}>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm" className="border-blue-300 hover:bg-blue-50">
+                                    <Download className="mr-2 h-4 w-4 text-blue-600"/>
+                                    Export
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={exportOrdersToCSV}>
+                                    Export as CSV
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator/>
+                                <DropdownMenuItem onClick={() => toast.success("Print started")}>
+                                    <Printer className="mr-2 h-4 w-4"/>
+                                    Print Orders
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </PermissionGuard>
                 </div>
             </div>
 
@@ -419,7 +417,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                                         )}
                                                                     </div>
                                                                 )
-                                                                : `Table ${order.table_id || 'Unknown'}`}
+                                                                : `Table ${order?.table?.table_number || 'Unknown'}`}
                                                     </CardTitle>
                                                     <Badge variant="outline"
                                                            className="border-blue-300 text-blue-700">#{order.id}</Badge>
@@ -507,35 +505,39 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                     <CardFooter
                                         className="flex items-center justify-between border-t border-blue-100 bg-blue-50/50 dark:bg-blue-950/50 pt-3">
                                         <div className="flex gap-2">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => onEditOrder(order)}
-                                                disabled={
-                                                    order.status === 'cancelled' ||
-                                                    order.status === 'paid'
-                                                }
-                                                className="border-blue-300 hover:bg-blue-100 text-blue-700"
-                                            >
-                                                <Edit className="mr-2 h-4 w-4"/>
-                                                Edit
-                                            </Button>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="text-red-500 hover:text-red-700 border-red-200 hover:bg-red-50"
-                                                onClick={() => onCancelOrder(order)}
-                                                disabled={
-                                                    order.status === 'cancelled' ||
-                                                    order.status === 'paid' ||
-                                                    (order.order_type === 'dine-in' && order.status !== 'placed') ||
-                                                    (order.order_type === 'takeaway' && order.status !== 'preparing') ||
-                                                    order.order_type === 'quick-bill'
-                                                }
-                                            >
-                                                <Trash2 className="mr-2 h-4 w-4"/>
-                                                Cancel
-                                            </Button>
+                                            <PermissionGuard permission={PERMISSIONS.UPDATE_ORDER}>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => onEditOrder(order)}
+                                                    disabled={
+                                                        order.status === 'cancelled' ||
+                                                        order.status === 'paid'
+                                                    }
+                                                    className="border-blue-300 hover:bg-blue-100 text-blue-700"
+                                                >
+                                                    <Edit className="mr-2 h-4 w-4"/>
+                                                    Edit
+                                                </Button>
+                                            </PermissionGuard>
+                                            <PermissionGuard permission={PERMISSIONS.DELETE_ORDER}>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-red-500 hover:text-red-700 border-red-200 hover:bg-red-50"
+                                                    onClick={() => onCancelOrder(order)}
+                                                    disabled={
+                                                        order.status === 'cancelled' ||
+                                                        order.status === 'paid' ||
+                                                        (order.order_type === 'dine-in' && order.status !== 'placed') ||
+                                                        (order.order_type === 'takeaway' && order.status !== 'preparing') ||
+                                                        order.order_type === 'quick-bill'
+                                                    }
+                                                >
+                                                    <Trash2 className="mr-2 h-4 w-4"/>
+                                                    Cancel
+                                                </Button>
+                                            </PermissionGuard>
                                         </div>
 
                                         <div className="text-right">
@@ -664,24 +666,28 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                         </div>
                                                     </div>
                                                     <div className="flex justify-between mt-2">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="text-xs h-7 text-blue-700 hover:bg-blue-100"
-                                                            onClick={() => onEditOrder(order)}
-                                                        >
-                                                            <Edit className="h-3 w-3 mr-1"/> Edit
-                                                        </Button>
-                                                        {isTrackingEnabled && (
+                                                        <PermissionGuard permission={PERMISSIONS.UPDATE_ORDER}>
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
                                                                 className="text-xs h-7 text-blue-700 hover:bg-blue-100"
-                                                                onClick={() => onUpdateOrderStatus(order.id, 'preparing')}
-                                                                disabled={order.allowed_next_states && !order.allowed_next_states.includes('preparing')}
+                                                                onClick={() => onEditOrder(order)}
                                                             >
-                                                                Move to Preparing →
+                                                                <Edit className="h-3 w-3 mr-1"/> Edit
                                                             </Button>
+                                                        </PermissionGuard>
+                                                        {isTrackingEnabled && (
+                                                            <PermissionGuard permission={PERMISSIONS.UPDATE_ORDER}>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="text-xs h-7 text-blue-700 hover:bg-blue-100"
+                                                                    onClick={() => onUpdateOrderStatus(order.id, 'preparing')}
+                                                                    disabled={order.allowed_next_states && !order.allowed_next_states.includes('preparing')}
+                                                                >
+                                                                    Move to Preparing →
+                                                                </Button>
+                                                            </PermissionGuard>
                                                         )}
                                                     </div>
                                                 </CardContent>

@@ -4,7 +4,7 @@ import {Badge} from '@/components/ui/badge';
 import {Button} from '@/components/ui/button';
 import {Separator} from '@/components/ui/separator';
 import {Clock, CreditCard} from 'lucide-react';
-import {format} from 'date-fns';
+import {formatDateWithContext} from '@/lib/date-utils';
 import {Order} from '@/types';
 import {OrderItemCard, OrderItemRow} from './OrderItem';
 import {useRestaurant} from '@/api/restaurant';
@@ -54,7 +54,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                         <CardTitle className="text-xl">Order #{order.id}</CardTitle>
                         <CardDescription className="sm:mt-0">
                             <Clock className="inline-block h-4 w-4 mr-1"/>
-                            {format(new Date(order.order_time), 'MMM d, h:mm a')}
+                            {formatDateWithContext(order.order_time)}
                         </CardDescription>
                     </div>
                     {showOrderStatusBadge && (

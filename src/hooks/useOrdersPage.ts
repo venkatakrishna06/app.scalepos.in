@@ -3,7 +3,8 @@ import {useCancelOrder, useOrders, useUpdateOrderItemStatus, useUpdateOrderStatu
 import {Order} from '@/types';
 
 import {toast} from '@/lib/toast';
-import {format as formatDate, isToday, isYesterday, subDays} from 'date-fns';
+import {subDays, isToday, isYesterday} from 'date-fns';
+import {formatDateISO, formatDateForFilename, formatDateWithContext} from '@/lib/date-utils';
 
 type SortField = 'newest' | 'oldest' | 'highest' | 'lowest';
 
@@ -56,7 +57,8 @@ export const useOrdersPage = () => {
             setQueryParams({});
             await refetchOrders();
             toast.success('Orders refreshed successfully');
-        } catch (err) {
+        } catch {
+            // Silently handle error
         }
     }, [refetchOrders]);
 
@@ -73,7 +75,7 @@ export const useOrdersPage = () => {
             setIsCancelDialogOpen(false);
             setOrderToCancel(null);
             toast.success('Order cancelled successfully');
-        } catch (err) {
+        } catch {
             toast.error('Failed to cancel order');
         }
     }, [orderToCancel, cancelOrderMutation, refetchOrders]);
@@ -89,20 +91,16 @@ export const useOrdersPage = () => {
             await updateOrderStatusMutation.mutateAsync({id: orderId, status: newStatus});
             await refetchOrders();
             toast.success(`Order status updated to ${newStatus}`);
-        } catch (err) {
-
+        } catch {
             toast.error('Failed to update order status');
         }
     }, [updateOrderStatusMutation, refetchOrders]);
 
     const handleItemStatusChange = useCallback(async (orderId: number, itemId: number, newStatus: string) => {
-        try {
+
             await updateOrderItemStatusMutation.mutateAsync({itemId, status: newStatus});
             await refetchOrders();
-            toast.success('Order item status updated');
-        } catch (err) {
-            toast.error('Failed to update order item status');
-        }
+
     }, [updateOrderItemStatusMutation, refetchOrders]);
 
     const handleCloseViewOrdersDialog = useCallback(() => {
@@ -245,7 +243,7 @@ export const useOrdersPage = () => {
                 order.order_type,
                 order.order_type === 'dine-in' ? `Table ${order.table_id || 'Unknown'}` : `Token ${order.token_number || 'N/A'}`,
                 order.status,
-                formatDate(new Date(order.order_time), 'yyyy-MM-dd HH:mm:ss'),
+                formatDateISO(order.order_time),
                 order.customer || 'N/A',
                 order.server || 'N/A',
                 order.payment_method || 'N/A',
@@ -269,7 +267,7 @@ export const useOrdersPage = () => {
 
         // Set link properties
         link.setAttribute('href', url);
-        link.setAttribute('download', `orders_export_${formatDate(new Date(), 'yyyy-MM-dd_HH-mm')}.csv`);
+        link.setAttribute('download', `orders_export_${formatDateForFilename(new Date())}.csv`);
         link.style.visibility = 'hidden';
 
         // Add link to document, click it, and remove it
@@ -282,14 +280,7 @@ export const useOrdersPage = () => {
     }, [filteredAndSortedOrders]);
 
     const getOrderDateDisplay = useCallback((dateString: string) => {
-        const date = new Date(dateString);
-        if (isToday(date)) {
-            return `Today, ${formatDate(date, 'h:mm a')}`;
-        } else if (isYesterday(date)) {
-            return `Yesterday, ${formatDate(date, 'h:mm a')}`;
-        } else {
-            return formatDate(date, 'MMM d, h:mm a');
-        }
+        return formatDateWithContext(dateString);
     }, []);
 
     return {

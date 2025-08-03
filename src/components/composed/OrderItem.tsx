@@ -28,7 +28,7 @@ export const OrderItemRow: React.FC<OrderItemProps> = ({
                                                            handleCancelItem
                                                        }) => {
     const {data: restaurant} = useRestaurant();
-    const {hasPermission} = usePermissions();
+    const {hasPermission, isServer} = usePermissions();
     const isTrackingEnabled = restaurant?.enable_order_status_tracking || false;
     const showStatusBadge = isTrackingEnabled || item.status === 'cancelled';
 
@@ -82,20 +82,22 @@ export const OrderItemRow: React.FC<OrderItemProps> = ({
             <td className="py-3">
                 {hasPermission(PERMISSIONS.UPDATE_ORDER) && item.status === 'placed' && (
                     <div className="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleCancelItem(orderId, item.id)}
-                            disabled={processingItemId === item.id || (item.allowed_next_states && !item.allowed_next_states.includes('cancelled'))}
-                        >
-                            {processingItemId === item.id ? (
-                                <Loader2 className="h-3 w-3 animate-spin mr-1"/>
-                            ) : (
-                                <XCircle className="h-3 w-3 mr-1"/>
-                            )}
-                            Cancel
-                        </Button>
-                        {isTrackingEnabled && (
+                        {!isServer() && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleCancelItem(orderId, item.id)}
+                                disabled={processingItemId === item.id || (item.allowed_next_states && !item.allowed_next_states.includes('cancelled'))}
+                            >
+                                {processingItemId === item.id ? (
+                                    <Loader2 className="h-3 w-3 animate-spin mr-1"/>
+                                ) : (
+                                    <XCircle className="h-3 w-3 mr-1"/>
+                                )}
+                                Cancel
+                            </Button>
+                        )}
+                        {isTrackingEnabled && hasPermission(PERMISSIONS.PREPARE_ORDER) && (
                             <Button
                                 size="sm"
                                 onClick={() => handleItemStatusChange(orderId, item.id, 'preparing')}
@@ -110,7 +112,7 @@ export const OrderItemRow: React.FC<OrderItemProps> = ({
                         )}
                     </div>
                 )}
-                {hasPermission(PERMISSIONS.UPDATE_ORDER) && isTrackingEnabled && item.status === 'preparing' && (
+                {hasPermission(PERMISSIONS.PREPARE_ORDER) && isTrackingEnabled && item.status === 'preparing' && (
                     <Button
                         size="sm"
                         onClick={() => handleItemStatusChange(orderId, item.id, 'ready')}
@@ -124,7 +126,7 @@ export const OrderItemRow: React.FC<OrderItemProps> = ({
                         Mark Ready
                     </Button>
                 )}
-                {hasPermission(PERMISSIONS.UPDATE_ORDER) && isTrackingEnabled && item.status === 'ready' && (
+                {hasPermission(PERMISSIONS.SERVE_ORDER) && isTrackingEnabled && item.status === 'ready' && (
                     <Button
                         size="sm"
                         onClick={() => handleItemStatusChange(orderId, item.id, 'served')}
@@ -153,7 +155,7 @@ export const OrderItemCard: React.FC<OrderItemProps> = ({
                                                             handleCancelItem
                                                         }) => {
     const {data: restaurant} = useRestaurant();
-    const {hasPermission} = usePermissions();
+    const {hasPermission, isServer} = usePermissions();
     const isTrackingEnabled = restaurant?.enable_order_status_tracking || false;
     const showStatusBadge = isTrackingEnabled || item.status === 'cancelled';
 
@@ -215,20 +217,22 @@ export const OrderItemCard: React.FC<OrderItemProps> = ({
                     <div className="flex flex-wrap gap-2 mt-2">
                         {item.status === 'placed' && (
                             <>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleCancelItem(orderId, item.id)}
-                                    disabled={processingItemId === item.id || (item.allowed_next_states && !item.allowed_next_states.includes('cancelled'))}
-                                >
-                                    {processingItemId === item.id ? (
-                                        <Loader2 className="h-3 w-3 animate-spin mr-1"/>
-                                    ) : (
-                                        <XCircle className="h-3 w-3 mr-1"/>
-                                    )}
-                                    Cancel
-                                </Button>
-                                {isTrackingEnabled && (
+                                {!isServer() && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleCancelItem(orderId, item.id)}
+                                        disabled={processingItemId === item.id || (item.allowed_next_states && !item.allowed_next_states.includes('cancelled'))}
+                                    >
+                                        {processingItemId === item.id ? (
+                                            <Loader2 className="h-3 w-3 animate-spin mr-1"/>
+                                        ) : (
+                                            <XCircle className="h-3 w-3 mr-1"/>
+                                        )}
+                                        Cancel
+                                    </Button>
+                                )}
+                                {isTrackingEnabled && hasPermission(PERMISSIONS.PREPARE_ORDER) && (
                                     <Button
                                         size="sm"
                                         onClick={() => handleItemStatusChange(orderId, item.id, 'preparing')}
@@ -243,7 +247,7 @@ export const OrderItemCard: React.FC<OrderItemProps> = ({
                                 )}
                             </>
                         )}
-                        {isTrackingEnabled && item.status === 'preparing' && (
+                        {isTrackingEnabled && item.status === 'preparing' && hasPermission(PERMISSIONS.PREPARE_ORDER) && (
                             <Button
                                 size="sm"
                                 onClick={() => handleItemStatusChange(orderId, item.id, 'ready')}
@@ -257,7 +261,7 @@ export const OrderItemCard: React.FC<OrderItemProps> = ({
                                 Mark Ready
                             </Button>
                         )}
-                        {isTrackingEnabled && item.status === 'ready' && (
+                        {isTrackingEnabled && item.status === 'ready' && hasPermission(PERMISSIONS.SERVE_ORDER) && (
                             <Button
                                 size="sm"
                                 onClick={() => handleItemStatusChange(orderId, item.id, 'served')}

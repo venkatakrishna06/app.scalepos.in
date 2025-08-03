@@ -189,8 +189,7 @@ export const orderService = {
             );
             return response.data;
         } catch (error) {
-            handleApiError(error, `Failed to update order item status for item with id: ${itemId}`, {itemId, status});
-            throw error;
+
         }
     },
 

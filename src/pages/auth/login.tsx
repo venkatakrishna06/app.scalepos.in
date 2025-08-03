@@ -56,8 +56,8 @@ export default function Login() {
 
     const handleSubmit = async (data: LoginFormData) => {
         try {
+
             await login(data.email, data.password);
-            debugger;
 
             // Get the user from auth store to determine role-based redirect
             const user = useAuthStore.getState().user;
