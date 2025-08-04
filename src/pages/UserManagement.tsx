@@ -9,6 +9,7 @@ import {toast} from '@/lib/toast';
 import {useDeleteUser, useUsers} from '@/api/users';
 import {User as UserType} from '@/types';
 import {UserManagementSkeleton} from '@/components/composed/user-management-skeleton';
+import {ConfirmationDialog} from '@/components/composed/ConfirmationDialog';
 
 const UserManagement: React.FC = () => {
     const {data: users = [], isLoading, isError, error, refetch} = useUsers();
@@ -17,17 +18,25 @@ const UserManagement: React.FC = () => {
     const [roleFilter, setRoleFilter] = useState<string>('all');
     const [showDialog, setShowDialog] = useState(false);
     const [editingUser, setEditingUser] = useState<UserType | null>(null);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [deletingUserId, setDeletingUserId] = useState<number | null>(null);
 
-    const handleDelete = async (id: number) => {
-        const confirmed = window.confirm('Are you sure you want to delete this user?');
-        if (!confirmed) return;
+    const handleDelete = async () => {
+        if (!deletingUserId) return;
 
         try {
-            await deleteUserMutation.mutateAsync(id);
+            await deleteUserMutation.mutateAsync(deletingUserId);
             toast.success('User deleted successfully');
-        } catch (err) {
+            setIsDeleteDialogOpen(false);
+            setDeletingUserId(null);
+        } catch {
             toast.error('Failed to delete user');
         }
+    };
+
+    const openDeleteDialog = (id: number) => {
+        setDeletingUserId(id);
+        setIsDeleteDialogOpen(true);
     };
 
     const handleFormSubmit = () => {
@@ -181,7 +190,7 @@ const UserManagement: React.FC = () => {
                                         variant="destructive"
                                         size="sm"
                                         className="flex-1 h-10 opacity-80 hover:opacity-100"
-                                        onClick={() => handleDelete(user.id)}
+                                        onClick={() => openDeleteDialog(user.id)}
                                         disabled={deleteUserMutation.isLoading}
                                     >
                                         <Trash2 className="mr-2 h-4 w-4"/>
@@ -221,6 +230,15 @@ const UserManagement: React.FC = () => {
 
                 </DialogContent>
             </Dialog>
+
+            <ConfirmationDialog
+                open={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
+                onConfirm={handleDelete}
+                title="Delete User"
+                description="Are you sure you want to delete this user? This action cannot be undone."
+                confirmText="Yes, Delete"
+            />
         </div>
     );
 };

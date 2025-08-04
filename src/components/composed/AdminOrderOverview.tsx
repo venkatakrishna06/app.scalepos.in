@@ -44,6 +44,8 @@ interface AdminOrderOverviewProps {
     onRefreshOrders: () => void;
     onUpdateOrderStatus: (orderId: number, newStatus: Order['status']) => void;
     onItemStatusChange: (orderId: number, itemId: number, newStatus: string) => void;
+    filterTimeframe: string;
+    setFilterTimeframe: (value: string) => void;
 }
 
 export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
@@ -52,7 +54,9 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                                           onCancelOrder,
                                                                           onRefreshOrders,
                                                                           onUpdateOrderStatus,
-                                                                          onItemStatusChange
+                                                                          onItemStatusChange,
+                                                                          filterTimeframe,
+                                                                          setFilterTimeframe
                                                                       }) => {
     // Get restaurant data to check if order tracking is enabled
     const {data:restaurant} = useRestaurant();
@@ -60,7 +64,6 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
 
     // State for filter parameters
     const [filterStatus, setFilterStatus] = useState<string>('all');
-    const [filterTimeframe, setFilterTimeframe] = useState<string>('today');
     const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>('all');
     const [filterOrderType, setFilterOrderType] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -103,9 +106,11 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
             'Table/Token',
             'Status',
             'Order Time',
-            'Customer',
             'Server',
-            'Payment Method',
+            'SGST Rate',
+            'CGST Rate',
+            'SGST Amount',
+            'CGST Amount',
             'Total Amount',
             'Items'
         ];
@@ -114,7 +119,10 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
         const csvRows = filteredOrders.map(order => {
             // Format items as a comma-separated list
             const itemsList = (order.items || [])
-                .map(item => `${item.name || 'Unknown Item'} (${item.quantity || 0}x₹${(item.price !== undefined && item.price !== null) ? item.price.toFixed(2) : '0.00'})`)
+                .map(item => {
+                    const isCancelled = item.status === 'cancelled';
+                    return `${isCancelled ? '[CANCELLED] ' : ''}${item.name || 'Unknown Item'} (${item.quantity || 0}x₹${(item.price !== undefined && item.price !== null) ? item.price.toFixed(2) : '0.00'})`;
+                })
                 .join('; ');
 
             // Create row data
@@ -124,9 +132,11 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                 order.order_type === 'dine-in' ? `Table ${order.table_id || 'Unknown'}` : `Token ${order.token_number || 'N/A'}`,
                 order.status,
                 formatDateISO(order.order_time),
-                order.customer || 'N/A',
                 order.server || 'N/A',
-                order.payment_method || 'N/A',
+                (order.sgst_rate || 0).toFixed(2),
+                (order.cgst_rate || 0).toFixed(2),
+                (order.sgst_amount || 0).toFixed(2),
+                (order.cgst_amount || 0).toFixed(2),
                 (order.total_amount || 0).toFixed(2),
                 itemsList
             ];
@@ -432,16 +442,14 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                 </Badge>
                                             )}
                                         </div>
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <Coffee className="h-4 w-4 text-blue-600"/>
+                                            <span>Server: {order.server || 'Unknown'}</span>
+                                        </div>
                                     </CardHeader>
 
-                                    <CardContent className="pb-3">
-                                        <div className="space-y-3">
 
-
-                                            <div className="flex items-center gap-2 text-sm">
-                                                <Coffee className="h-4 w-4 text-blue-600"/>
-                                                <span>Server: {order.server || 'Unknown'}</span>
-                                            </div>
+                                        <div className="space-y-1">
 
                                             {order.payment_method && (
                                                 <div className="flex items-center gap-2 text-sm">
@@ -460,7 +468,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                         </div>
 
                                         <div
-                                            className="mt-4 max-h-40 overflow-auto rounded-md border border-blue-100 custom-scrollbar">
+                                            className="max-h-40 overflow-auto  border border-blue-100 custom-scrollbar">
                                             <table className="w-full">
                                                 <thead className="bg-blue-50 dark:bg-blue-950 text-xs">
                                                 <tr className="text-left">
@@ -476,9 +484,9 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                 {(order?.items || []).length > 0 ? (
                                                     (order.items || []).map((item) => (
                                                         <tr key={item.id} className="hover:bg-blue-50/50">
-                                                            <td className="p-2">{item.name || 'Unknown Item'}</td>
-                                                            <td className="p-2">{item.quantity || 0}</td>
-                                                            <td className="p-2">{formatCurrency((item.quantity || 0) * (item.price !== undefined ? item.price : 0))}</td>
+                                                            <td className={cn("p-2", item.status === 'cancelled' && "text-red-500 font-medium")}>{item.name || 'Unknown Item'}</td>
+                                                            <td className={cn("p-2", item.status === 'cancelled' && "text-red-500 font-medium")}>{item.quantity || 0}</td>
+                                                            <td className={cn("p-2", item.status === 'cancelled' && "text-red-500 font-medium")}>{formatCurrency((item.quantity || 0) * (item.price !== undefined ? item.price : 0))}</td>
                                                             <td className="p-2">
                                                                 {(isTrackingEnabled || item.status === 'cancelled') && (
                                                                     <Badge variant="outline"
@@ -500,7 +508,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                 </tbody>
                                             </table>
                                         </div>
-                                    </CardContent>
+
 
                                     <CardFooter
                                         className="flex items-center justify-between border-t border-blue-100 bg-blue-50/50 dark:bg-blue-950/50 pt-3">
@@ -634,9 +642,9 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                                             <div
                                                                                 className="flex-1 flex items-center gap-1">
                                                                                 <span
-                                                                                    className="font-medium truncate">{item.name}</span>
+                                                                                    className={cn("font-medium truncate", item.status === 'cancelled' && "text-red-500")}>{item.name}</span>
                                                                                 <span
-                                                                                    className="text-blue-600">×{item.quantity}</span>
+                                                                                    className={cn("text-blue-600", item.status === 'cancelled' && "text-red-500")}>×{item.quantity}</span>
                                                                                 {(isTrackingEnabled || item.status === 'cancelled') && (
                                                                                     <Badge
                                                                                         className={cn("px-1 py-0.5 text-xs ml-auto", getStatusBadgeStyles(item.status || 'unknown'))}>
@@ -774,9 +782,9 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                                             <div
                                                                                 className="flex-1 flex items-center gap-1">
                                                                                 <span
-                                                                                    className="font-medium truncate">{item.name}</span>
+                                                                                    className={cn("font-medium truncate", item.status === 'cancelled' && "text-red-500")}>{item.name}</span>
                                                                                 <span
-                                                                                    className="text-yellow-600">×{item.quantity}</span>
+                                                                                    className={cn("text-yellow-600", item.status === 'cancelled' && "text-red-500")}>×{item.quantity}</span>
                                                                                 {(isTrackingEnabled || item.status === 'cancelled') && (
                                                                                     <Badge
                                                                                         className={cn("px-1 py-0.5 text-xs ml-auto", getStatusBadgeStyles(item.status || 'unknown'))}>
@@ -913,9 +921,9 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                                             <div
                                                                                 className="flex-1 flex items-center gap-1">
                                                                                 <span
-                                                                                    className="font-medium truncate">{item.name}</span>
+                                                                                    className={cn("font-medium truncate", item.status === 'cancelled' && "text-red-500")}>{item.name}</span>
                                                                                 <span
-                                                                                    className="text-green-600">×{item.quantity}</span>
+                                                                                    className={cn("text-green-600", item.status === 'cancelled' && "text-red-500")}>×{item.quantity}</span>
                                                                                 {(isTrackingEnabled || item.status === 'cancelled') && (
                                                                                     <Badge
                                                                                         className={cn("px-1 py-0.5 text-xs ml-auto", getStatusBadgeStyles(item.status || 'unknown'))}>
@@ -1041,9 +1049,9 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                                             <div
                                                                                 className="flex-1 flex items-center gap-1">
                                                                                 <span
-                                                                                    className="font-medium truncate">{item.name}</span>
+                                                                                    className={cn("font-medium truncate", item.status === 'cancelled' && "text-red-500")}>{item.name}</span>
                                                                                 <span
-                                                                                    className="text-purple-600">×{item.quantity}</span>
+                                                                                    className={cn("text-purple-600", item.status === 'cancelled' && "text-red-500")}>×{item.quantity}</span>
                                                                                 {(isTrackingEnabled || item.status === 'cancelled') && (
                                                                                     <Badge
                                                                                         className={cn("px-1 py-0.5 text-xs ml-auto", getStatusBadgeStyles(item.status || 'unknown'))}>

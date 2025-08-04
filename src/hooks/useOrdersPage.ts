@@ -3,7 +3,7 @@ import {useCancelOrder, useOrders, useUpdateOrderItemStatus, useUpdateOrderStatu
 import {Order} from '@/types';
 
 import {toast} from '@/lib/toast';
-import {subDays, isToday, isYesterday} from 'date-fns';
+import {isToday, isYesterday, subDays, startOfDay, endOfDay, formatDate} from 'date-fns';
 import {formatDateISO, formatDateForFilename, formatDateWithContext} from '@/lib/date-utils';
 
 type SortField = 'newest' | 'oldest' | 'highest' | 'lowest';
@@ -43,6 +43,68 @@ export const useOrdersPage = () => {
     const [sortBy, setSortBy] = useState<SortField>('newest');
     const [activeTab, setActiveTab] = useState<string>('all');
 
+    // Update queryParams when filterTimeframe changes and trigger a refetch
+    useEffect(() => {
+        // Create a new queryParams object to ensure React Query detects the change
+        setQueryParams(prevParams => {
+            let newParams = { ...prevParams };
+            
+            // Handle 'yesterday' with start_date and end_date
+            if (filterTimeframe === 'yesterday') {
+                const yesterdayStart = startOfDay(subDays(new Date(), 1));
+                const yesterdayEnd = endOfDay(subDays(new Date(), 1));
+                
+                newParams = {
+                    ...prevParams,
+                    period: undefined, // Remove period parameter
+                    start_date: formatDate(yesterdayStart,'yyyy-MM-dd'),
+                    end_date: formatDate(yesterdayEnd,'yyyy-MM-dd')
+                };
+            } else {
+                // Map other UI filter values to API period values
+                let period: 'day' | 'week' | 'month' | undefined;
+                
+                switch (filterTimeframe) {
+                    case 'today':
+                        period = 'day';
+                        break;
+                    case 'week':
+                        period = 'week';
+                        break;
+                    case 'month':
+                        period = 'month';
+                        break;
+                    case 'all':
+                        // For 'all', we'll fetch a month of data to have a comprehensive view
+                        period = 'month';
+                        break;
+                }
+                
+                // Only update if the period has changed to avoid infinite loops
+                if (prevParams.period === period && 
+                    !prevParams.start_date && 
+                    !prevParams.end_date) {
+                    return prevParams;
+                }
+                
+                // Clear any existing start_date and end_date
+                newParams = {
+                    ...prevParams,
+                    period,
+                    start_date: undefined,
+                    end_date: undefined
+                };
+            }
+            
+            // Schedule a refetch after the state update
+            setTimeout(() => {
+                refetchOrders();
+            }, 0);
+            
+            return newParams;
+        });
+    }, [filterTimeframe, refetchOrders]);
+
     useEffect(() => {
         if (orders.length > 0 && selectedOrderId && isViewOrdersDialogOpen) {
             const updatedOrder = orders.find(order => order.id === selectedOrderId);
@@ -54,13 +116,61 @@ export const useOrdersPage = () => {
 
     const refreshOrders = useCallback(async () => {
         try {
-            setQueryParams({});
-            await refetchOrders();
-            toast.success('Orders refreshed successfully');
+            // Create a new queryParams object to ensure React Query detects the change
+            setQueryParams(prev => {
+                let newParams = { ...prev };
+                
+                // Handle 'yesterday' with start_date and end_date
+                if (filterTimeframe === 'yesterday') {
+                    const yesterdayStart = startOfDay(subDays(new Date(), 1));
+                    const yesterdayEnd = endOfDay(subDays(new Date(), 1));
+
+                    
+                    newParams = {
+                        ...prev,
+                        period: undefined, // Remove period parameter
+                        start_date: formatDate(yesterdayStart,'yyyy-MM-dd'),
+                        end_date: formatDate(yesterdayEnd,'yyyy-MM-dd')
+                    };
+                } else {
+                    // Map other UI filter values to API period values
+                    let period: 'day' | 'week' | 'month';
+                    
+                    switch (filterTimeframe) {
+                        case 'week':
+                            period = 'week';
+                            break;
+                        case 'month':
+                        case 'all':
+                            period = 'month';
+                            break;
+                        case 'today':
+                        default:
+                            period = 'day';
+                            break;
+                    }
+                    
+                    // Clear any existing start_date and end_date
+                    newParams = {
+                        ...prev,
+                        period,
+                        start_date: undefined,
+                        end_date: undefined
+                    };
+                }
+                
+                return newParams;
+            });
+            
+            // Wait a moment for the state to update before refetching
+            setTimeout(async () => {
+                await refetchOrders();
+                toast.success('Orders refreshed successfully');
+            }, 0);
         } catch {
-            // Silently handle error
+            toast.error('Failed to refresh orders');
         }
-    }, [refetchOrders]);
+    }, [refetchOrders, filterTimeframe]);
 
     const showCancelConfirmation = useCallback((order: Order) => {
         setOrderToCancel(order);
@@ -117,24 +227,20 @@ export const useOrdersPage = () => {
                 const matchesStatus = filterStatus === 'all' ? true : order.status === filterStatus;
 
                 // Timeframe filter
+                // We're now fetching data from the API based on the selected time frame,
+                // but we still need client-side filtering for 'today' and 'yesterday'
+                // since they both map to 'day' in the API call
                 let matchesTimeframe = true;
-                if (filterTimeframe !== 'all') {
+                
+                // Only apply additional client-side filtering for 'today' and 'yesterday'
+                // since 'week', 'month', and 'all' are already handled by the API
+                if (filterTimeframe === 'today' || filterTimeframe === 'yesterday') {
                     const orderDate = new Date(order.order_time);
-                    const now = new Date();
-
-                    switch (filterTimeframe) {
-                        case 'today':
-                            matchesTimeframe = isToday(orderDate);
-                            break;
-                        case 'yesterday':
-                            matchesTimeframe = isYesterday(orderDate);
-                            break;
-                        case 'week':
-                            matchesTimeframe = orderDate >= subDays(now, 7);
-                            break;
-                        case 'month':
-                            matchesTimeframe = orderDate >= subDays(now, 30);
-                            break;
+                    
+                    if (filterTimeframe === 'today') {
+                        matchesTimeframe = isToday(orderDate);
+                    } else if (filterTimeframe === 'yesterday') {
+                        matchesTimeframe = isYesterday(orderDate);
                     }
                 }
 

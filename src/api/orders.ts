@@ -60,6 +60,16 @@ export const useOrdersByTable = (tableId: number) => {
     });
 };
 
+export const useOrderDetailsById = (orderId: number) => {
+    return useQuery({
+        queryKey: ['orderDetails', orderId],
+        queryFn: () => orderService.getOrderById(orderId),
+        staleTime: STALE_TIME,
+        gcTime: CACHE_TIME,
+        enabled: !!orderId,
+    });
+};
+
 export const useUpdateOrderStatus = () => {
     const queryClient = useQueryClient();
     return useMutation({

@@ -20,6 +20,7 @@ export const PERMISSIONS = {
     CREATE_MENU: 'create:menu',
     READ_MENU: 'read:menu',
     UPDATE_MENU: 'update:menu',
+    UPDATE_MENU_ITEM_STATUS: 'update:menu-item-status',
     DELETE_MENU: 'delete:menu',
     
     // Order Management
@@ -120,7 +121,7 @@ export const ROLE_PERMISSIONS = {
     ],
     [ROLES.KITCHEN]: [
         // Kitchen has food preparation permissions
-        PERMISSIONS.CREATE_MENU, PERMISSIONS.READ_MENU, PERMISSIONS.UPDATE_MENU,
+         PERMISSIONS.READ_MENU, PERMISSIONS.UPDATE_MENU_ITEM_STATUS,
         PERMISSIONS.READ_ORDER, PERMISSIONS.UPDATE_ORDER, PERMISSIONS.PREPARE_ORDER,
         
         // Legacy permissions

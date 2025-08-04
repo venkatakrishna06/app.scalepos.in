@@ -503,20 +503,37 @@ function CreateOrderDialogComponent({
             };
 
             if (existingOrder) {
-                const updatedItems = [...existingOrder.items, ...orderData.items];
-                await updateOrderMutation.mutateAsync({
-                    id: existingOrder.id,
-                    order: { items: updatedItems } as any
-                });
-                toast.success(`Order for ${table_id ? `Table ${table_id}` : currentOrderType} updated.`);
-                
-                // Print KOT for new items
-                if (orderItems.length > 0) {
-                    await handlePrintKOT(existingOrder.token_number || tokenNumber);
-                }
-            } else {
+                            const existingItemsMap = new Map(existingOrder.items.map(item => [item.menu_item_id, { ...item }]));
+
+                            orderData.items.forEach(newItem => {
+                                if (existingItemsMap.has(newItem.menu_item_id)) {
+                                    const existingItem = existingItemsMap.get(newItem.menu_item_id)!;
+                                    existingItem.quantity += newItem.quantity;
+                                    if (newItem.notes) {
+                                        existingItem.notes = existingItem.notes ? `${existingItem.notes}; ${newItem.notes}` : newItem.notes;
+                                    }
+                                } else {
+                                    existingItemsMap.set(newItem.menu_item_id, newItem);
+                                }
+                            });
+
+                            const updatedItems = Array.from(existingItemsMap.values());
+
+                            await updateOrderMutation.mutateAsync({
+                                id: existingOrder.id,
+                                order: { items: updatedItems } as any
+                            });
+                            toast.success(`Order for ${table_id ? `Table ${table_id}` : currentOrderType} updated.`);
+                            onClose();
+                            // Print KOT for new items
+                            if (orderItems.length > 0) {
+                                await handlePrintKOT(existingOrder.token_number || tokenNumber);
+                            }
+                        }else {
                 await createOrderMutation.mutateAsync(orderData as any);
                 toast.success(`Order created successfully.`);
+                onClose();
+
                 
                 // Print KOT for new order
                 await handlePrintKOT(tokenNumber);
@@ -641,21 +658,21 @@ function CreateOrderDialogComponent({
                                 >
                                     All Items
                                 </button>
-                                <button
-                                    className={cn(
-                                        "w-full rounded-md p-2 text-left text-sm flex items-center",
-                                        selectedCategory === 'favourites'
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'hover:bg-accent hover:text-accent-foreground'
-                                    )}
-                                    onClick={() => setSelectedCategory('favourites')}
-                                >
-                                    <Star className="h-4 w-4 mr-2"/>
-                                    Favourites
-                                    {favoriteItemsLoading && (
-                                        <Loader2 className="h-3 w-3 ml-2 animate-spin"/>
-                                    )}
-                                </button>
+                                {/*<button*/}
+                                {/*    className={cn(*/}
+                                {/*        "w-full rounded-md p-2 text-left text-sm flex items-center",*/}
+                                {/*        selectedCategory === 'favourites'*/}
+                                {/*            ? 'bg-primary text-primary-foreground'*/}
+                                {/*            : 'hover:bg-accent hover:text-accent-foreground'*/}
+                                {/*    )}*/}
+                                {/*    onClick={() => setSelectedCategory('favourites')}*/}
+                                {/*>*/}
+                                {/*    <Star className="h-4 w-4 mr-2"/>*/}
+                                {/*    Favourites*/}
+                                {/*    {favoriteItemsLoading && (*/}
+                                {/*        <Loader2 className="h-3 w-3 ml-2 animate-spin"/>*/}
+                                {/*    )}*/}
+                                {/*</button>*/}
                             </div>
                             <div className="flex flex-col gap-1">
                                 {/* Main Categories with Expandable Subcategories */}

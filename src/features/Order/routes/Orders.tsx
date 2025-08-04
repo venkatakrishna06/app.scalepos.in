@@ -32,6 +32,8 @@ export default function Orders() {
         handleUpdateOrderStatus,
         handleItemStatusChange,
         handleCloseViewOrdersDialog,
+        filterTimeframe,
+        setFilterTimeframe,
     } = useOrdersPage();
     const {isAdmin, isManager, isServer, isKitchen} = usePermissions();
 
@@ -65,16 +67,18 @@ export default function Orders() {
 
     return (
         <div className="space-y-6">
-            {isAdmin()  && (
-                <AdminOrderOverview
-                    orders={orders}
-                    onEditOrder={handleEditOrder}
-                    onCancelOrder={showCancelConfirmation}
-                    onRefreshOrders={refreshOrders}
-                    onUpdateOrderStatus={handleUpdateOrderStatus}
-                    onItemStatusChange={handleItemStatusChange}
-                />
-            )}
+{(isAdmin() || isManager()) && (
+    <AdminOrderOverview
+        orders={orders}
+        onEditOrder={handleEditOrder}
+        onCancelOrder={showCancelConfirmation}
+        onRefreshOrders={refreshOrders}
+        onUpdateOrderStatus={handleUpdateOrderStatus}
+        onItemStatusChange={handleItemStatusChange}
+        filterTimeframe={filterTimeframe}
+        setFilterTimeframe={setFilterTimeframe}
+    />
+)}
 
             {isServer() && (
                 <ServerOrderView
@@ -96,6 +100,7 @@ export default function Orders() {
                 <ViewOrdersDialog
                     open={isViewOrdersDialogOpen}
                     tableId={selectedOrder.table_id || null}
+                    orderId = {selectedOrder.id}
                     onClose={handleCloseViewOrdersDialog}
                 />
             )}

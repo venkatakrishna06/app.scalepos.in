@@ -63,13 +63,13 @@ const navigationWithPermissions: NavigationItem[] = [
     },
     {name: 'Menu', href: '/menu', icon: Coffee, permissions: [PERMISSIONS.READ_MENU], category: 'management'},
     {name: 'Categories', href: '/categories', icon: Tags, permissions: [PERMISSIONS.READ_MENU], category: 'management'},
-    {
-        name: 'Payments',
-        href: '/payments',
-        icon: Receipt,
-        permissions: [PERMISSIONS.READ_PAYMENT],
-        category: 'management'
-    },
+    // {
+    //     name: 'Payments',
+    //     href: '/payments',
+    //     icon: Receipt,
+    //     permissions: [PERMISSIONS.READ_PAYMENT],
+    //     category: 'management'
+    // },
 
     // Admin category
     {name: 'Staff', href: '/staff', icon: UserCircle, permissions: [PERMISSIONS.READ_USER], category: 'admin'},

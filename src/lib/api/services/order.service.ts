@@ -82,6 +82,15 @@ export const orderService = {
         }
     },
 
+    getOrderById : async (id: number) => {
+        try {
+            const response = await api.get<Order>(API_ENDPOINTS.ORDERS.DETAILS(id));
+            return validateApiResponse(response.data, orderSchema);
+        } catch (error) {
+            handleApiError(error, `Failed to fetch order with id: ${id}`, {id});
+            throw error;
+        }
+    },
     createOrder: async (order: Omit<Order, 'id'>) => {
         try {
             const response = await api.post<Order>(API_ENDPOINTS.ORDERS.CREATE, order);

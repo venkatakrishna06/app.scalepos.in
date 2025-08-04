@@ -36,7 +36,7 @@ export function Stats({
                 description="Total revenue today"
                 loading={isLoading}
                 trend="up"
-                onClick={() => navigate('/payments')}
+                onClick={() => navigate('/')}
             />
 
             <StatsCard

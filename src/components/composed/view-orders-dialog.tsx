@@ -7,7 +7,12 @@ import {OrderDetails} from "@/components/composed/OrderDetails";
 import {Skeleton} from "@/components/ui/skeleton";
 import {Card, CardContent, CardFooter, CardHeader} from '@/components/ui/card';
 import {Separator} from '@/components/ui/separator';
-import {useCancelOrderItem, useOrdersByTable, useUpdateOrderItem, useUpdateOrderItemStatus} from '@/api/orders';
+import {
+    useCancelOrderItem,
+    useOrdersByTable,
+    useUpdateOrderItem,
+    useUpdateOrderItemStatus
+} from '@/api/orders';
 import {AlertCircle, Clock, CreditCard, RefreshCw} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {formatTime} from '@/lib/date-utils';
@@ -20,9 +25,10 @@ interface ViewOrdersDialogProps {
     onClose: () => void;
     tableId: number | null;
     onPayment?: (order: Order) => void;
+    orderId?: number;
 }
 
-export function ViewOrdersDialog({open, onClose, tableId, onPayment}: ViewOrdersDialogProps) {
+export function ViewOrdersDialog({open, onClose, tableId, onPayment, orderId}: ViewOrdersDialogProps) {
     const [processingItemId, setProcessingItemId] = useState<number | null>(null);
     const [activeOrderId, setActiveOrderId] = useState<number | null>(null);
     const [refreshTrigger, setRefreshTrigger] = useState(0);

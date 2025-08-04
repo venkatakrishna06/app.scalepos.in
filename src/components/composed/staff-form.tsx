@@ -26,7 +26,10 @@ interface StaffFormProps {
 export function StaffForm({onSubmit, initialData, isSubmitting}: StaffFormProps) {
     const form = useForm<StaffFormData>({
         resolver: zodResolver(staffSchema),
-        defaultValues: initialData,
+        defaultValues: {
+            status: 'active',
+            ...initialData
+        },
     });
 
     return (

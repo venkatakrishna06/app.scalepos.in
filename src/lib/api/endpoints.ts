@@ -28,6 +28,7 @@ export const API_ENDPOINTS = {
     ORDERS: {
         LIST: '/api/v1/orders',
         CREATE: '/api/v1/orders',
+        DETAILS: (id: number) => `/api/v1/orders/${id}`,
         UPDATE: (id: number) => `/api/v1/orders/${id}`,
         DELETE: (id: number) => `/api/v1/orders/${id}`,
         // New endpoints for order status management

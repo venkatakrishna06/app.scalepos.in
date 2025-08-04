@@ -61,7 +61,9 @@ export const KitchenView: React.FC<KitchenViewProps> = ({
     });
 
     // Group items by status
-    const placedItems = filteredItems.filter(item => item.status === 'placed');
+    const placedItems = filteredItems.filter(item => item.status === 'placed').sort((a, b) => {
+        return new Date(a.orderTime).getTime() - new Date(b.orderTime).getTime();
+    });
     const preparingItems = filteredItems.filter(item => item.status === 'preparing');
 
     return (

@@ -275,7 +275,7 @@ export default function Menu() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                {hasPermission(PERMISSIONS.UPDATE_MENU) && (
+                                                {hasPermission(PERMISSIONS.UPDATE_MENU_ITEM_STATUS) && (
                                                     <DropdownMenuItem
                                                         onClick={() => handleToggleAvailability(item.id)}
                                                         disabled={createMenuItemMutation.isLoading || updateMenuItemMutation.isLoading || deleteMenuItemMutation.isLoading}

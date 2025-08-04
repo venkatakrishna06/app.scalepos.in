@@ -8,6 +8,8 @@ interface AdminOrderOverviewProps {
     onRefreshOrders: () => void;
     onUpdateOrderStatus: (orderId: number, newStatus: Order['status']) => void;
     onItemStatusChange: (orderId: number, itemId: number, newStatus: string) => void;
+    filterTimeframe: string;
+    setFilterTimeframe: (value: string) => void;
 }
 
 export function AdminOrderOverview({
@@ -16,7 +18,9 @@ export function AdminOrderOverview({
                                        onCancelOrder,
                                        onRefreshOrders,
                                        onUpdateOrderStatus,
-                                       onItemStatusChange
+                                       onItemStatusChange,
+                                       filterTimeframe,
+                                       setFilterTimeframe
                                    }: AdminOrderOverviewProps) {
     return (
         <AdminOrderOverviewComponent
@@ -26,6 +30,8 @@ export function AdminOrderOverview({
             onRefreshOrders={onRefreshOrders}
             onUpdateOrderStatus={onUpdateOrderStatus}
             onItemStatusChange={onItemStatusChange}
+            filterTimeframe={filterTimeframe}
+            setFilterTimeframe={setFilterTimeframe}
         />
     );
 }

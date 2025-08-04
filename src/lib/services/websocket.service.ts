@@ -1,7 +1,7 @@
 // src/lib/services/websocket.service.ts
 import { tokenService } from './token.service';
 import { queryClient } from '../queryClient';
-import { MenuItem, Order, Table } from '@/types';
+import { MenuItem, Order, OrderItem, Table } from '@/types';
 
 /**
  * Types of messages that the server may send over the WebSocket.
@@ -11,6 +11,7 @@ type WebSocketMessageType =
   | 'order_update'
   | 'order_create'
   | 'menu_item_update'
+  | 'order_item_update'
   | 'order_item_status_update';
 
 interface DeletedEntityData {
@@ -128,6 +129,9 @@ class WebSocketService {
         case 'order_update':
           this.handleOrderUpdate(message.data as Order | DeletedEntityData);
           break;
+        case 'order_item_update':
+          this.handleOrderUpdate(message.data as OrderItem);
+          break;
         case 'menu_item_update':
           this.handleMenuItemUpdate(
             message.data as MenuItem | DeletedEntityData,
@@ -215,14 +219,30 @@ class WebSocketService {
    * Handle an order creation or update.
    * Updates the React Query cache for orders.
    */
-  private handleOrderUpdate(data: Order | DeletedEntityData): void {
+  private handleOrderUpdate(data: Order | OrderItem | DeletedEntityData): void {
     const queryKey = ['orders'];
     queryClient.setQueriesData({ queryKey }, (oldData: any) => {
         if (!Array.isArray(oldData)) return oldData;
 
         if ('deleted' in data && data.deleted) {
             return oldData.filter((order: Order) => order.id !== data.id);
+        } else if ('order_id' in data) {
+            // This is an OrderItem, not an Order
+            const orderItem = data as OrderItem;
+            console.log('Received OrderItem update:', orderItem);
+            
+            // Find the parent order and update the item within it
+            return oldData.map((order: Order) => {
+                if (order.id === orderItem.order_id) {
+                    const updatedItems = order.items.map(item => 
+                        item.id === orderItem.id ? orderItem : item
+                    );
+                    return { ...order, items: updatedItems };
+                }
+                return order;
+            });
         } else {
+            // This is a complete Order
             const orderData = data as Order;
             const index = oldData.findIndex((order: Order) => order.id === orderData.id);
             if (index !== -1) {

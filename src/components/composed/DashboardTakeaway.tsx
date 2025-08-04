@@ -308,9 +308,9 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({ onOrderC
                 </div>
                 <div className="mb-2 space-y-1">
                     <button className={cn("w-full rounded-md p-2 text-left text-sm", selectedCategory === 'all' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent')} onClick={() => { setSelectedCategory('all'); if (window.innerWidth < 768) setIsSidebarOpen(false); }}>All Items</button>
-                    <button className={cn("w-full rounded-md p-2 text-left text-sm flex items-center", selectedCategory === 'favourites' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent')} onClick={() => { setSelectedCategory('favourites'); if (window.innerWidth < 768) setIsSidebarOpen(false); }}>
-                        <Star className="h-4 w-4 mr-2" /> Favourites {favoriteItemsLoading && <Loader2 className="h-3 w-3 ml-2 animate-spin" />}
-                    </button>
+                    {/*<button className={cn("w-full rounded-md p-2 text-left text-sm flex items-center", selectedCategory === 'favourites' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent')} onClick={() => { setSelectedCategory('favourites'); if (window.innerWidth < 768) setIsSidebarOpen(false); }}>*/}
+                    {/*    <Star className="h-4 w-4 mr-2" /> Favourites {favoriteItemsLoading && <Loader2 className="h-3 w-3 ml-2 animate-spin" />}*/}
+                    {/*</button>*/}
                 </div>
                 <div className="flex flex-col gap-1">
                     {mainCategories.map(category => (
@@ -386,8 +386,35 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({ onOrderC
                 {/* Cart */}
                 <div className={cn("border-t bg-muted md:w-[30rem] md:border-l md:border-t-0 flex flex-col dark:border-border overflow-hidden", "md:relative md:flex", isCartOpen ? "fixed inset-0 z-50 bg-background" : "hidden", "md:static md:z-auto shrink-0")}>
                     <div className="flex flex-col h-full overflow-hidden">
-                        <div className="flex items-center justify-between p-0.5 md:hidden shrink-0"><h2 className="text-base font-semibold">Your Order</h2><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsCartOpen(false)}><X className="h-5 w-5"/></Button></div>
-                        <div className="p-3 md:block hidden shrink-0"><h2 className="text-base font-semibold">Order Summary</h2></div>
+                        <div className="flex items-center justify-between p-0.5 md:hidden shrink-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <h2 className="text-base font-semibold">Your Order</h2>
+                                                        {orderItems.length > 0 && (
+                                                            <Button 
+                                                                variant="outline" 
+                                                                size="sm" 
+                                                                onClick={() => setOrderItems([])}
+                                                                className="text-xs"
+                                                            >
+                                                                Clear All
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsCartOpen(false)}><X className="h-5 w-5"/></Button>
+                                                </div>
+                        <div className="p-3 md:flex hidden shrink-0 justify-between items-center">
+                                                    <h2 className="text-base font-semibold">Order Summary</h2>
+                                                    {orderItems.length > 0 && (
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            onClick={() => setOrderItems([])}
+                                                            className="text-xs"
+                                                        >
+                                                            Clear All
+                                                        </Button>
+                                                    )}
+                                                </div>
                         <div className="flex-1 overflow-y-auto px-3 pb-3 custom-scrollbar">
                             {orderItems.length === 0 ? <div className="flex h-40 flex-col items-center justify-center rounded-md border border-dashed p-4 text-center"><ShoppingCart className="h-8 w-8 text-muted-foreground mb-2"/><p className="text-sm">Your order is empty</p></div> :
                                 <div className="space-y-1">

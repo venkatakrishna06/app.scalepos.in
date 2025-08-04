@@ -21,8 +21,6 @@ import {
     LazyUserManagement
 } from '@/routes/lazyRoutes';
 
-// Import permission test component
-import { PermissionTest } from '@/components/composed/permission-test';
 
 // Import non-lazy-loaded pages
 import Login from '@/pages/auth/login';
@@ -77,7 +75,6 @@ export default function AppRoutes() {
             <Route path="/user-management" element={<RoleBasedRoute requiredPermission="manage-users"><LazyUserManagement/></RoleBasedRoute>}/>
             <Route path="/profile" element={<RoleBasedRoute requiredPermission="view-profile"><LazyProfile/></RoleBasedRoute>}/>
 
-            <Route path="/permission-test" element={<RoleBasedRoute requiredPermission="dashboard"><PermissionTest/></RoleBasedRoute>}/>
 
             <Route path="/settings" element={<RoleBasedRoute requiredPermission="view-settings"><LazySettings/></RoleBasedRoute>}>
                 <Route path="profile" element={<LazyProfileSettings/>}/>
