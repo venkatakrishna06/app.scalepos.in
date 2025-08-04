@@ -20,7 +20,7 @@ import Layout from "@/components/composed/layout.tsx";
 // Set up localStorage persistence for React Query
 const localStoragePersister = createSyncStoragePersister({
     storage: window.sessionStorage,
-    key: 'quickquick-cache',
+    key: 'scalePOS-cache',
 });
 
 // Persist the React Query cache to localStorage
@@ -59,6 +59,19 @@ function App() {
         }
     }, []);
 
+    // Add event listener to clear React Query cache on tab close or page reload
+    useEffect(() => {
+        const handleBeforeUnload = () => {
+            // Clear React Query cache
+            queryClient.clear();
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, []);
     return (
         <QueryClientProvider client={queryClient}>
             <ThemeProvider defaultTheme="system" storageKey="restaurant-theme">

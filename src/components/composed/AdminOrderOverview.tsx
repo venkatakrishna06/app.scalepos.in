@@ -10,7 +10,8 @@ import {
     LayoutList,
     Printer,
     Search,
-    Trash2
+    Trash2,
+    CheckCircle
 } from 'lucide-react';
 import {subDays, isToday, isYesterday} from 'date-fns';
 import {formatDateWithContext, formatDateISO, formatDateForFilename} from '@/lib/date-utils';
@@ -34,6 +35,8 @@ import {Order} from '@/types';
 
 import {FilterDropdownContainer} from './FilterDropdownContainer';
 import {useRestaurant} from "@/api";
+import {useCreatePayment} from "@/api/payments";
+import {useUpdateOrderStatus} from "@/api/orders";
 import {PermissionGuard} from './permission-guard';
 import {PERMISSIONS} from '@/lib/auth/roles';
 
@@ -61,6 +64,10 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
     // Get restaurant data to check if order tracking is enabled
     const {data:restaurant} = useRestaurant();
     const isTrackingEnabled = restaurant?.enable_order_status_tracking || false;
+
+    // Mutations for updating order status and creating payment
+    const createPaymentMutation = useCreatePayment();
+    const updateOrderStatusMutation = useUpdateOrderStatus();
 
     // State for filter parameters
     const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -95,6 +102,44 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
     const formatCurrency = (amount: number | undefined) => {
         if (amount === undefined) return '₹0.00';
         return `₹${amount.toFixed(2)}`;
+    };
+    
+    // Handle marking an order as delivered (for takeaway and quick-bill orders)
+    const handleMarkAsDelivered = async (order: Order) => {
+        try {
+            // Only proceed if order tracking is enabled
+            if (!isTrackingEnabled) {
+                toast.error("Order tracking is not enabled");
+                return;
+            }
+            
+            // Only for takeaway and quick-bill orders
+            if (order.order_type !== 'takeaway' && order.order_type !== 'quick-bill') {
+                toast.error("This action is only available for takeaway and quick-bill orders");
+                return;
+            }
+            
+            // Create payment data
+            const paymentData = {
+                order_id: order.id,
+                amount: order.total_amount || 0,
+                payment_method: order.payment_method || 'cash',
+                payment_status: 'completed' as const,
+                transaction_id: `txn_${Date.now()}`,
+            };
+            
+            // Create payment and update order status
+            await createPaymentMutation.mutateAsync(paymentData);
+            await updateOrderStatusMutation.mutateAsync({ id: order.id, status: 'paid' });
+            
+            toast.success('Order delivered');
+            
+            // // Refresh orders
+            // onRefreshOrders();
+        } catch (error) {
+            console.error('Error marking order as delivered:', error);
+            toast.error('Failed to mark order as delivered');
+        }
     };
 
     // Export orders to CSV
@@ -513,6 +558,9 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                     <CardFooter
                                         className="flex items-center justify-between border-t border-blue-100 bg-blue-50/50 dark:bg-blue-950/50 pt-3">
                                         <div className="flex gap-2">
+                                            {
+                                                order.order_type === 'dine-in' && (
+
                                             <PermissionGuard permission={PERMISSIONS.UPDATE_ORDER}>
                                                 <Button
                                                     variant="outline"
@@ -528,6 +576,25 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                     Edit
                                                 </Button>
                                             </PermissionGuard>
+                                                )
+                                            }
+                                            {/* Delivered button for takeaway and quick-bill orders when order tracking is enabled */}
+                                            {isTrackingEnabled && 
+                                             (order.order_type === 'takeaway' || order.order_type === 'quick-bill') && 
+                                             order.status !== 'paid' && 
+                                             order.status !== 'cancelled' && (
+                                                <PermissionGuard permission={PERMISSIONS.UPDATE_ORDER}>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handleMarkAsDelivered(order)}
+                                                        className="border-green-300 hover:bg-green-100 text-green-700"
+                                                    >
+                                                        <CheckCircle className="mr-2 h-4 w-4"/>
+                                                        Delivered
+                                                    </Button>
+                                                </PermissionGuard>
+                                            )}
                                             <PermissionGuard permission={PERMISSIONS.DELETE_ORDER}>
                                                 <Button
                                                     variant="outline"
@@ -537,9 +604,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                     disabled={
                                                         order.status === 'cancelled' ||
                                                         order.status === 'paid' ||
-                                                        (order.order_type === 'dine-in' && order.status !== 'placed') ||
-                                                        (order.order_type === 'takeaway' && order.status !== 'preparing') ||
-                                                        order.order_type === 'quick-bill'
+                                                        (order.order_type === 'dine-in' && (order.status !== 'placed' || order.status !== 'preparing'))
                                                     }
                                                 >
                                                     <Trash2 className="mr-2 h-4 w-4"/>
@@ -825,15 +890,27 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                                 >
                                                                     ← Back to Placed
                                                                 </Button>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="text-xs h-7 text-yellow-700 hover:bg-yellow-100"
-                                                                    onClick={() => onUpdateOrderStatus(order.id, 'served')}
-                                                                    disabled={order.allowed_next_states && !order.allowed_next_states.includes('served')}
-                                                                >
-                                                                    Move to Served →
-                                                                </Button>
+                                                                {/* Delivered button for takeaway and quick-bill orders */}
+                                                                {(order.order_type === 'takeaway' || order.order_type === 'quick-bill') ? (
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="text-xs h-7 text-green-700 hover:bg-green-100"
+                                                                        onClick={() => handleMarkAsDelivered(order)}
+                                                                    >
+                                                                        <CheckCircle className="h-3 w-3 mr-1"/> Delivered
+                                                                    </Button>
+                                                                ) : (
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="text-xs h-7 text-yellow-700 hover:bg-yellow-100"
+                                                                        onClick={() => onUpdateOrderStatus(order.id, 'served')}
+                                                                        disabled={order.allowed_next_states && !order.allowed_next_states.includes('served')}
+                                                                    >
+                                                                        Move to Served →
+                                                                    </Button>
+                                                                )}
                                                             </>
                                                         )}
                                                     </div>
@@ -953,15 +1030,27 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                                 >
                                                                     ← Back to Preparing
                                                                 </Button>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="text-xs h-7 text-green-700 hover:bg-green-100"
-                                                                    onClick={() => onUpdateOrderStatus(order.id, 'paid')}
-                                                                    disabled={order.allowed_next_states && !order.allowed_next_states.includes('paid')}
-                                                                >
-                                                                    Mark as Paid →
-                                                                </Button>
+                                                                {/* Delivered button for takeaway and quick-bill orders */}
+                                                                {(order.order_type === 'takeaway' || order.order_type === 'quick-bill') ? (
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="text-xs h-7 text-green-700 hover:bg-green-100"
+                                                                        onClick={() => handleMarkAsDelivered(order)}
+                                                                    >
+                                                                        <CheckCircle className="h-3 w-3 mr-1"/> Delivered
+                                                                    </Button>
+                                                                ) : (
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="text-xs h-7 text-green-700 hover:bg-green-100"
+                                                                        onClick={() => onUpdateOrderStatus(order.id, 'paid')}
+                                                                        disabled={order.allowed_next_states && !order.allowed_next_states.includes('paid')}
+                                                                    >
+                                                                        Mark as Paid →
+                                                                    </Button>
+                                                                )}
                                                             </>
                                                         )}
                                                     </div>

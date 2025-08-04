@@ -252,20 +252,27 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({ onOrderC
 
             await handlePrint(printerConfig?.kot_printers, generateReceiptContent(createdOrder));
 
-            const paymentData = {
-                order_id: createdOrder.id,
-                amount: gstDetails.roundedAmount,
-                payment_method: paymentMethod,
-                payment_status: 'completed' as const,
-                transaction_id: `txn_${Date.now()}`,
-            };
+            // Check if order tracking is enabled
+            const isTrackingEnabled = restaurant?.enable_order_status_tracking || false;
 
-            await createPaymentMutation.mutateAsync(paymentData);
-            await updateOrderStatusMutation.mutateAsync({ id: createdOrder.id, status: 'paid' });
+            // Only update payment and order status automatically if order tracking is NOT enabled
+            // or if the order type is not takeaway or quick-bill
+            if (!isTrackingEnabled || (type !== 'takeaway' && type !== 'quick-bill')) {
+                const paymentData = {
+                    order_id: createdOrder.id,
+                    amount: gstDetails.roundedAmount,
+                    payment_method: paymentMethod,
+                    payment_status: 'completed' as const,
+                    transaction_id: `txn_${Date.now()}`,
+                };
 
-            await handlePrint(printerConfig?.bill_printers, generateReceiptContent(createdOrder));
-
-            toast.success('Order placed and payment completed successfully');
+                await createPaymentMutation.mutateAsync(paymentData);
+                await updateOrderStatusMutation.mutateAsync({ id: createdOrder.id, status: 'paid' });
+                await handlePrint(printerConfig?.bill_printers, generateReceiptContent(createdOrder));
+                toast.success('Order placed and payment completed successfully');
+            } else {
+                toast.success('Order placed successfully');
+            }
 
             setOrderItems([]);
             setSearchQuery('');

@@ -4,6 +4,7 @@ import {authService} from '@/lib/api/services/auth.service';
 import {tokenService} from '@/lib/services/token.service';
 import {api} from '@/lib/api/axios';
 import {toast} from '@/lib/toast';
+import {queryClient} from '@/lib/queryClient';
 
 const USER_STORAGE_KEY = 'user_data';
 
@@ -97,9 +98,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     logout: async () => {
         tokenService.clearTokens();
-        sessionStorage.clear()
+        sessionStorage.clear();
         saveUserToStorage(null);
         delete api.defaults.headers.common['Authorization'];
+        // Clear React Query cache
+        queryClient.clear();
         set({ user: null, isAuthenticated: false, loading: false, token: null, isInitializing: false });
     },
 

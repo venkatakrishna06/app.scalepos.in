@@ -1,6 +1,5 @@
 import {api} from '../axios';
 import {API_ENDPOINTS} from '../endpoints';
-import logger from '@/lib/services/logger.service';
 
 export interface PrinterConfig {
     bill_printers: string[];
@@ -137,6 +136,7 @@ declare global {
             };
             print: (config: any, data: any) => Promise<void>;
             security: {
+                setSignatureAlgorithm: (algorithm: string) => void;
                 setCertificatePromise: (certCallback: () => Promise<string>) => void;
                 setSignaturePromise: (signCallback: (toSign: string) => Promise<string>) => void;
             };
