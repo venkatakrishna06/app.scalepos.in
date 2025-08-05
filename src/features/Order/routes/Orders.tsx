@@ -112,6 +112,7 @@ export default function Orders() {
                 title="Cancel Order"
                 description={`Are you sure you want to cancel this order? This action cannot be undone. Order #${orderToCancel?.id} - ${orderToCancel?.order_type === 'takeaway' ? 'Takeaway' : orderToCancel?.order_type === 'quick-bill' ? 'Quick Bill' : `Table ${orderToCancel?.table?.table_number || 'Unknown'}`}`}
                 confirmText="Yes, Cancel Order"
+                isLoading={cancelOrderMutation.isLoading}
             />
         </div>
     );

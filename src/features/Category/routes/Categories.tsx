@@ -1,4 +1,5 @@
 import {AlertCircle, Edit2, FolderTree, Loader2, Plus, Search, Trash2} from 'lucide-react';
+import {useState} from 'react';
 
 import {Button} from '@/components/ui/button';
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle} from '@/components/ui/dialog';
@@ -7,6 +8,7 @@ import {Input} from "@/components/ui/input";
 import {Card, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {Badge} from '@/components/ui/badge';
+import {ConfirmationDialog} from '@/components/composed/ConfirmationDialog';
 import {useCategoriesPage} from '@/hooks/useCategoriesPage';
 import {CategoriesSkeleton} from "@/components/composed/categories-skeleton.tsx";
 
@@ -35,6 +37,25 @@ export default function Categories() {
         openEditDialog,
         openNewDialog
     } = useCategoriesPage();
+    
+    // State for delete confirmation dialog
+    const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+    const [categoryToDelete, setCategoryToDelete] = useState<number | null>(null);
+    
+    // Function to open delete confirmation dialog
+    const openDeleteConfirmation = (id: number) => {
+        setCategoryToDelete(id);
+        setShowDeleteConfirmation(true);
+    };
+    
+    // Function to handle confirmed deletion
+    const confirmDelete = () => {
+        if (categoryToDelete !== null) {
+            handleDelete(categoryToDelete);
+            setShowDeleteConfirmation(false);
+            setCategoryToDelete(null);
+        }
+    };
 
     if (isLoading) {
         return <CategoriesSkeleton/>;
@@ -160,7 +181,7 @@ export default function Categories() {
                                         <Button
                                             variant="destructive"
                                             size="sm"
-                                            onClick={() => handleDelete(category.id)}
+                                            onClick={() => openDeleteConfirmation(category.id)}
                                             disabled={createCategoryMutation.isLoading || updateCategoryMutation.isLoading || deleteCategoryMutation.isLoading}
                                         >
                                             <Trash2 className="mr-2 h-4 w-4"/>
@@ -263,6 +284,18 @@ export default function Categories() {
                     </Form>
                 </DialogContent>
             </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmationDialog
+                open={showDeleteConfirmation}
+                onOpenChange={setShowDeleteConfirmation}
+                onConfirm={confirmDelete}
+                title="Delete Category"
+                description="Are you sure you want to delete this category? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                isLoading={deleteCategoryMutation.isLoading}
+            />
         </div>
     );
 }

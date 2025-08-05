@@ -128,7 +128,7 @@ export function MenuItemForm({onSubmit, initialData, isSubmitting, categories}: 
                                         </FormControl>
                                         <SelectContent>
                                             {categories
-                                                .filter((category) => category.parent_category_id)
+                                                // .filter((category) => category.parent_category_id)
                                                 .map((category) => (
                                                     <SelectItem key={category.id} value={category.id.toString()}>
                                                         {category.name}

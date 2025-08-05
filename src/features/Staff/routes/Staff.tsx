@@ -221,6 +221,7 @@ export default function Staff() {
                 title="Delete Staff Member"
                 description="Are you sure you want to delete this staff member? This action cannot be undone."
                 confirmText="Yes, Delete"
+                isLoading={deleteStaffMutation.isLoading}
             />
         </div>
     );

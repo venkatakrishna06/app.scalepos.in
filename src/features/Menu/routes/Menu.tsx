@@ -27,10 +27,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card';
 import {MenuItemForm} from '@/components/composed/menu-item-form';
+import {ConfirmationDialog} from '@/components/composed/ConfirmationDialog';
 import {cn} from '@/lib/utils';
 import {PERMISSIONS} from '@/lib/auth/roles';
 import {useMenuPage} from '@/hooks/useMenuPage';
 import {MenuSkeleton} from "@/components/composed/menu-skeleton.tsx";
+import {useState} from 'react';
 
 export default function Menu() {
     const {hasPermission} = usePermissions();
@@ -68,6 +70,25 @@ export default function Menu() {
         openEditDialog,
         openNewDialog
     } = useMenuPage();
+    
+    // State for delete confirmation dialog
+    const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+    
+    // Function to open delete confirmation dialog
+    const openDeleteConfirmation = (id: number) => {
+        setItemToDelete(id);
+        setShowDeleteConfirmation(true);
+    };
+    
+    // Function to handle confirmed deletion
+    const confirmDelete = () => {
+        if (itemToDelete !== null) {
+            handleDelete(itemToDelete);
+            setShowDeleteConfirmation(false);
+            setItemToDelete(null);
+        }
+    };
 
     if (menuItemsLoading || categoriesLoading) {
         return <MenuSkeleton/>;
@@ -306,7 +327,7 @@ export default function Menu() {
                                                     <>
                                                         <DropdownMenuSeparator/>
                                                         <DropdownMenuItem
-                                                            onClick={() => handleDelete(item.id)}
+                                                            onClick={() => openDeleteConfirmation(item.id)}
                                                             disabled={createMenuItemMutation.isLoading || updateMenuItemMutation.isLoading || deleteMenuItemMutation.isLoading}
                                                             className="text-destructive focus:text-destructive"
                                                         >
@@ -434,7 +455,7 @@ export default function Menu() {
                                                     variant="ghost"
                                                     size="sm"
                                                     className="h-8 px-2 text-xs text-destructive hover:text-destructive"
-                                                    onClick={() => handleDelete(item.id)}
+                                                    onClick={() => openDeleteConfirmation(item.id)}
                                                     disabled={createMenuItemMutation.isLoading || updateMenuItemMutation.isLoading || deleteMenuItemMutation.isLoading}
                                                 >
                                                     <Trash2 className="mr-1.5 h-3.5 w-3.5"/>
@@ -499,6 +520,18 @@ export default function Menu() {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmationDialog
+                open={showDeleteConfirmation}
+                onOpenChange={setShowDeleteConfirmation}
+                onConfirm={confirmDelete}
+                title="Delete Menu Item"
+                description="Are you sure you want to delete this menu item? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                isLoading={deleteMenuItemMutation.isLoading}
+            />
         </div>
     );
 }
