@@ -1,4 +1,4 @@
-# QuickQuick Restaurant Management System
+# ScalePOS - Restaurant Management System
 
 ## Overview
 
