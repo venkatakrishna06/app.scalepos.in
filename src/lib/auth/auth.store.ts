@@ -32,7 +32,13 @@ interface AuthState {
     isAuthenticated: boolean;
     token: string | null;
     login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
-    signup: (data: any) => Promise<void>;
+    signup: (email:string,
+             password :string,
+             restaurant_name : string,
+             restaurant_address : string,
+             restaurant_phone:string,
+             restaurant_email : string,
+             restaurant_gst:string) => Promise<void>;
     logout: () => Promise<void>;
     // Other functions omitted for brevity...
     initAuth: () => Promise<void>;
@@ -107,9 +113,72 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     },
 
     // Other functions from your original file...
-    signup: async () => {},
-    updateProfile: async () => {},
-    changePassword: async () => {},
+    signup: async (
+        email,
+        password ,
+        restaurant_name ,
+        restaurant_address ,
+        restaurant_phone,
+        restaurant_email ,
+        restaurant_gst
+    ) => {
+        try {
+            set({loading: true, error: null});
+            const response = await authService.signup({
+                email,
+                password,
+                restaurant_name,
+                restaurant_address,
+                restaurant_phone,
+                restaurant_email,
+                restaurant_gst
+            });
+
+            // Store both tokens if refresh token is provided
+            if (response.refreshToken) {
+                // This now just sets a flag indicating we have a refresh token
+                // The actual token is stored as an HttpOnly cookie by the server
+                tokenService.setRefreshToken();
+            }
+
+            // Save user data to sessionStorage
+            saveUserToStorage(response.user);
+
+            set(state => {
+                state.setToken(response.token);
+                return {user: response.user, isAuthenticated: true};
+            });
+        } catch {
+            set({error: 'Failed to create account'});
+        } finally {
+            set({loading: false});
+        }
+    },
+    updateProfile: async (data) => {
+        try {
+            set({loading: true, error: null});
+            const updatedUser = await authService.updateProfile(data);
+
+            // Save updated user data to sessionStorage
+            saveUserToStorage(updatedUser);
+
+            set({user: updatedUser});
+        } catch {
+            set({error: 'Failed to update profile'});
+        } finally {
+            set({loading: false});
+        }
+    },
+    changePassword: async (currentPassword:string, newPassword:string) => {
+        try {
+            set({loading: true, error: null});
+            await authService.changePassword(currentPassword, newPassword);
+        } catch {
+            set({error: 'Failed to change password'});
+        } finally {
+            set({loading: false});
+        }
+    },
     clearError: () => {},
     setToken: () => {},
 }));

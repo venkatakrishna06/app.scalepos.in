@@ -28,15 +28,17 @@ const signupSchema = z.object({
         .min(5, 'Address must be at least 5 characters')
         .optional(),
     restaurant_phone: z.string()
-        .regex(/^\+?[\d\s-]{10,}$/, 'Please enter a valid phone number')
-        .optional(),
+        .regex(/^\+?[\d\s-]{10,}$/, 'Please enter a valid phone number'),
     restaurant_email: z.string()
         .email('Please enter a valid email address')
         .optional()
         .or(z.literal('')),
     restaurant_gst: z.string()
-        .regex(/^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}[Z]{1}[A-Z\d]{1}$/, 'Please enter a valid GST number (15 characters)')
-        .optional(),
+        .optional()
+        .refine(
+            (val) => !val || /^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}[Z]{1}[A-Z\d]{1}$/.test(val),
+            { message: 'Please enter a valid GST number (15 characters)' }
+        ),
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ["confirmPassword"],
