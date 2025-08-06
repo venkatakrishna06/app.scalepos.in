@@ -177,10 +177,10 @@ export const useOrdersPage = () => {
         setIsCancelDialogOpen(true);
     }, []);
 
-    const handleCancelOrder = useCallback(async () => {
+    const handleCancelOrder = useCallback(async (reason: string) => {
         if (!orderToCancel) return;
         try {
-            await cancelOrderMutation.mutateAsync({id: orderToCancel.id, reason: 'Cancelled by user'});
+            await cancelOrderMutation.mutateAsync({id: orderToCancel.id, reason});
             await refetchOrders();
             setIsCancelDialogOpen(false);
             setOrderToCancel(null);

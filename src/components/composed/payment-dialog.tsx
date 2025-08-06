@@ -1,5 +1,5 @@
 import {useEffect, useRef, useState} from 'react';
-import {AlertCircle, CheckCircle, Loader2} from 'lucide-react';
+import {AlertCircle, CheckCircle} from 'lucide-react';
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from '@/components/ui/dialog';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
@@ -727,33 +727,21 @@ export function PaymentDialog({open, onClose, order, draftOrder, onPaymentComple
                                     <Button
                                         onClick={handlePrintBillAndPayment}
                                         className="w-full h-9 text-xs"
-                                        disabled={isSubmitting}
+                                        loading={isSubmitting}
+                                        loadingText="Processing..."
                                         variant="secondary"
                                     >
-                                        {isSubmitting ? (
-                                            <>
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                                                Processing...
-                                            </>
-                                        ) : (
-                                            "Print Bill & Complete Payment"
-                                        )}
+                                        Print Bill & Complete Payment
                                     </Button>
 
                                     <Button
                                         onClick={handlePayment}
                                         className="w-full h-9 text-xs font-medium"
-                                        disabled={isSubmitting}
+                                        loading={isSubmitting}
+                                        loadingText="Processing..."
                                         variant="outline"
                                     >
-                                        {isSubmitting ? (
-                                            <>
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                                                Processing...
-                                            </>
-                                        ) : (
-                                            "Complete Payment"
-                                        )}
+                                        Complete Payment
                                     </Button>
                                 </div>
                             </div>

@@ -19,6 +19,7 @@ import {formatTime} from '@/lib/date-utils';
 import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert';
 import {usePermissions} from '@/hooks/usePermissions';
 import {PERMISSIONS} from '@/lib/auth/roles';
+import {CancellationReasonDialog} from '@/components/composed/CancellationReasonDialog';
 
 interface ViewOrdersDialogProps {
     open: boolean;
@@ -32,6 +33,8 @@ export function ViewOrdersDialog({open, onClose, tableId, onPayment, orderId}: V
     const [processingItemId, setProcessingItemId] = useState<number | null>(null);
     const [activeOrderId, setActiveOrderId] = useState<number | null>(null);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const [isItemCancelDialogOpen, setIsItemCancelDialogOpen] = useState(false);
+    const [itemToCancel, setItemToCancel] = useState<{orderId: number, itemId: number} | null>(null);
     const {hasPermission} = usePermissions();
 
     // Use React Query to get the latest orders data
@@ -150,13 +153,19 @@ export function ViewOrdersDialog({open, onClose, tableId, onPayment, orderId}: V
         }
     }, [processingItemId, updateOrderItemStatusMutation]);
 
-    const handleCancelItem = useCallback(async (orderId: number, itemId: number) => {
+    const showItemCancellationDialog = useCallback((orderId: number, itemId: number) => {
+        setItemToCancel({ orderId, itemId });
+        setIsItemCancelDialogOpen(true);
+    }, []);
+
+    const handleCancelItem = useCallback(async (orderId: number, itemId: number, reason: string) => {
         if (processingItemId) return;
 
         try {
             setProcessingItemId(itemId);
-            await cancelOrderItemMutation.mutateAsync({orderId, itemId, reason: 'Cancelled by user'});
+            await cancelOrderItemMutation.mutateAsync({orderId, itemId, reason});
             setRefreshTrigger(prev => prev + 1);
+            toast.success('Item cancelled successfully');
         } catch {
             toast.error('Failed to cancel item');
         } finally {
@@ -332,7 +341,7 @@ export function ViewOrdersDialog({open, onClose, tableId, onPayment, orderId}: V
                                     onPayment={hasPermission(PERMISSIONS.CREATE_PAYMENT) ? onPayment : undefined}
                                     handleQuantityChange={handleQuantityChange}
                                     handleItemStatusChange={handleItemStatusChange}
-                                    handleCancelItem={handleCancelItem}
+                                    handleCancelItem={showItemCancellationDialog}
                                     processingItemId={processingItemId}
                                     getOrderTotal={getOrderTotal}
                                     getGstDetails={getGstDetails}
@@ -354,6 +363,22 @@ export function ViewOrdersDialog({open, onClose, tableId, onPayment, orderId}: V
                         )}
                     </div>
                 )}
+
+                {/* Cancellation Reason Dialog for Items */}
+                <CancellationReasonDialog
+                    open={isItemCancelDialogOpen}
+                    onOpenChange={setIsItemCancelDialogOpen}
+                    onConfirm={(reason) => {
+                        if (itemToCancel) {
+                            handleCancelItem(itemToCancel.orderId, itemToCancel.itemId, reason);
+                            setItemToCancel(null);
+                            setIsItemCancelDialogOpen(false);
+                        }
+                    }}
+                    title="Cancel Item"
+                    description="Please provide a reason for cancelling this item."
+                    confirmText="Yes, Cancel Item"
+                />
             </DialogContent>
         </Dialog>
     );

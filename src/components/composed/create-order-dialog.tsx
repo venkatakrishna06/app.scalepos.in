@@ -878,19 +878,12 @@ function CreateOrderDialogComponent({
                                                 <Button
                                                     className="w-full justify-between py-4 text-base"
                                                     onClick={debouncedSubmitOrder}
-                                                    disabled={orderItems.length === 0 || isSubmitting}
+                                                    disabled={orderItems.length === 0}
+                                                    loading={isSubmitting}
+                                                    loadingText="Processing..."
                                                 >
-                                                    {isSubmitting ? (
-                                                        <>
-                                                            <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                                                            <span>Processing...</span>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <span>{existingOrder ? 'Update Order' : 'Place Order'}</span>
-                                                            <ChevronRight className="h-5 w-5"/>
-                                                        </>
-                                                    )}
+                                                    <span>{existingOrder ? 'Update Order' : 'Place Order'}</span>
+                                                    {!isSubmitting && <ChevronRight className="h-5 w-5"/>}
                                                 </Button>
                                             </PermissionGuard>
                                         </div>
@@ -923,3 +916,4 @@ function CreateOrderDialogComponent({
 
 // Export the component wrapped with memo to prevent unnecessary rerenders
 export const CreateOrderDialog = memo(CreateOrderDialogComponent);
+

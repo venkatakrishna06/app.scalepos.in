@@ -299,7 +299,7 @@ export default function Menu() {
                                                 {hasPermission(PERMISSIONS.UPDATE_MENU_ITEM_STATUS) && (
                                                     <DropdownMenuItem
                                                         onClick={() => handleToggleAvailability(item.id)}
-                                                        disabled={createMenuItemMutation.isLoading || updateMenuItemMutation.isLoading || deleteMenuItemMutation.isLoading}
+                                                        disabled={updateMenuItemMutation.isPending}
                                                     >
                                                         {item.available ? (
                                                             <>

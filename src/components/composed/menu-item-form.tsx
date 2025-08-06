@@ -2,7 +2,7 @@ import {useForm} from "react-hook-form";
 import {zodResolver} from '@hookform/resolvers/zod';
 import {z} from 'zod';
 import {useState} from 'react';
-import {ImageIcon, Loader2} from 'lucide-react';
+import {ImageIcon} from 'lucide-react';
 import {Button} from "@/components/ui/button";
 import {Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
 import {Input} from "@/components/ui/input";
@@ -14,14 +14,14 @@ const menuItemSchema = z.object({
     name: z.string().min(1, 'Name is required'),
     description: z.string().min(1, 'Description is required'),
     price: z.number().min(0.01, 'Price must be greater than 0'),
-    category_id: z.string().min(1, 'Category is required').transform(val => parseInt(val, 10)),
+    category_id: z.number().min(1, 'Category is required'),
     image: z.string().url('Must be a valid URL'),
 });
 
 type MenuItemFormData = z.infer<typeof menuItemSchema>;
 
 interface MenuItemFormProps {
-    onSubmit: (data: Omit<MenuItemFormData, 'category_id'> & { category_id: number }) => void;
+    onSubmit: (data: MenuItemFormData) => void;
     initialData?: Partial<MenuItemFormData>;
     isSubmitting: boolean;
     categories: Category[];
@@ -34,14 +34,15 @@ export function MenuItemForm({onSubmit, initialData, isSubmitting, categories}: 
         resolver: zodResolver(menuItemSchema),
         defaultValues: {
             ...initialData,
-            category_id: initialData?.category_id ? String(initialData.category_id) : undefined,
+            category_id: initialData?.category_id || undefined,
         },
     });
 
     const handleSubmit = async (data: MenuItemFormData) => {
         try {
             onSubmit(data);
-        } catch (error) {
+        } catch (err) {
+            console.error('Form submission error:', err);
             toast.error('Failed to save menu item');
         }
     };
@@ -178,8 +179,13 @@ export function MenuItemForm({onSubmit, initialData, isSubmitting, categories}: 
                     </div>
                 </div>
 
-                <Button disabled={isSubmitting} type="submit" className="w-full">
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                <Button
+                    type="submit"
+                    className="w-full"
+                    loading={isSubmitting}
+                    loadingText={`${initialData ? 'Updating' : 'Creating'} Menu Item...`}
+                    disabled={isSubmitting}
+                >
                     {initialData ? 'Update' : 'Create'} Menu Item
                 </Button>
             </form>

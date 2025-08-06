@@ -5,7 +5,6 @@ import {Button} from "@/components/ui/button"
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form"
 import {Input} from "@/components/ui/input"
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select"
-import {Loader2} from "lucide-react";
 
 const staffSchema = z.object({
     name: z.string().min(1, 'Name is required'),
@@ -123,8 +122,12 @@ export function StaffForm({onSubmit, initialData, isSubmitting}: StaffFormProps)
                     )}
                 />
 
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                <Button 
+                    type="submit" 
+                    className="w-full"
+                    loading={isSubmitting}
+                    loadingText="Saving Staff Member..."
+                >
                     Save Staff Member
                 </Button>
             </form>

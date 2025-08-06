@@ -129,8 +129,11 @@ export default function OrderTrackingSettings() {
                     </div>
 
                     <div className="mt-6 flex justify-end">
-                        <Button onClick={handleSave} disabled={updateRestaurantMutation.isLoading}>
-                            {updateRestaurantMutation.isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                        <Button
+                            onClick={handleSave}
+                            loading={updateRestaurantMutation.isPending}
+                            loadingText="Saving Settings..."
+                        >
                             Save Settings
                         </Button>
                     </div>

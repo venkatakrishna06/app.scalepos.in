@@ -99,8 +99,11 @@ export function RestaurantGstRates({restaurant, onUpdate}: RestaurantGstRatesPro
                 </div>
 
                 <div className="mt-4 flex justify-end">
-                    <Button onClick={handleSave} disabled={updateGstSettingsMutation.isLoading}>
-                        {updateGstSettingsMutation.isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                    <Button
+                        onClick={handleSave}
+                        loading={updateGstSettingsMutation.isPending}
+                        loadingText="Saving GST Rates..."
+                    >
                         Save GST Rates
                     </Button>
                 </div>

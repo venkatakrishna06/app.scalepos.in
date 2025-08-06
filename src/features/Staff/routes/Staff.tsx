@@ -89,7 +89,9 @@ export default function Staff() {
                         </DropdownMenu>
                         <Button
                             onClick={openNewDialog}
-                            disabled={createStaffMutation.isLoading || updateStaffMutation.isLoading || deleteStaffMutation.isLoading}
+                            loading={createStaffMutation.isPending}
+                            loadingText="Loading..."
+                            disabled={updateStaffMutation.isPending || deleteStaffMutation.isPending}
                             className="h-10 w-full sm:w-auto"
                         >
                             <Plus className="mr-2 h-4 w-4"/>
@@ -163,7 +165,8 @@ export default function Staff() {
                                         size="sm"
                                         className="flex-1 h-10 border-primary/30 hover:bg-primary/5"
                                         onClick={() => openEditDialog(member)}
-                                        disabled={createStaffMutation.isLoading || updateStaffMutation.isLoading || deleteStaffMutation.isLoading}
+                                        loading={updateStaffMutation.isPending}
+                                        disabled={createStaffMutation.isPending || deleteStaffMutation.isPending}
                                     >
                                         <Edit2 className="mr-2 h-4 w-4"/>
                                         Edit
@@ -173,7 +176,8 @@ export default function Staff() {
                                         size="sm"
                                         className="flex-1 h-10 opacity-80 hover:opacity-100"
                                         onClick={() => openDeleteDialog(member.id)}
-                                        disabled={createStaffMutation.isLoading || updateStaffMutation.isLoading || deleteStaffMutation.isLoading}
+                                        loading={deleteStaffMutation.isPending}
+                                        disabled={createStaffMutation.isPending || updateStaffMutation.isPending}
                                     >
                                         <Trash2 className="mr-2 h-4 w-4"/>
                                         Delete

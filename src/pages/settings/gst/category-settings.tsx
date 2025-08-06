@@ -218,8 +218,11 @@ export function CategoryGstSettings({categories, onUpdate, onMenuItemsRefresh}: 
                 </div>
 
                 <div className="mt-4 flex justify-end">
-                    <Button onClick={handleSave} disabled={updateCategoryMutation.isLoading}>
-                        {updateCategoryMutation.isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                    <Button
+                        onClick={handleSave}
+                        loading={updateCategoryMutation.isPending}
+                        loadingText="Saving Category Settings..."
+                    >
                         Save Category Settings
                     </Button>
                 </div>

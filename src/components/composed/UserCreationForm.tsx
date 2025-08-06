@@ -328,16 +328,11 @@ export default function UserCreationForm({initialData, onSuccess}: UserFormProps
                 <Button
                     type="submit"
                     className="w-full bg-gradient-to-r from-blue-600 to-blue-700 py-6 text-white hover:from-blue-700 hover:to-blue-800"
-                    disabled={createUserMutation.isLoading || updateUserMutation.isLoading || staffLoading}
+                    loading={createUserMutation.isPending || updateUserMutation.isPending}
+                    loadingText={isEditMode ? 'Updating user...' : 'Creating user...'}
+                    disabled={staffLoading}
                 >
-                    {(createUserMutation.isLoading || updateUserMutation.isLoading) ? (
-                        <>
-                            <Loader2 className="mr-2 h-5 w-5 animate-spin"/>
-                            {isEditMode ? 'Updating user...' : 'Creating user...'}
-                        </>
-                    ) : (
-                        isEditMode ? 'Update User' : 'Create User'
-                    )}
+                    {isEditMode ? 'Update User' : 'Create User'}
                 </Button>
             </form>
         </Form>

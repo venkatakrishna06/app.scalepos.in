@@ -106,7 +106,8 @@ const UserManagement: React.FC = () => {
                         </DropdownMenu>
                         <Button
                             onClick={() => setShowDialog(true)}
-                            disabled={deleteUserMutation.isLoading}
+                            loading={deleteUserMutation.isPending}
+                            loadingText="Loading..."
                             className="h-10 w-full sm:w-auto"
                         >
                             <Plus className="mr-2 h-4 w-4"/>
@@ -181,7 +182,7 @@ const UserManagement: React.FC = () => {
                                             setEditingUser(user);
                                             setShowDialog(true);
                                         }}
-                                        disabled={deleteUserMutation.isLoading}
+                                        disabled={deleteUserMutation.isPending}
                                     >
                                         <Edit2 className="mr-2 h-4 w-4"/>
                                         Edit
@@ -191,7 +192,8 @@ const UserManagement: React.FC = () => {
                                         size="sm"
                                         className="flex-1 h-10 opacity-80 hover:opacity-100"
                                         onClick={() => openDeleteDialog(user.id)}
-                                        disabled={deleteUserMutation.isLoading}
+                                        loading={deleteUserMutation.isPending}
+                                        loadingText="Deleting..."
                                     >
                                         <Trash2 className="mr-2 h-4 w-4"/>
                                         Delete

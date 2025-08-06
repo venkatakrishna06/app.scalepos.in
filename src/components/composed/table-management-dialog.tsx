@@ -1,5 +1,4 @@
 import {useEffect, useState} from 'react';
-import {Loader2} from 'lucide-react';
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle} from '@/components/ui/dialog';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
@@ -179,19 +178,16 @@ export function TableManagementDialog({
                                         type="button"
                                         variant="outline"
                                         onClick={onClose}
-                                        disabled={createTableMutation.isLoading}
+                                        disabled={createTableMutation.isPending}
                                     >
                                         Cancel
                                     </Button>
-                                    <Button type="submit" disabled={createTableMutation.isLoading}>
-                                        {createTableMutation.isLoading ? (
-                                            <>
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                                                Processing...
-                                            </>
-                                        ) : (
-                                            'Add Table'
-                                        )}
+                                    <Button
+                                        type="submit"
+                                        loading={createTableMutation.isPending}
+                                        loadingText="Processing..."
+                                    >
+                                        Add Table
                                     </Button>
                                 </div>
                             </form>
@@ -235,22 +231,17 @@ export function TableManagementDialog({
                                 <Button
                                     variant="outline"
                                     onClick={onClose}
-                                    disabled={mergeTablesMutation.isLoading}
+                                    disabled={mergeTablesMutation.isPending}
                                 >
                                     Cancel
                                 </Button>
                                 <Button
                                     onClick={handleAction}
-                                    disabled={mergeTablesMutation.isLoading || selectedTables.length < 2}
+                                    disabled={selectedTables.length < 2}
+                                    loading={mergeTablesMutation.isPending}
+                                    loadingText="Processing..."
                                 >
-                                    {mergeTablesMutation.isLoading ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                                            Processing...
-                                        </>
-                                    ) : (
-                                        'Merge Tables'
-                                    )}
+                                    Merge Tables
                                 </Button>
                             </div>
                         </div>
@@ -296,19 +287,16 @@ export function TableManagementDialog({
                                         type="button"
                                         variant="outline"
                                         onClick={onClose}
-                                        disabled={splitTableMutation.isLoading}
+                                        disabled={splitTableMutation.isPending}
                                     >
                                         Cancel
                                     </Button>
-                                    <Button type="submit" disabled={splitTableMutation.isLoading}>
-                                        {splitTableMutation.isLoading ? (
-                                            <>
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                                                Processing...
-                                            </>
-                                        ) : (
-                                            'Split Table'
-                                        )}
+                                    <Button
+                                        type="submit"
+                                        loading={splitTableMutation.isPending}
+                                        loadingText="Processing..."
+                                    >
+                                        Split Table
                                     </Button>
                                 </div>
                             </form>

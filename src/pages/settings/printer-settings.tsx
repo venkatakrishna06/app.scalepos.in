@@ -352,9 +352,11 @@ export default function PrinterSettings() {
                         </div>
 
                         <div className="mt-6 flex justify-end">
-                            <Button onClick={handleSave} disabled={updatePrinterConfigMutation.isLoading}>
-                                {updatePrinterConfigMutation.isLoading &&
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                            <Button
+                                onClick={handleSave}
+                                loading={updatePrinterConfigMutation.isPending}
+                                loadingText="Saving Settings..."
+                            >
                                 Save Settings
                             </Button>
                         </div>

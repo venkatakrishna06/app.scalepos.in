@@ -177,16 +177,21 @@ export default function Profile() {
 
                         {isEditing && (
                             <div className="flex justify-end gap-3">
-                                <Button type="button" variant="outline" onClick={cancelEdit}>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={cancelEdit}
+                                    disabled={updateProfileMutation.isPending}
+                                >
                                     <X className="mr-2 h-4 w-4"/>
                                     Cancel
                                 </Button>
-                                <Button type="submit" disabled={updateProfileMutation.isLoading}>
-                                    {updateProfileMutation.isLoading ? (
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                                    ) : (
-                                        <Save className="mr-2 h-4 w-4"/>
-                                    )}
+                                <Button
+                                    type="submit"
+                                    loading={updateProfileMutation.isPending}
+                                    loadingText="Saving Changes..."
+                                >
+                                    <Save className="mr-2 h-4 w-4"/>
                                     Save Changes
                                 </Button>
                             </div>
@@ -302,13 +307,15 @@ export default function Profile() {
                                 type="button"
                                 variant="outline"
                                 onClick={() => dispatch({type: 'RESET_PASSWORD_FORM'})}
+                                disabled={changePasswordMutation.isPending}
                             >
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={changePasswordMutation.isLoading}>
-                                {changePasswordMutation.isLoading && (
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                                )}
+                            <Button
+                                type="submit"
+                                loading={changePasswordMutation.isPending}
+                                loadingText="Updating Password..."
+                            >
                                 Update Password
                             </Button>
                         </DialogFooter>

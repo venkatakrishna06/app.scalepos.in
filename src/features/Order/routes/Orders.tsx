@@ -8,7 +8,7 @@ import {useAuthStore} from "@/lib/auth/auth.store";
 import {usePermissions} from '@/hooks/usePermissions';
 import {OrdersSkeleton} from '@/components/composed/orders-skeleton';
 import {useOrdersPage} from '@/hooks/useOrdersPage';
-import {ConfirmationDialog} from '@/components/composed/ConfirmationDialog';
+import {CancellationReasonDialog} from '@/components/composed/CancellationReasonDialog';
 
 export default function Orders() {
     const {user} = useAuthStore();
@@ -105,14 +105,13 @@ export default function Orders() {
                 />
             )}
 
-            <ConfirmationDialog
+            <CancellationReasonDialog
                 open={isCancelDialogOpen}
                 onOpenChange={setIsCancelDialogOpen}
                 onConfirm={handleCancelOrder}
                 title="Cancel Order"
-                description={`Are you sure you want to cancel this order? This action cannot be undone. Order #${orderToCancel?.id} - ${orderToCancel?.order_type === 'takeaway' ? 'Takeaway' : orderToCancel?.order_type === 'quick-bill' ? 'Quick Bill' : `Table ${orderToCancel?.table?.table_number || 'Unknown'}`}`}
+                description={`Please provide a reason for cancelling this order. Order #${orderToCancel?.id} - ${orderToCancel?.order_type === 'takeaway' ? 'Takeaway' : orderToCancel?.order_type === 'quick-bill' ? 'Quick Bill' : `Table ${orderToCancel?.table?.table_number || 'Unknown'}`}`}
                 confirmText="Yes, Cancel Order"
-                isLoading={cancelOrderMutation.isLoading}
             />
         </div>
     );

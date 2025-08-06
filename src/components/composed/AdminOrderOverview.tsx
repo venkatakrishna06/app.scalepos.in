@@ -604,7 +604,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                     disabled={
                                                         order.status === 'cancelled' ||
                                                         order.status === 'paid' ||
-                                                        (order.order_type === 'dine-in' && (order.status !== 'placed' || order.status !== 'preparing'))
+                                                        (order.order_type === 'dine-in' && (order.status !== 'placed'))
                                                     }
                                                 >
                                                     <Trash2 className="mr-2 h-4 w-4"/>
