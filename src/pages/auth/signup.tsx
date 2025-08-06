@@ -48,7 +48,7 @@ type SignupFormData = z.infer<typeof signupSchema>;
 
 export default function Signup() {
     const navigate = useNavigate();
-    const {signup, loading, error, clearError} = useAuthStore();
+    const {signup, loading, error} = useAuthStore();
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -83,7 +83,6 @@ export default function Signup() {
         } catch {
             if (error) {
                 toast.error(error);
-                clearError();
             }
         }
     };
