@@ -5,7 +5,6 @@ import { API_ENDPOINTS } from '../endpoints';
 export const authService = {
     login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
         try {
-            debugger
             const response = await api.post<AuthResponse>(API_ENDPOINTS.AUTH.LOGIN, credentials);
             return response.data;
         } catch (error) {

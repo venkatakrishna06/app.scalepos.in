@@ -632,20 +632,20 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                 </PermissionGuard>
                                             )}
                                             <PermissionGuard permission={PERMISSIONS.DELETE_ORDER}>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="text-red-500 hover:text-red-700 border-red-200 hover:bg-red-50"
-                                                    onClick={() => onCancelOrder(order)}
-                                                    disabled={
-                                                        order.status === 'cancelled' ||
-                                                        order.status === 'paid' ||
-                                                        (order.order_type === 'dine-in' && (order.status !== 'placed'))
-                                                    }
-                                                >
-                                                    <Trash2 className="mr-2 h-4 w-4"/>
-                                                    Cancel
-                                                </Button>
+                                              <Button
+                                                  variant="outline"
+                                                  size="sm"
+                                                  className="text-red-500 hover:text-red-700 border-red-200 hover:bg-red-50"
+                                                  onClick={() => onCancelOrder(order)}
+                                                  disabled={
+                                                      order.status === 'cancelled' ||
+                                                      order.status === 'paid' ||
+                                                      ['preparing', 'served', 'ready'].includes(order.status)
+                                                  }
+                                              >
+                                                  <Trash2 className="mr-2 h-4 w-4"/>
+                                                  Cancel
+                                              </Button>
                                             </PermissionGuard>
                                         </div>
 

@@ -208,7 +208,7 @@ export const useOrdersPage = () => {
     const handleItemStatusChange = useCallback(async (orderId: number, itemId: number, newStatus: string) => {
 
             await updateOrderItemStatusMutation.mutateAsync({itemId, status: newStatus});
-            await refetchOrders();
+            // await refetchOrders();
 
     }, [updateOrderItemStatusMutation, refetchOrders]);
 

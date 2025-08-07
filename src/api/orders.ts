@@ -24,9 +24,9 @@ export const useCreateOrder = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (order: Omit<Order, 'id'>) => orderService.createOrder(order),
-        onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['orders']});
-        },
+        // onSuccess: () => {
+        //     queryClient.invalidateQueries({queryKey: ['orders']});
+        // },
     });
 };
 
@@ -128,9 +128,9 @@ export const useUpdateOrderItemStatus = () => {
             itemId: number,
             status: string
         }) => orderService.updateOrderItemStatus(itemId, status),
-        onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['orders']});
-        },
+        // onSuccess: () => {
+        //     queryClient.invalidateQueries({queryKey: ['orders']});
+        // },
     });
 };
 

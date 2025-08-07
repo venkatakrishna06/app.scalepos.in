@@ -437,9 +437,9 @@ function CreateOrderDialogComponent({
 
                 // Get KOT printers from configuration
                 const kotPrinters = printerConfig?.kot_printers || [];
-                if (kotPrinters.length === 0) {
-                    throw new Error('No KOT printers configured. Please configure printers in settings.');
-                }
+                // if (kotPrinters.length === 0) {
+                //     throw new Error('No KOT printers configured. Please configure printers in settings.');
+                // }
 
                 // Generate ESC/POS receipt content
                 const kotContent = generateKOTContent(tokenNumber);

@@ -84,7 +84,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     },
 
     login: async (email, password, rememberMe = true) => {
-        debugger
         set({ loading: true, error: null });
         try {
             tokenService.setPersistentSession(rememberMe);
