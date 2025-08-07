@@ -82,10 +82,13 @@ export function ViewOrdersDialog({open, onClose, tableId, onPayment, orderId}: V
     // Helper function to get the order total
     const getOrderTotal = useCallback((order: Order) => {
         if (order.total_amount) {
-            return order.total_amount;
+            // Include roundoff by using Math.ceil
+            return Math.ceil(order.total_amount);
         }
         const nonCancelledItems = order?.items?.filter(item => item.status !== 'cancelled') || [];
-        return nonCancelledItems.reduce((total, item) => total + (item.quantity * item.price), 0);
+        const calculatedTotal = nonCancelledItems.reduce((total, item) => total + (item.quantity * item.price), 0);
+        // Include roundoff by using Math.ceil
+        return Math.ceil(calculatedTotal);
     }, []);
 
     // Helper function to get GST details from the order

@@ -19,6 +19,12 @@ import {Button} from '@/components/ui/button';
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
 import {Input} from '@/components/ui/input';
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger
+} from '@/components/ui/tooltip';
 
 import {
     DropdownMenu,
@@ -79,6 +85,17 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
 
     // View layout state
     const [viewLayout, setViewLayout] = useState<'grid' | 'kanban'>('grid');
+    
+    // State to track open tooltips
+    const [openTooltips, setOpenTooltips] = useState<Record<number, boolean>>({});
+    
+    // Function to toggle tooltip open state
+    const toggleTooltip = (orderId: number) => {
+        setOpenTooltips(prev => ({
+            ...prev,
+            [orderId]: !prev[orderId]
+        }));
+    };
 
     // Helper function to get status badge styling
     const getStatusBadgeStyles = (status: string) => {
@@ -102,6 +119,25 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
     const formatCurrency = (amount: number | undefined) => {
         if (amount === undefined) return '₹0.00';
         return `₹${amount.toFixed(2)}`;
+    };
+    
+    // Calculate total with roundoff
+    const getTotalWithRoundoff = (amount: number | undefined) => {
+        if (amount === undefined) return 0;
+        return Math.ceil(amount);
+    };
+    
+    // Helper function to get GST details from the order
+    const getGstDetails = (order: Order) => {
+        return {
+            subTotal: order.sub_total || 0,
+            sgstRate: order.sgst_rate || 0,
+            cgstRate: order.cgst_rate || 0,
+            sgstAmount: order.sgst_amount || 0,
+            cgstAmount: order.cgst_amount || 0,
+            totalGstAmount: (order.sgst_amount || 0) + (order.cgst_amount || 0),
+            roundingDifference: Math.ceil(order.total_amount || 0) - (order.total_amount || 0)
+        };
     };
     
     // Handle marking an order as delivered (for takeaway and quick-bill orders)
@@ -615,9 +651,48 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
 
                                         <div className="text-right">
                                             <p className="text-xs text-blue-600">Total Amount</p>
-                                            <p className="text-base font-semibold text-blue-800">
-                                                {formatCurrency(order.total_amount)}
-                                            </p>
+                                            <TooltipProvider>
+                                                <Tooltip 
+                                                    open={openTooltips[order.id]} 
+                                                    onOpenChange={(open) => setOpenTooltips(prev => ({...prev, [order.id]: open}))}
+                                                >
+                                                    <TooltipTrigger asChild>
+                                                        <p 
+                                                            className="text-base font-semibold text-blue-800 cursor-help"
+                                                            onClick={() => toggleTooltip(order.id)}
+                                                        >
+                                                            {formatCurrency(getTotalWithRoundoff(order.total_amount))}
+                                                        </p>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent className="p-3 max-w-xs">
+                                                        <div className="space-y-1.5">
+                                                            <p className="text-xs font-medium">Price Breakdown</p>
+                                                            <div className="text-xs space-y-1">
+                                                                <div className="flex justify-between">
+                                                                    <span>Subtotal:</span>
+                                                                    <span>{formatCurrency(getGstDetails(order).subTotal)}</span>
+                                                                </div>
+                                                                {getGstDetails(order).sgstAmount > 0 && (
+                                                                    <div className="flex justify-between">
+                                                                        <span>SGST ({getGstDetails(order).sgstRate}%):</span>
+                                                                        <span>{formatCurrency(getGstDetails(order).sgstAmount)}</span>
+                                                                    </div>
+                                                                )}
+                                                                {getGstDetails(order).cgstAmount > 0 && (
+                                                                    <div className="flex justify-between">
+                                                                        <span>CGST ({getGstDetails(order).cgstRate}%):</span>
+                                                                        <span>{formatCurrency(getGstDetails(order).cgstAmount)}</span>
+                                                                    </div>
+                                                                )}
+                                                                <div className="flex justify-between">
+                                                                    <span>Rounding:</span>
+                                                                    <span>{formatCurrency(getGstDetails(order).roundingDifference)}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
                                         </div>
                                     </CardFooter>
                                 </Card>
@@ -691,8 +766,48 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                 {getOrderDateDisplay(order.order_time)}
                               </span>
                                                         </div>
-                                                        <span
-                                                            className="text-xs font-medium text-blue-800">{formatCurrency(order.total_amount)}</span>
+                                                        <TooltipProvider>
+                                                            <Tooltip 
+                                                                open={openTooltips[order.id]} 
+                                                                onOpenChange={(open) => setOpenTooltips(prev => ({...prev, [order.id]: open}))}
+                                                            >
+                                                                <TooltipTrigger asChild>
+                                                                    <span 
+                                                                        className="text-xs font-medium text-blue-800 cursor-help"
+                                                                        onClick={() => toggleTooltip(order.id)}
+                                                                    >
+                                                                        {formatCurrency(getTotalWithRoundoff(order.total_amount))}
+                                                                    </span>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent className="p-3 max-w-xs">
+                                                                    <div className="space-y-1.5">
+                                                                        <p className="text-xs font-medium">Price Breakdown</p>
+                                                                        <div className="text-xs space-y-1">
+                                                                            <div className="flex justify-between">
+                                                                                <span>Subtotal:</span>
+                                                                                <span>{formatCurrency(getGstDetails(order).subTotal)}</span>
+                                                                            </div>
+                                                                            {getGstDetails(order).sgstAmount > 0 && (
+                                                                                <div className="flex justify-between">
+                                                                                    <span>SGST ({getGstDetails(order).sgstRate}%):</span>
+                                                                                    <span>{formatCurrency(getGstDetails(order).sgstAmount)}</span>
+                                                                                </div>
+                                                                            )}
+                                                                            {getGstDetails(order).cgstAmount > 0 && (
+                                                                                <div className="flex justify-between">
+                                                                                    <span>CGST ({getGstDetails(order).cgstRate}%):</span>
+                                                                                    <span>{formatCurrency(getGstDetails(order).cgstAmount)}</span>
+                                                                                </div>
+                                                                            )}
+                                                                            <div className="flex justify-between">
+                                                                                <span>Rounding:</span>
+                                                                                <span>{formatCurrency(getGstDetails(order).roundingDifference)}</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        </TooltipProvider>
                                                     </div>
                                                 </CardHeader>
                                                 <CardContent className="p-2 pt-0">

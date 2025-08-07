@@ -180,9 +180,8 @@ export const useOrdersPage = () => {
     const handleCancelOrder = useCallback(async (reason: string) => {
         if (!orderToCancel) return;
         try {
-            await cancelOrderMutation.mutateAsync({id: orderToCancel.id, reason});
-            await refetchOrders();
             setIsCancelDialogOpen(false);
+            await cancelOrderMutation.mutateAsync({id: orderToCancel.id, reason});
             setOrderToCancel(null);
             toast.success('Order cancelled successfully');
         } catch {
