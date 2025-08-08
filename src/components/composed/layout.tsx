@@ -33,7 +33,7 @@ export default function Layout({children}: LayoutProps) {
     };
 
     return (
-        <div className="h-screen flex flex-col bg-background overflow-hidden">
+        <div className="min-h-[100dvh] flex flex-col bg-background overflow-hidden">
             <Navbar
                 toggleSidebar={toggleSidebar}
                 isSidebarOpen={isSidebarOpen}
@@ -49,7 +49,7 @@ export default function Layout({children}: LayoutProps) {
 
                 <div className={cn(
                     "flex-shrink-0 overflow-hidden bg-white dark:bg-gray-800",
-                    "fixed lg:relative h-screen z-40 transition-all duration-300 ease-in-out",
+                    "fixed lg:relative h-[100dvh] z-40 transition-all duration-300 ease-in-out",
                     isSidebarOpen
                         ? "lg:w-44 xl:w-52 w-[280px] translate-x-0 shadow-xl"
                         : "w-[280px] -translate-x-full lg:w-0 lg:translate-x-0"
@@ -60,7 +60,7 @@ export default function Layout({children}: LayoutProps) {
                 <main className={cn(
                     "flex-1 overflow-y-auto transition-all duration-300 ease-in-out custom-scrollbar",
                     isSidebarOpen ? "" : "lg:pl-0",
-                    "pb-20 lg:pb-6"
+                    "pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-6"
                 )}>
                     <div className={cn(
                         "mx-auto p-1 sm:p-2 lg:p-3",

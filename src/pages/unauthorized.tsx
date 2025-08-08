@@ -5,7 +5,7 @@ export default function Unauthorized() {
     const navigate = useNavigate();
 
     return (
-        <div className="flex flex-col items-center justify-center h-screen">
+        <div className="flex flex-col items-center justify-center min-h-[100dvh]">
             <h1 className="text-2xl font-bold">Access Denied</h1>
             <p className="mt-2 text-muted-foreground">
                 You don't have permission to access this page.

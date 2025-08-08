@@ -576,7 +576,7 @@ function CreateOrderDialogComponent({
         <Dialog open={open}>
             <DialogContent
                 onClose={!isSubmitting ? onClose : undefined}
-                className="h-[90vh] max-h-[90vh] max-w-[90vw] md:max-w-[90vw] lg:max-w-[80vw] p-0 sm:p-2 overflow-hidden">
+                className="h-[90dvh] max-h-[90dvh] max-w-[90vw] md:max-w-[90vw] lg:max-w-[80vw] p-0 sm:p-2 overflow-hidden">
                 <div className="flex h-full flex-col overflow-hidden">
                     {/* Mobile header with toggle button and centered text */}
                     <div className="flex items-center md:hidden p-2 border-b shrink-0">
@@ -896,7 +896,7 @@ function CreateOrderDialogComponent({
                     {/* Floating cart button on mobile */}
                     {!isCartOpen && orderItems.length > 0 && (
                         <Button
-                            className="fixed bottom-4 right-4 h-14 w-14 rounded-full shadow-lg md:hidden"
+                            className="fixed right-4 h-14 w-14 rounded-full shadow-lg md:hidden bottom-[calc(1rem+env(safe-area-inset-bottom))]"
                             onClick={() => setIsCartOpen(true)}
                         >
                             <div className="relative">

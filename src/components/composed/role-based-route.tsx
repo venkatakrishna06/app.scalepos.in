@@ -16,7 +16,7 @@ export const RoleBasedRoute = ({children, requiredPermission}: RoleBasedRoutePro
 
     // Show a loading screen only during the initial authentication process
     if (isInitializing) {
-        return <div className="flex items-center justify-center h-screen">Authenticating...</div>;
+        return <div className="flex items-center justify-center min-h-[100dvh]">Authenticating...</div>;
     }
 
     if (!isAuthenticated) {

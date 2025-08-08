@@ -40,7 +40,7 @@ export default function Navbar({toggleSidebar, isSidebarOpen}: NavbarProps) {
 
     return (
         <nav
-            className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
+            className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm pt-[env(safe-area-inset-top)]">
             <div className="container flex h-14 sm:h-16 items-center px-2 sm:px-4 lg:px-6">
                 <div className="flex flex-1 items-center justify-between">
                     <div className="flex items-center gap-2 sm:gap-4 lg:gap-6">

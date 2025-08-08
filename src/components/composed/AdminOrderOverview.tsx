@@ -44,7 +44,7 @@ import {useRestaurant} from "@/api";
 import {useCreatePayment} from "@/api/payments";
 import {useUpdateOrderStatus} from "@/api/orders";
 import {PermissionGuard} from './permission-guard';
-import {PERMISSIONS} from '@/lib/auth/roles';
+import {PERMISSIONS, ROLES} from '@/lib/auth/roles';
 
 interface AdminOrderOverviewProps {
     orders: Order[];
@@ -337,55 +337,8 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
         })
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-2">
             {/* Page header with title and actions */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <h1 className="text-2xl font-semibold tracking-tight text-blue-800 dark:text-blue-300">Admin Orders
-                    Overview</h1>
-
-                <div className="flex flex-wrap items-center gap-2">
-                    {/* View Layout Toggle */}
-                    <div className="mr-2">
-                        <Tabs value={viewLayout} onValueChange={(value) => setViewLayout(value as 'grid' | 'kanban')}>
-                            <TabsList className="grid w-[120px] grid-cols-2">
-                                <TabsTrigger value="grid" title="Grid View">
-                                    <LayoutGrid className="h-4 w-4"/>
-                                </TabsTrigger>
-                                <TabsTrigger value="kanban" title="Kanban View">
-                                    <LayoutList className="h-4 w-4"/>
-                                </TabsTrigger>
-                            </TabsList>
-                        </Tabs>
-                    </div>
-
-                    <Button variant="outline" size="sm" onClick={onRefreshOrders}
-                            className="border-blue-300 hover:bg-blue-50">
-                        <ArrowUpDown className="mr-2 h-4 w-4 text-blue-600"/>
-                        Refresh
-                    </Button>
-
-                    <PermissionGuard permission={PERMISSIONS.READ_ORDER}>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" className="border-blue-300 hover:bg-blue-50">
-                                    <Download className="mr-2 h-4 w-4 text-blue-600"/>
-                                    Export
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={exportOrdersToCSV}>
-                                    Export as CSV
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator/>
-                                <DropdownMenuItem onClick={() => toast.success("Print started")}>
-                                    <Printer className="mr-2 h-4 w-4"/>
-                                    Print Orders
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </PermissionGuard>
-                </div>
-            </div>
 
             {/* Tabs for order status filtering */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -404,6 +357,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                     className="pl-9 border-blue-200 focus-visible:ring-blue-400"
                                 />
                             </div>
+
 
                             <FilterDropdownContainer>
                                 <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -469,6 +423,38 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                     </SelectContent>
                                 </Select>
                             </FilterDropdownContainer>
+                            <Tabs value={viewLayout} onValueChange={(value) => setViewLayout(value as 'grid' | 'kanban')}>
+                                <TabsList className="grid w-[120px] grid-cols-2">
+                                    <TabsTrigger value="grid" title="Grid View">
+                                        <LayoutGrid className="h-4 w-4"/>
+                                    </TabsTrigger>
+                                    <TabsTrigger value="kanban" title="Kanban View">
+                                        <LayoutList className="h-4 w-4"/>
+                                    </TabsTrigger>
+                                </TabsList>
+                            </Tabs>
+                            <Button variant="outline" size="sm" onClick={onRefreshOrders}
+                                    className="border-blue-300 hover:bg-blue-50">
+                                <ArrowUpDown className="mr-2 h-4 w-4 text-blue-600"/>
+                                Refresh
+                            </Button>
+
+                            <PermissionGuard permission={ROLES.ADMIN}>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" size="sm" className="border-blue-300 hover:bg-blue-50">
+                                            <Download className="mr-2 h-4 w-4 text-blue-600"/>
+                                            Export
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={exportOrdersToCSV}>
+                                            Export as CSV
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator/>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </PermissionGuard>
                         </div>
                     </div>
                 </div>

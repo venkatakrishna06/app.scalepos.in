@@ -42,6 +42,8 @@ interface AuthState {
     logout: () => Promise<void>;
     // Other functions omitted for brevity...
     initAuth: () => Promise<void>;
+    clearError: () => void;
+    setToken: (token: string) => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -178,6 +180,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             set({loading: false});
         }
     },
-    clearError: () => {},
-    setToken: () => {},
+    clearError: () => set({ error: null }),
+    setToken: (token: string) => set({ token }),
 }));

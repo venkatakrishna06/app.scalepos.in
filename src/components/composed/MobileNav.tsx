@@ -14,12 +14,12 @@ export function MobileNav() {
 
     return (
         <motion.div
-            className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg"
+            className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg pb-[env(safe-area-inset-bottom)]"
             initial={{y: 100}}
             animate={{y: 0}}
             transition={{type: "spring", stiffness: 300, damping: 30}}
         >
-            <div className="flex h-16 items-center justify-around px-1">
+            <div className="flex h-14 xs:h-16 items-center justify-around px-1">
                 <NavButton
                     icon={<Table2 className="h-5 w-5"/>}
                     label="Tables"

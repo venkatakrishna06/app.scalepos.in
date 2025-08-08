@@ -67,7 +67,7 @@ export const KitchenView: React.FC<KitchenViewProps> = ({
     const preparingItems = filteredItems.filter(item => item.status === 'preparing');
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
             {/* Page header with title */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <h1 className="text-2xl font-semibold tracking-tight text-yellow-800 dark:text-yellow-300">Kitchen
