@@ -94,10 +94,10 @@ export default function Signup() {
                 <div
                     className="w-full max-w-2xl space-y-8 rounded-2xl bg-white/80 p-8 shadow-xl backdrop-blur-sm dark:bg-gray-800/80">
                     <div className="text-center">
-                        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+                        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
                             Create your account
                         </h1>
-                        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                        <p className="mt-2 text-sm text-muted-foreground">
                             Set up your restaurant management system
                         </p>
                     </div>
@@ -111,13 +111,13 @@ export default function Signup() {
                                         name="email"
                                         render={({field}) => (
                                             <FormItem>
-                                                <FormLabel className="text-gray-700 dark:text-gray-300">
+                                                <FormLabel className="text-foreground">
                                                     Email address
                                                 </FormLabel>
                                                 <FormControl>
                                                     <div className="relative">
                                                         <Mail
-                                                            className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"/>
+                                                            className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground"/>
                                                         <Input
                                                             placeholder="Enter your email"
                                                             className="pl-10 dark:border-blue-700 dark:focus:border-blue-500"
@@ -135,13 +135,13 @@ export default function Signup() {
                                         name="restaurant_name"
                                         render={({field}) => (
                                             <FormItem>
-                                                <FormLabel className="text-gray-700 dark:text-gray-300">
+                                                <FormLabel className="text-foreground">
                                                     Restaurant Name
                                                 </FormLabel>
                                                 <FormControl>
                                                     <div className="relative">
                                                         <Building2
-                                                            className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"/>
+                                                            className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground"/>
                                                         <Input
                                                             placeholder="Enter restaurant name"
                                                             className="pl-10 dark:border-blue-700 dark:focus:border-blue-500"
@@ -161,13 +161,13 @@ export default function Signup() {
                                         name="password"
                                         render={({field}) => (
                                             <FormItem>
-                                                <FormLabel className="text-gray-700 dark:text-gray-300">
+                                                <FormLabel className="text-foreground">
                                                     Password
                                                 </FormLabel>
                                                 <FormControl>
                                                     <div className="relative">
                                                         <Lock
-                                                            className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"/>
+                                                            className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground"/>
                                                         <Input
                                                             type={showPassword ? "text" : "password"}
                                                             placeholder="Create a password"
@@ -177,7 +177,7 @@ export default function Signup() {
                                                         <button
                                                             type="button"
                                                             onClick={() => setShowPassword(!showPassword)}
-                                                            className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                                                            className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
                                                         >
                                                             {showPassword ? (
                                                                 <svg xmlns="http://www.w3.org/2000/svg"
@@ -215,13 +215,13 @@ export default function Signup() {
                                         name="confirmPassword"
                                         render={({field}) => (
                                             <FormItem>
-                                                <FormLabel className="text-gray-700 dark:text-gray-300">
+                                                <FormLabel className="text-foreground">
                                                     Confirm Password
                                                 </FormLabel>
                                                 <FormControl>
                                                     <div className="relative">
                                                         <Lock
-                                                            className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"/>
+                                                            className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground"/>
                                                         <Input
                                                             type={showConfirmPassword ? "text" : "password"}
                                                             placeholder="Confirm your password"
@@ -231,7 +231,7 @@ export default function Signup() {
                                                         <button
                                                             type="button"
                                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                            className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                                                            className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
                                                         >
                                                             {showConfirmPassword ? (
                                                                 <svg xmlns="http://www.w3.org/2000/svg"
@@ -262,7 +262,7 @@ export default function Signup() {
                                 </div>
 
                                 <div className="space-y-4">
-                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                    <h2 className="text-lg font-semibold text-foreground">
                                         Restaurant Details
                                     </h2>
 
@@ -272,13 +272,13 @@ export default function Signup() {
                                             name="restaurant_phone"
                                             render={({field}) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-gray-700 dark:text-gray-300">
+                                                    <FormLabel className="text-foreground">
                                                         Restaurant Phone
                                                     </FormLabel>
                                                     <FormControl>
                                                         <div className="relative">
                                                             <Phone
-                                                                className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"/>
+                                                                className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground"/>
                                                             <Input
                                                                 placeholder="Enter phone number"
                                                                 className="pl-10 dark:border-blue-700 dark:focus:border-blue-500"
@@ -296,13 +296,13 @@ export default function Signup() {
                                             name="restaurant_email"
                                             render={({field}) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-gray-700 dark:text-gray-300">
+                                                    <FormLabel className="text-foreground">
                                                         Restaurant Email (Optional)
                                                     </FormLabel>
                                                     <FormControl>
                                                         <div className="relative">
                                                             <Mail
-                                                                className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"/>
+                                                                className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground"/>
                                                             <Input
                                                                 placeholder="Enter restaurant email"
                                                                 className="pl-10 dark:border-blue-700 dark:focus:border-blue-500"
@@ -322,13 +322,13 @@ export default function Signup() {
                                             name="restaurant_address"
                                             render={({field}) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-gray-700 dark:text-gray-300">
+                                                    <FormLabel className="text-foreground">
                                                         Restaurant Address
                                                     </FormLabel>
                                                     <FormControl>
                                                         <div className="relative">
                                                             <MapPin
-                                                                className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"/>
+                                                                className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground"/>
                                                             <Input
                                                                 placeholder="Enter restaurant address"
                                                                 className="pl-10 dark:border-blue-700 dark:focus:border-blue-500"
@@ -346,13 +346,13 @@ export default function Signup() {
                                             name="restaurant_gst"
                                             render={({field}) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-gray-700 dark:text-gray-300">
+                                                    <FormLabel className="text-foreground">
                                                         GST Number (Optional)
                                                     </FormLabel>
                                                     <FormControl>
                                                         <div className="relative">
                                                             <CreditCard
-                                                                className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"/>
+                                                                className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground"/>
                                                             <Input
                                                                 placeholder="Enter GST number (15 characters)"
                                                                 className="pl-10 dark:border-blue-700 dark:focus:border-blue-500"
@@ -375,7 +375,7 @@ export default function Signup() {
 
                             <Button
                                 type="submit"
-                                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 py-6 text-white hover:from-blue-700 hover:to-blue-800"
+                                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 py-6"
                                 disabled={loading}
                             >
                                 {loading ? (
@@ -388,11 +388,11 @@ export default function Signup() {
                                 )}
                             </Button>
 
-                            <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+                            <p className="text-center text-sm text-muted-foreground">
                                 Already have an account?{' '}
                                 <Link
                                     to="/login"
-                                    className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                                    className="font-medium text-primary hover:text-primary/80"
                                 >
                                     Sign in instead
                                 </Link>

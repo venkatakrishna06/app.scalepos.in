@@ -7,6 +7,7 @@ import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
 import {Badge} from '@/components/ui/badge';
 import {cn} from '@/lib/utils';
+import { statusBadge } from "@/ui/theme/status-styles";
 import {Order} from '@/types';
 import {PermissionGuard} from './permission-guard';
 import {PERMISSIONS} from '@/lib/auth/roles';
@@ -47,25 +48,8 @@ export const ServerOrderView: React.FC<ServerOrderViewProps> = ({
         }));
     };
 
-    // Helper function to get status badge styling
-    const getStatusBadgeStyles = (status: string) => {
-        switch (status) {
-            case 'placed':
-                return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-            case 'preparing':
-                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-            case 'ready':
-                return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
-            case 'served':
-                return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-            case 'paid':
-                return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
-            case 'cancelled':
-                return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-            default:
-                return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-        }
-    };
+    // Helper function to get status badge styling (centralized)
+    const getStatusBadgeStyles = (status: string) => statusBadge(status);
 
     // Format currency
     const formatCurrency = (amount: number | undefined) => {
@@ -134,17 +118,17 @@ export const ServerOrderView: React.FC<ServerOrderViewProps> = ({
         <div className="space-y-6 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
             {/* Page header with title */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <h1 className="text-2xl font-semibold tracking-tight text-green-800 dark:text-green-300">My Orders</h1>
+                <h1 className="text-2xl font-semibold tracking-tight text-success">My Orders</h1>
             </div>
 
             {/* Tabs for active vs completed orders */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
+                <TabsList className="bg-info/10 border-info/30">
                     <TabsTrigger value="active"
-                                 className="data-[state=active]:bg-green-200 data-[state=active]:text-green-800">Active
+                                 className="data-[state=active]:bg-success/20 data-[state=active]:text-success">Active
                         Orders</TabsTrigger>
                     <TabsTrigger value="completed"
-                                 className="data-[state=active]:bg-green-200 data-[state=active]:text-green-800">Completed
+                                 className="data-[state=active]:bg-success/20 data-[state=active]:text-success">Completed
                         Orders</TabsTrigger>
                 </TabsList>
 
@@ -159,7 +143,7 @@ export const ServerOrderView: React.FC<ServerOrderViewProps> = ({
                                     placeholder="Search by order #, table, customer..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-9 border-green-200 focus-visible:ring-green-400"
+                                    className="pl-9 focus-visible:ring-focus"
                                 />
                             </div>
                         </div>
@@ -169,8 +153,8 @@ export const ServerOrderView: React.FC<ServerOrderViewProps> = ({
                 <TabsContent value="active" className="mt-4">
                     <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                         {filteredOrders.map((order) => (
-                            <Card key={order.id} className="overflow-hidden border-green-200 hover:shadow-md">
-                                <CardHeader className="pb-3 bg-green-50 dark:bg-green-950 border-b border-green-100">
+                            <Card key={order.id} className="overflow-hidden border-success/30 hover:shadow-md">
+                                <CardHeader className="pb-3 bg-success/10 border-b border-success/20">
                                     <div className="flex items-start justify-between">
                                         <div>
                                             <div className="flex items-center gap-2">
@@ -265,7 +249,7 @@ export const ServerOrderView: React.FC<ServerOrderViewProps> = ({
                                 </CardContent>
 
                                 <CardFooter
-                                    className="flex items-center justify-between border-t border-green-100 bg-green-50/50 dark:bg-green-950/50 pt-3">
+                                    className="flex items-center justify-between border-t border-success/20 bg-success/10 pt-3">
                                     <div className="flex gap-2">
                                         {/*<Button*/}
                                         {/*  variant="outline"*/}
@@ -340,10 +324,10 @@ export const ServerOrderView: React.FC<ServerOrderViewProps> = ({
 
                         {filteredOrders.length === 0 && (
                             <div
-                                className="col-span-full rounded-lg border border-dashed border-green-200 p-8 text-center">
-                                <FileText className="mx-auto h-8 w-8 text-green-400"/>
-                                <h3 className="mt-2 text-lg font-semibold text-green-800">No Active Orders</h3>
-                                <p className="mt-1 text-sm text-green-600">
+                                className="col-span-full rounded-lg border border-dashed border-success/30 p-8 text-center">
+                                <FileText className="mx-auto h-8 w-8 text-success"/>
+                                <h3 className="mt-2 text-lg font-semibold text-success">No Active Orders</h3>
+                                <p className="mt-1 text-sm text-success">
                                     You don't have any active orders assigned to you
                                 </p>
                             </div>
@@ -355,7 +339,7 @@ export const ServerOrderView: React.FC<ServerOrderViewProps> = ({
                     <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                         {filteredOrders.map((order) => (
                             <Card key={order.id}
-                                  className="overflow-hidden border-green-200 hover:shadow-md opacity-80">
+                                  className="overflow-hidden border-success/30 hover:shadow-md opacity-80">
                                 <CardHeader className="pb-3 bg-green-50 dark:bg-green-950 border-b border-green-100">
                                     <div className="flex items-start justify-between">
                                         <div>

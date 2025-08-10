@@ -6,6 +6,7 @@ import {Input} from '@/components/ui/input';
 import {Card, CardContent, CardHeader} from '@/components/ui/card';
 import {Badge} from '@/components/ui/badge';
 import {cn} from '@/lib/utils';
+import { statusBadge } from "@/ui/theme/status-styles";
 import {Order} from '@/types';
 
 interface KitchenViewProps {
@@ -20,17 +21,8 @@ export const KitchenView: React.FC<KitchenViewProps> = ({
     // State for filter parameters
     const [searchQuery, setSearchQuery] = useState('');
 
-    // Helper function to get status badge styling
-    const getStatusBadgeStyles = (status: string) => {
-        switch (status) {
-            case 'placed':
-                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-            case 'preparing':
-                return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
-            default:
-                return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-        }
-    };
+    // Helper function to get status badge styling (centralized)
+    const getStatusBadgeStyles = (status: string) => statusBadge(status);
 
     // Format time function is now imported from date-utils
 
@@ -83,7 +75,7 @@ export const KitchenView: React.FC<KitchenViewProps> = ({
                             placeholder="Search by item name, order #, table..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-9 border-yellow-200 focus-visible:ring-yellow-400"
+                            className="pl-9 focus-visible:ring-focus"
                         />
                     </div>
                 </div>
@@ -93,11 +85,11 @@ export const KitchenView: React.FC<KitchenViewProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Placed Items Section */}
                 <div className="space-y-4">
-                    <div className="bg-yellow-100 dark:bg-yellow-900 p-3 rounded-md">
-                        <h2 className="font-semibold text-yellow-800 dark:text-yellow-200 flex items-center">
+                    <div className="bg-warning/15 p-3 rounded-md">
+                        <h2 className="font-semibold text-warning flex items-center">
                             <span>PLACED ITEMS</span>
                             <Badge
-                                className="ml-2 bg-yellow-200 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200">
+                                className="ml-2 bg-warning/20 text-warning ring-1 ring-warning/30">
                                 {placedItems.length}
                             </Badge>
                         </h2>
@@ -107,26 +99,26 @@ export const KitchenView: React.FC<KitchenViewProps> = ({
                         <div className="space-y-3">
                             {placedItems.map((item) => (
                                 <Card key={`${item.orderId}-${item.id}`}
-                                      className="overflow-hidden border-yellow-200 hover:shadow-md">
+                                      className="overflow-hidden border-warning/30 hover:shadow-md">
                                     <CardHeader
-                                        className="p-3 pb-2 bg-yellow-50 dark:bg-yellow-950 border-b border-yellow-100">
+                                        className="p-3 pb-2 bg-warning/10 border-b border-warning/20">
                                         <div className="flex justify-between items-center">
                                             <div className="flex items-center gap-2">
-                                                <Badge variant="outline" className="border-yellow-300 text-yellow-700">
+                                                <Badge variant="outline" className="border-warning/50 text-warning">
                                                     Order #{item.orderId}
                                                 </Badge>
                                                 {item.tableNumber ? (
                                                     <Badge variant="outline"
-                                                           className="border-yellow-300 text-yellow-700">
+                                                           className="border-warning/50 text-warning">
                                                         Table {item.tableNumber}
                                                     </Badge>
                                                 ) : (
                                                     <Badge variant="outline"
-                                                           className="border-yellow-300 text-yellow-700">
+                                                           className="border-warning/50 text-warning">
                                                         {item.orderType === 'takeaway' ? 'Takeaway' : 'Quick Bill'}
                                                     </Badge>
                                                 )}
-                                                <span className="text-xs text-yellow-600">
+                                                <span className="text-xs text-warning">
                           <Clock className="inline h-3 w-3 mr-1"/>
                                                     {formatTime(item.orderTime)}
                         </span>
@@ -140,13 +132,13 @@ export const KitchenView: React.FC<KitchenViewProps> = ({
                                         <div className="flex justify-between items-center">
                                             <div>
                                                 <div className="flex items-center gap-2">
-                                                    <Utensils className="h-4 w-4 text-yellow-600"/>
+                                                    <Utensils className="h-4 w-4 text-warning"/>
                                                     <span className="font-medium">{item.name}</span>
-                                                    <span className="text-sm text-yellow-600">×{item.quantity}</span>
+                                                    <span className="text-sm text-warning">×{item.quantity}</span>
                                                 </div>
                                                 {item.notes && (
                                                     <div
-                                                        className="mt-1 text-sm text-muted-foreground bg-yellow-50 p-1 rounded-sm border border-yellow-100">
+                                                        className="mt-1 text-sm text-muted-foreground bg-warning/10 p-1 rounded-sm border border-warning/20">
                                                         <span className="font-medium">Notes:</span> {item.notes}
                                                     </div>
                                                 )}
@@ -154,7 +146,7 @@ export const KitchenView: React.FC<KitchenViewProps> = ({
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                className="border-yellow-300 hover:bg-yellow-100 text-yellow-700"
+                                                className="border-warning/50 hover:bg-warning/10 text-warning"
                                                 onClick={() => onItemStatusChange(item.orderId, item.id, 'preparing')}
                                                 disabled={item.allowed_next_states && !item.allowed_next_states.includes('preparing')}
                                             >
@@ -167,10 +159,10 @@ export const KitchenView: React.FC<KitchenViewProps> = ({
                             ))}
                         </div>
                     ) : (
-                        <div className="rounded-lg border border-dashed border-yellow-200 p-8 text-center">
-                            <FileText className="mx-auto h-8 w-8 text-yellow-400"/>
-                            <h3 className="mt-2 text-lg font-semibold text-yellow-800">No Placed Items</h3>
-                            <p className="mt-1 text-sm text-yellow-600">
+                        <div className="rounded-lg border border-dashed border-warning/30 p-8 text-center">
+                            <FileText className="mx-auto h-8 w-8 text-warning"/>
+                            <h3 className="mt-2 text-lg font-semibold text-warning">No Placed Items</h3>
+                            <p className="mt-1 text-sm text-warning">
                                 There are no items waiting to be prepared
                             </p>
                         </div>
@@ -179,11 +171,11 @@ export const KitchenView: React.FC<KitchenViewProps> = ({
 
                 {/* Preparing Items Section */}
                 <div className="space-y-4">
-                    <div className="bg-orange-100 dark:bg-orange-900 p-3 rounded-md">
-                        <h2 className="font-semibold text-orange-800 dark:text-orange-200 flex items-center">
+                    <div className="bg-warning/15 p-3 rounded-md">
+                        <h2 className="font-semibold text-warning flex items-center">
                             <span>PREPARING ITEMS</span>
                             <Badge
-                                className="ml-2 bg-orange-200 text-orange-800 dark:bg-orange-800 dark:text-orange-200">
+                                className="ml-2 bg-warning/20 text-warning ring-1 ring-warning/30">
                                 {preparingItems.length}
                             </Badge>
                         </h2>
@@ -193,26 +185,26 @@ export const KitchenView: React.FC<KitchenViewProps> = ({
                         <div className="space-y-3">
                             {preparingItems.map((item) => (
                                 <Card key={`${item.orderId}-${item.id}`}
-                                      className="overflow-hidden border-orange-200 hover:shadow-md">
+                                      className="overflow-hidden border-warning/30 hover:shadow-md">
                                     <CardHeader
-                                        className="p-3 pb-2 bg-orange-50 dark:bg-orange-950 border-b border-orange-100">
+                                        className="p-3 pb-2 bg-warning/10 border-b border-warning/20">
                                         <div className="flex justify-between items-center">
                                             <div className="flex items-center gap-2">
-                                                <Badge variant="outline" className="border-orange-300 text-orange-700">
+                                                <Badge variant="outline" className="border-warning/50 text-warning">
                                                     Order #{item.orderId}
                                                 </Badge>
                                                 {item.tableNumber ? (
                                                     <Badge variant="outline"
-                                                           className="border-orange-300 text-orange-700">
+                                                           className="border-warning/50 text-warning">
                                                         Table {item.tableNumber}
                                                     </Badge>
                                                 ) : (
                                                     <Badge variant="outline"
-                                                           className="border-orange-300 text-orange-700">
+                                                           className="border-warning/50 text-warning">
                                                         {item.orderType === 'takeaway' ? 'Takeaway' : 'Quick Bill'}
                                                     </Badge>
                                                 )}
-                                                <span className="text-xs text-orange-600">
+                                                <span className="text-xs text-warning">
                           <Clock className="inline h-3 w-3 mr-1"/>
                                                     {formatTime(item.orderTime)}
                         </span>
@@ -226,13 +218,13 @@ export const KitchenView: React.FC<KitchenViewProps> = ({
                                         <div className="flex justify-between items-center">
                                             <div>
                                                 <div className="flex items-center gap-2">
-                                                    <Coffee className="h-4 w-4 text-orange-600"/>
+                                                    <Coffee className="h-4 w-4 text-warning"/>
                                                     <span className="font-medium">{item.name}</span>
-                                                    <span className="text-sm text-orange-600">×{item.quantity}</span>
+                                                    <span className="text-sm text-warning">×{item.quantity}</span>
                                                 </div>
                                                 {item.notes && (
                                                     <div
-                                                        className="mt-1 text-sm text-muted-foreground bg-orange-50 p-1 rounded-sm border border-orange-100">
+                                                        className="mt-1 text-sm text-muted-foreground bg-warning/10 p-1 rounded-sm border border-warning/20">
                                                         <span className="font-medium">Notes:</span> {item.notes}
                                                     </div>
                                                 )}
@@ -240,7 +232,7 @@ export const KitchenView: React.FC<KitchenViewProps> = ({
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                className="border-green-300 hover:bg-green-100 text-green-700"
+                                                className="border-success/50 hover:bg-success/10 text-success"
                                                 onClick={() => onItemStatusChange(item.orderId, item.id, 'ready')}
                                                 disabled={item.allowed_next_states && !item.allowed_next_states.includes('ready')}
                                             >
@@ -253,10 +245,10 @@ export const KitchenView: React.FC<KitchenViewProps> = ({
                             ))}
                         </div>
                     ) : (
-                        <div className="rounded-lg border border-dashed border-orange-200 p-8 text-center">
-                            <FileText className="mx-auto h-8 w-8 text-orange-400"/>
-                            <h3 className="mt-2 text-lg font-semibold text-orange-800">No Items Being Prepared</h3>
-                            <p className="mt-1 text-sm text-orange-600">
+                        <div className="rounded-lg border border-dashed border-warning/30 p-8 text-center">
+                            <FileText className="mx-auto h-8 w-8 text-warning"/>
+                            <h3 className="mt-2 text-lg font-semibold text-warning">No Items Being Prepared</h3>
+                            <p className="mt-1 text-sm text-warning">
                                 There are no items currently being prepared
                             </p>
                         </div>

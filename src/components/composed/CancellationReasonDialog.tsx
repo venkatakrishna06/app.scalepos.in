@@ -61,8 +61,8 @@ export function CancellationReasonDialog({
                     <DialogDescription>{description}</DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
-                    <Label htmlFor="cancellation-reason" className={`block mb-2 ${error ? 'text-red-500' : ''}`}>
-                        Reason for cancellation <span className="text-red-500">*</span>
+                    <Label htmlFor="cancellation-reason" className={`block mb-2 ${error ? 'text-destructive' : ''}`}>
+                        Reason for cancellation <span className="text-destructive">*</span>
                     </Label>
                     <Input
                         id="cancellation-reason"
@@ -74,11 +74,11 @@ export function CancellationReasonDialog({
                             }
                         }}
                         placeholder="Enter reason for cancellation"
-                        className={error ? 'border-red-500 focus-visible:ring-red-500' : ''}
+                        className={error ? 'border-destructive focus-visible:ring-destructive' : ''}
                         autoFocus
                     />
                     {error && (
-                        <p className="mt-1 text-sm text-red-500">
+                        <p className="mt-1 text-sm text-destructive">
                             Please provide a reason for cancellation
                         </p>
                     )}

@@ -81,10 +81,10 @@ export default function Login() {
                 <div
                     className="w-full max-w-md space-y-8 rounded-2xl bg-white/80 p-8 shadow-xl backdrop-blur-sm dark:bg-gray-800/80">
                     <div className="text-center">
-                        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+                        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
                             Welcome back
                         </h1>
-                        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                        <p className="mt-2 text-sm text-muted-foreground">
                             Sign in to your account to continue
                         </p>
                     </div>
@@ -97,12 +97,12 @@ export default function Login() {
                                     name="email"
                                     render={({field}) => (
                                         <FormItem>
-                                            <FormLabel className="text-gray-700 dark:text-gray-300">
+                                            <FormLabel className="text-foreground">
                                                 Email address
                                             </FormLabel>
                                             <FormControl>
                                                 <div className="relative">
-                                                    <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"/>
+                                                    <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground"/>
                                                     <Input
                                                         placeholder="Enter your email"
                                                         className="pl-10"
@@ -120,12 +120,12 @@ export default function Login() {
                                     name="password"
                                     render={({field}) => (
                                         <FormItem>
-                                            <FormLabel className="text-gray-700 dark:text-gray-300">
+                                            <FormLabel className="text-foreground">
                                                 Password
                                             </FormLabel>
                                             <FormControl>
                                                 <div className="relative">
-                                                    <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"/>
+                                                    <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground"/>
                                                     <Input
                                                         type={showPassword ? "text" : "password"}
                                                         placeholder="Enter your password"
@@ -135,7 +135,7 @@ export default function Login() {
                                                     <button
                                                         type="button"
                                                         onClick={() => setShowPassword(!showPassword)}
-                                                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                                                        className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
                                                     >
                                                         {showPassword ? (
                                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5"
@@ -170,10 +170,10 @@ export default function Login() {
                                         id="remember-me"
                                         name="remember-me"
                                         type="checkbox"
-                                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        className="h-4 w-4 rounded border-input text-primary focus:ring-focus"
                                     />
                                     <label htmlFor="remember-me"
-                                           className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                                           className="ml-2 block text-sm text-foreground">
                                         Remember me
                                     </label>
                                 </div>
@@ -181,7 +181,7 @@ export default function Login() {
                                 <div className="text-sm">
                                     <Link
                                         to="/forgot-password"
-                                        className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                                        className="font-medium text-primary hover:text-primary/80"
                                     >
                                         Forgot your password?
                                     </Link>
@@ -190,7 +190,7 @@ export default function Login() {
 
                             <Button
                                 type="submit"
-                                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 py-6 text-white hover:from-blue-700 hover:to-blue-800"
+                                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 py-6"
                                 disabled={loading}
                             >
                                 {loading ? (
@@ -224,11 +224,11 @@ export default function Login() {
                             {/*  </button>*/}
                             {/*</div>*/}
 
-                            <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+                            <p className="text-center text-sm text-muted-foreground">
                                 Don't have an account?{' '}
                                 <Link
                                     to="/signup"
-                                    className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                                    className="font-medium text-primary hover:text-primary/80"
                                 >
                                     Sign up now
                                 </Link>

@@ -5,12 +5,13 @@ import {Order} from '@/types';
 import {toast} from '@/lib/toast';
 import {isToday, isYesterday, subDays, startOfDay, endOfDay, formatDate} from 'date-fns';
 import {formatDateISO, formatDateForFilename, formatDateWithContext} from '@/lib/date-utils';
+import { statusBadge } from "@/ui/theme/status-styles";
 
 type SortField = 'newest' | 'oldest' | 'highest' | 'lowest';
 
 export const useOrdersPage = () => {
     const [queryParams, setQueryParams] = useState<{
-        period?: 'day' | 'week' | 'month';
+        period?: 'day' | 'week' | 'month' |'all';
         start_date?: string;
         end_date?: string;
         table_number?: number;
@@ -62,7 +63,7 @@ export const useOrdersPage = () => {
                 };
             } else {
                 // Map other UI filter values to API period values
-                let period: 'day' | 'week' | 'month' | undefined;
+                let period: 'day' | 'week' | 'month' | 'all'| undefined;
                 
                 switch (filterTimeframe) {
                     case 'today':
@@ -76,7 +77,7 @@ export const useOrdersPage = () => {
                         break;
                     case 'all':
                         // For 'all', we'll fetch a month of data to have a comprehensive view
-                        period = 'month';
+                        period = 'all';
                         break;
                 }
                 
@@ -299,20 +300,7 @@ export const useOrdersPage = () => {
     }, [orders, filterStatus, filterTimeframe, filterPaymentMethod, filterOrderType, searchQuery, activeTab, sortBy]);
 
     const getStatusBadgeStyles = useCallback((status: string) => {
-        switch (status) {
-            case 'placed':
-                return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-            case 'preparing':
-                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-            case 'served':
-                return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-            case 'paid':
-                return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
-            case 'cancelled':
-                return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-            default:
-                return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-        }
+        return statusBadge(status);
     }, []);
 
     const formatCurrency = useCallback((amount: number | undefined) => {

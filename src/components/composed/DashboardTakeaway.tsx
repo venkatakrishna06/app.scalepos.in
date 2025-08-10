@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { TakeawaySkeleton } from '@/components/composed/takeaway-skeleton';
 import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
 import {MenuItem, Order, OrderItem} from '@/types';
 import {cn, debounce} from '@/lib/utils';
 import {useAuthStore} from "@/lib/auth/auth.store";
@@ -298,7 +299,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({ onOrderC
     }
 
     return (
-        <div className="flex min-h-[100dvh] flex-col md:flex-row gap-1 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+        <div className="flex h-[calc(100vh-8rem)] flex-col md:flex-row gap-1">
             {/* Header */}
             <div className="flex items-center md:hidden p-2 border-b bg-background/95 backdrop-blur sticky top-0 z-20">
                 <Button variant="ghost" size="icon" className="h-8 w-8 absolute left-2" onClick={() => setIsSidebarOpen(!isSidebarOpen)}><MenuIcon className="h-4 w-4" /></Button>
@@ -308,7 +309,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({ onOrderC
             {error && <div className="mx-3 mb-3 rounded-md bg-destructive/10 p-2 text-xs text-destructive flex items-center gap-2"><AlertCircle className="h-3 w-3" /><p>{error}</p></div>}
 
             {/* Sidebar */}
-            <div className={cn("border-b bg-muted p-2 md:w-48 md:border-b-0 md:border-r dark:border-border custom-scrollbar", "md:relative md:block", isSidebarOpen ? "fixed inset-0 z-[60] pt-14 pb-[calc(4rem+env(safe-area-inset-bottom))] overflow-y-auto" : "hidden", "md:static md:z-auto md:pt-0 md:pb-0")}>
+            <div className={cn("border-b bg-muted p-2 md:w-48 md:border-b-0 md:border-r dark:border-border custom-scrollbar", "md:relative md:block", isSidebarOpen ? "fixed inset-0 bottom-20 z-50 pt-14 pb-16 overflow-y-auto" : "hidden", "md:static md:z-auto md:pt-0 md:pb-0")}>
                 <div className="flex items-center justify-between mb-2 md:hidden sticky top-0 bg-muted z-10 pb-2">
                     <h3 className="font-medium">Categories</h3>
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsSidebarOpen(false)}><X className="h-5 w-5" /></Button>
@@ -391,7 +392,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({ onOrderC
                     </div>
                 </div>
                 {/* Cart */}
-                <div className={cn("border-t bg-muted md:w-[30rem] md:border-l md:border-t-0 flex flex-col dark:border-border overflow-hidden", "md:relative md:flex", isCartOpen ? "fixed inset-0 z-[60] bg-background" : "hidden", "md:static md:z-auto shrink-0")}>
+                <div className={cn("border-t bg-muted md:w-[25rem] md:border-l md:border-t-0 flex flex-col dark:border-border overflow-hidden", "md:relative md:flex", isCartOpen ? "fixed inset-0 z-[60] bg-background" : "hidden", "md:static md:z-auto shrink-0")}>
                     <div className="flex flex-col h-full overflow-hidden">
                         <div className="flex items-center justify-between p-0.5 md:hidden shrink-0">
                                                     <div className="flex items-center gap-2">
@@ -436,7 +437,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({ onOrderC
                                                     <button className="border rounded-md h-6 w-6 flex items-center justify-center ml-1" onClick={() => handleEditNote(item)}><Pencil className="h-3 w-3" /></button>
                                                 </div>
                                             </div>
-                                            {editingItemId === item.id && <div className="mt-1 flex gap-2"><input type="text" value={itemNote} onChange={e => setItemNote(e.target.value)} className="flex-1 h-8 px-2 text-sm border rounded-md" onKeyDown={e => {if (e.key === 'Enter') handleSaveNote()}} autoFocus/><Button size="sm" onClick={handleSaveNote} className="h-8 px-2">Save</Button></div>}
+                                            {editingItemId === item.id && <div className="mt-1 flex gap-2"><Input type="text" value={itemNote} onChange={e => setItemNote(e.target.value)} placeholder="Add note for this item..." className="flex-1 h-8 px-2 text-sm" onKeyDown={e => {if (e.key === 'Enter') handleSaveNote()}} autoFocus/><Button size="sm" onClick={handleSaveNote} className="h-8 px-2">Save</Button></div>}
                                         </div>
                                     ))}
                                 </div>}

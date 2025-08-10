@@ -50,25 +50,25 @@ export const TableCard = React.memo(({
     const getStatusIcon = (status: Table['status']) => {
         switch (status) {
             case 'available':
-                return <CheckCircle className="h-4 w-4 text-green-500"/>;
+                return <CheckCircle className="h-4 w-4 text-success"/>;
             case 'occupied':
-                return <Coffee className="h-4 w-4 text-orange-500"/>;
+                return <Coffee className="h-4 w-4 text-warning"/>;
             case 'reserved':
-                return <Calendar className="h-4 w-4 text-blue-500"/>;
+                return <Calendar className="h-4 w-4 text-info"/>;
             case 'cleaning':
-                return <RefreshCw className="h-4 w-4 text-yellow-500"/>;
+                return <RefreshCw className="h-4 w-4 text-warning"/>;
             default:
-                return <AlertCircle className="h-4 w-4 text-gray-500"/>;
+                return <AlertCircle className="h-4 w-4 text-muted-foreground"/>;
         }
     };
 
     return (
         <div className={cn(
             "rounded-lg border bg-card shadow transition-all hover:shadow-md",
-            table.status === 'occupied' && "border-l-4 border-l-orange-500",
-            table.status === 'available' && "border-l-4 border-l-green-500",
-            table.status === 'reserved' && "border-l-4 border-l-blue-500",
-            table.status === 'cleaning' && "border-l-4 border-l-yellow-500"
+            table.status === 'occupied' && "border-l-4 border-warning",
+            table.status === 'available' && "border-l-4 border-success",
+            table.status === 'reserved' && "border-l-4 border-info",
+            table.status === 'cleaning' && "border-l-4 border-warning"
         )}>
             {/* Header section */}
             <div className="p-4 pb-2">
@@ -94,15 +94,15 @@ export const TableCard = React.memo(({
                         {/*{table.status !== 'occupied' &&*/}
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => onStatusChange(table.id, 'available')}>
-                                <CheckCircle className="mr-2 h-4 w-4 text-green-500"/>
+                                <CheckCircle className="mr-2 h-4 w-4 text-success"/>
                                 Mark Available
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => onStatusChange(table.id, 'reserved')}>
-                                <Calendar className="mr-2 h-4 w-4 text-blue-500"/>
+                                <Calendar className="mr-2 h-4 w-4 text-info"/>
                                 Mark Reserved
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => onStatusChange(table.id, 'cleaning')}>
-                                <RefreshCw className="mr-2 h-4 w-4 text-yellow-500"/>
+                                <RefreshCw className="mr-2 h-4 w-4 text-warning"/>
                                 Mark Cleaning
                             </DropdownMenuItem>
                             <DropdownMenuSeparator/>
@@ -114,7 +114,7 @@ export const TableCard = React.memo(({
                             )}
                             {table.status === 'available' && (
                                 <DropdownMenuItem onClick={() => onDelete(table.id)}>
-                                    <Trash2 className="mr-2 h-4 w-4 text-red-500"/>
+                                    <Trash2 className="mr-2 h-4 w-4 text-destructive"/>
                                     Delete Table
                                 </DropdownMenuItem>
                             )}

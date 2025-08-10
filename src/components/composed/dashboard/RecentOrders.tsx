@@ -6,6 +6,7 @@ import {Order} from '@/types';
 import {Skeleton} from '@/components/ui/skeleton';
 import {cn} from '@/lib/utils';
 import {Badge} from '@/components/ui/badge';
+import { statusBadge } from "@/ui/theme/status-styles";
 
 interface RecentOrdersProps {
     activeOrders: Order[];
@@ -64,24 +65,14 @@ export function RecentOrders({activeOrders, isLoading}: RecentOrdersProps) {
                                 <div className="flex items-center gap-3">
                                     <div className={cn(
                                         "flex h-10 w-10 items-center justify-center rounded-full",
-                                        order.status === 'placed' ? "bg-blue-100" :
-                                            order.status === 'preparing' ? "bg-yellow-100" :
-                                                "bg-green-100"
+                                        order.status === 'placed' ? "bg-info/15 text-info" :
+                                            order.status === 'preparing' ? "bg-warning/15 text-warning" :
+                                                "bg-success/15 text-success"
                                     )}>
                                         {order.order_type === 'dine-in' ? (
-                                            <Table2 className={cn(
-                                                "h-5 w-5",
-                                                order.status === 'placed' ? "text-blue-700" :
-                                                    order.status === 'preparing' ? "text-yellow-700" :
-                                                        "text-green-700"
-                                            )}/>
+                                            <Table2 className="h-5 w-5"/>
                                         ) : (
-                                            <ShoppingBag className={cn(
-                                                "h-5 w-5",
-                                                order.status === 'placed' ? "text-blue-700" :
-                                                    order.status === 'preparing' ? "text-yellow-700" :
-                                                        "text-green-700"
-                                            )}/>
+                                            <ShoppingBag className="h-5 w-5"/>
                                         )}
                                     </div>
                                     <div>
@@ -99,13 +90,7 @@ export function RecentOrders({activeOrders, isLoading}: RecentOrdersProps) {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <Badge className={cn(
-                                        "capitalize",
-                                        order.status === 'placed' ? "bg-blue-100 text-blue-800 hover:bg-blue-200" :
-                                            order.status === 'preparing' ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-200" :
-                                                order.status === 'served' ? "bg-green-100 text-green-800 hover:bg-green-200" :
-                                                    "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                                    )}>
+                                    <Badge className={cn(statusBadge(order.status), "capitalize")}>
                                         {order.status}
                                     </Badge>
                                     <span

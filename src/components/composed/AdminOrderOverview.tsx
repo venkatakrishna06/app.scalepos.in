@@ -8,7 +8,6 @@ import {
     FileText,
     LayoutGrid,
     LayoutList,
-    Printer,
     Search,
     Trash2,
     CheckCircle
@@ -36,6 +35,7 @@ import {
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
 import {Badge} from '@/components/ui/badge';
 import {cn} from '@/lib/utils';
+import { statusBadge } from "@/ui/theme/status-styles";
 import {toast} from '@/lib/toast';
 import {Order} from '@/types';
 
@@ -97,23 +97,8 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
         }));
     };
 
-    // Helper function to get status badge styling
-    const getStatusBadgeStyles = (status: string) => {
-        switch (status) {
-            case 'placed':
-                return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-            case 'preparing':
-                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-            case 'served':
-                return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-            case 'paid':
-                return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
-            case 'cancelled':
-                return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-            default:
-                return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-        }
-    };
+    // Helper function to get status badge styling (centralized)
+    const getStatusBadgeStyles = (status: string) => statusBadge(status);
 
     // Format currency
     const formatCurrency = (amount: number | undefined) => {
@@ -168,7 +153,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
             await createPaymentMutation.mutateAsync(paymentData);
             await updateOrderStatusMutation.mutateAsync({ id: order.id, status: 'paid' });
             
-            toast.success('Order delivered');
+          //  toast.success('Order delivered');
             
             // // Refresh orders
             // onRefreshOrders();
@@ -259,13 +244,12 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
     const filteredOrders = orders.filter((order) => {
             // Status filter
             const matchesStatus = filterStatus === 'all' ? true : order.status === filterStatus;
+        const orderDate = new Date(order.order_time.replace(/Z$/, ''));
+        const now = new Date();
 
             // Timeframe filter
             let matchesTimeframe = true;
             if (filterTimeframe !== 'all') {
-                const orderDate = new Date(order.order_time.replace(/Z$/, ''));
-                const now = new Date();
-
                 switch (filterTimeframe) {
                     case 'today':
                         matchesTimeframe = isToday(orderDate);
@@ -281,7 +265,6 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                         break;
                 }
             }
-
             // Payment method filter
             const matchesPaymentMethod = filterPaymentMethod === 'all'
                 ? true
@@ -354,14 +337,14 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                     placeholder="Search by order #, token, table, customer..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-9 border-blue-200 focus-visible:ring-blue-400"
+                                    className="pl-9 focus-visible:ring-focus"
                                 />
                             </div>
 
 
                             <FilterDropdownContainer>
                                 <Select value={filterStatus} onValueChange={setFilterStatus}>
-                                    <SelectTrigger className="w-[130px] sm:w-[140px] border-blue-200">
+                                    <SelectTrigger className="w-[130px] sm:w-[140px]">
                                         <SelectValue placeholder="Status"/>
                                     </SelectTrigger>
                                     <SelectContent>
@@ -387,17 +370,17 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                     </SelectContent>
                                 </Select>
 
-                                <Select value={filterPaymentMethod} onValueChange={setFilterPaymentMethod}>
-                                    <SelectTrigger className="w-[130px] sm:w-[140px] border-blue-200">
-                                        <SelectValue placeholder="Payment"/>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Payments</SelectItem>
-                                        <SelectItem value="cash">Cash</SelectItem>
-                                        <SelectItem value="card">Card</SelectItem>
-                                        <SelectItem value="upi">UPI</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                {/*<Select value={filterPaymentMethod} onValueChange={setFilterPaymentMethod}>*/}
+                                {/*    <SelectTrigger className="w-[130px] sm:w-[140px] border-blue-200">*/}
+                                {/*        <SelectValue placeholder="Payment"/>*/}
+                                {/*    </SelectTrigger>*/}
+                                {/*    <SelectContent>*/}
+                                {/*        <SelectItem value="all">All Payments</SelectItem>*/}
+                                {/*        <SelectItem value="cash">Cash</SelectItem>*/}
+                                {/*        <SelectItem value="card">Card</SelectItem>*/}
+                                {/*        <SelectItem value="upi">UPI</SelectItem>*/}
+                                {/*    </SelectContent>*/}
+                                {/*</Select>*/}
 
                                 <Select value={filterOrderType} onValueChange={setFilterOrderType}>
                                     <SelectTrigger className="w-[130px] sm:w-[140px] border-blue-200">
@@ -434,16 +417,16 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                 </TabsList>
                             </Tabs>
                             <Button variant="outline" size="sm" onClick={onRefreshOrders}
-                                    className="border-blue-300 hover:bg-blue-50">
-                                <ArrowUpDown className="mr-2 h-4 w-4 text-blue-600"/>
+                                    className="border-info/40 hover:bg-info/10">
+                                <ArrowUpDown className="mr-2 h-4 w-4 text-info"/>
                                 Refresh
                             </Button>
 
                             <PermissionGuard permission={ROLES.ADMIN}>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" size="sm" className="border-blue-300 hover:bg-blue-50">
-                                            <Download className="mr-2 h-4 w-4 text-blue-600"/>
+                                        <Button variant="outline" size="sm" className="border-info/40 hover:bg-info/10">
+                                            <Download className="mr-2 h-4 w-4 text-info"/>
                                             Export
                                         </Button>
                                     </DropdownMenuTrigger>
@@ -464,19 +447,19 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                         // Grid View
                         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                             {filteredOrders.map((order) => (
-                                <Card key={order.id} className="overflow-hidden border-blue-200 hover:shadow-md">
-                                    <CardHeader className="pb-3 bg-blue-50 dark:bg-blue-950 border-b border-blue-100">
+                                <Card key={order.id} className="overflow-hidden border-info/30 hover:shadow-md">
+                                    <CardHeader className="pb-3 bg-info/10 border-b border-info/20">
                                         <div className="flex items-start justify-between">
                                             <div>
                                                 <div className="flex items-center gap-2">
-                                                    <CardTitle className="text-lg text-blue-800 dark:text-blue-300">
+                                                    <CardTitle className="text-lg text-info">
                                                         {order.order_type === 'takeaway'
                                                             ? (
                                                                 <div className="flex items-center">
                                                                     <span>Takeaway</span>
                                                                     {order.token_number && (
                                                                         <Badge
-                                                                            className="ml-2 bg-blue-100 text-blue-800 border-blue-300">
+                                                                            className="ml-2 bg-info/10 text-info border-info/40">
                                                                             Token: {order.token_number}
                                                                         </Badge>
                                                                     )}
@@ -488,7 +471,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                                         <span>Quick Bill</span>
                                                                         {order.token_number && (
                                                                             <Badge
-                                                                                className="ml-2 bg-blue-100 text-blue-800 border-blue-300">
+                                                                                className="ml-2 bg-info/10 text-info border-info/40">
                                                                                 Token: {order.token_number}
                                                                             </Badge>
                                                                         )}
@@ -497,20 +480,20 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                                 : `Table ${order?.table?.table_number || 'Unknown'}`}
                                                     </CardTitle>
                                                     <Badge variant="outline"
-                                                           className="border-blue-300 text-blue-700">#{order.id}</Badge>
+                                                           className="border-info/50 text-info">#{order.id}</Badge>
                                                 </div>
                                                 <CardDescription className="mt-1">
                                                     {getOrderDateDisplay(order.order_time)}
                                                 </CardDescription>
                                             </div>
                                             {(isTrackingEnabled || order.status === 'cancelled' || order.status === 'paid' || order.status === 'placed') && (
-                                                <Badge className={cn(getStatusBadgeStyles(order.status))}>
+                                                <Badge variant="outline" className={cn(getStatusBadgeStyles(order.status))}>
                                                     {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                                                 </Badge>
                                             )}
                                         </div>
                                         <div className="flex items-center gap-2 text-sm">
-                                            <Coffee className="h-4 w-4 text-blue-600"/>
+                                            <Coffee className="h-4 w-4 text-info"/>
                                             <span>Server: {order.server || 'Unknown'}</span>
                                         </div>
                                     </CardHeader>
@@ -520,7 +503,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
 
                                             {order.payment_method && (
                                                 <div className="flex items-center gap-2 text-sm">
-                                                    <CreditCard className="h-4 w-4 text-blue-600"/>
+                                                    <CreditCard className="h-4 w-4 text-info"/>
                                                     <span>Payment: {order.payment_method.charAt(0).toUpperCase() + order.payment_method.slice(1)}</span>
                                                 </div>
                                             )}
@@ -528,29 +511,29 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                             {/* Token number is now displayed in the title for takeaway and quick-bill orders */}
                                             {order.token_number && order.order_type === 'dine-in' && (
                                                 <div className="flex items-center gap-2 text-sm">
-                                                    <FileText className="h-4 w-4 text-blue-600"/>
+                                                    <FileText className="h-4 w-4 text-info"/>
                                                     <span>Token: {order.token_number}</span>
                                                 </div>
                                             )}
                                         </div>
 
                                         <div
-                                            className="max-h-40 overflow-auto  border border-blue-100 custom-scrollbar">
+                                            className="max-h-40 overflow-auto  border border-info/20 custom-scrollbar">
                                             <table className="w-full">
-                                                <thead className="bg-blue-50 dark:bg-blue-950 text-xs">
+                                                <thead className="bg-info/10 text-xs">
                                                 <tr className="text-left">
-                                                    <th className="p-2 text-blue-800">Item</th>
-                                                    <th className="p-2 text-blue-800">Qty</th>
-                                                    <th className="p-2 text-blue-800">Total</th>
+                                                    <th className="p-2 text-info">Item</th>
+                                                    <th className="p-2 text-info">Qty</th>
+                                                    <th className="p-2 text-info">Total</th>
 
-                                                    <th className="p-2 text-blue-800">Status</th>
+                                                    <th className="p-2 text-info">Status</th>
 
                                                 </tr>
                                                 </thead>
-                                                <tbody className="divide-y divide-blue-100 text-xs">
+                                                <tbody className="divide-y divide-info/20 text-xs">
                                                 {(order?.items || []).length > 0 ? (
                                                     (order.items || []).map((item) => (
-                                                        <tr key={item.id} className="hover:bg-blue-50/50">
+                                                        <tr key={item.id} className="hover:bg-info/10">
                                                             <td className={cn("p-2", item.status === 'cancelled' && "text-red-500 font-medium")}>{item.name || 'Unknown Item'}</td>
                                                             <td className={cn("p-2", item.status === 'cancelled' && "text-red-500 font-medium")}>{item.quantity || 0}</td>
                                                             <td className={cn("p-2", item.status === 'cancelled' && "text-red-500 font-medium")}>{formatCurrency((item.quantity || 0) * (item.price !== undefined ? item.price : 0))}</td>
@@ -578,7 +561,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
 
 
                                     <CardFooter
-                                        className="flex items-center justify-between border-t border-blue-100 bg-blue-50/50 dark:bg-blue-950/50 pt-3">
+                                        className="flex items-center justify-between border-t border-info/20 bg-info/10 pt-3">
                                         <div className="flex gap-2">
                                             {
                                                 order.order_type === 'dine-in' && (
@@ -592,7 +575,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                         order.status === 'cancelled' ||
                                                         order.status === 'paid'
                                                     }
-                                                    className="border-blue-300 hover:bg-blue-100 text-blue-700"
+                                                    className="border-info/50 hover:bg-info/10 text-info"
                                                 >
                                                     <Edit className="mr-2 h-4 w-4"/>
                                                     Edit
@@ -610,7 +593,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                         variant="outline"
                                                         size="sm"
                                                         onClick={() => handleMarkAsDelivered(order)}
-                                                        className="border-green-300 hover:bg-green-100 text-green-700"
+                                                        className="border-success/50 hover:bg-success/10 text-success"
                                                     >
                                                         <CheckCircle className="mr-2 h-4 w-4"/>
                                                         Delivered
@@ -621,7 +604,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                               <Button
                                                   variant="outline"
                                                   size="sm"
-                                                  className="text-red-500 hover:text-red-700 border-red-200 hover:bg-red-50"
+                                                  className="text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/10"
                                                   onClick={() => onCancelOrder(order)}
                                                   disabled={
                                                       order.status === 'cancelled' ||
@@ -636,7 +619,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                         </div>
 
                                         <div className="text-right">
-                                            <p className="text-xs text-blue-600">Total Amount</p>
+                                            <p className="text-xs text-info">Total Amount</p>
                                             <TooltipProvider>
                                                 <Tooltip 
                                                     open={openTooltips[order.id]} 
@@ -644,7 +627,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                 >
                                                     <TooltipTrigger asChild>
                                                         <p 
-                                                            className="text-base font-semibold text-blue-800 cursor-help"
+                                                            className="text-base font-semibold text-info cursor-help"
                                                             onClick={() => toggleTooltip(order.id)}
                                                         >
                                                             {formatCurrency(getTotalWithRoundoff(order.total_amount))}
@@ -686,10 +669,10 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
 
                             {filteredOrders.length === 0 && (
                                 <div
-                                    className="col-span-full rounded-lg border border-dashed border-blue-200 p-8 text-center">
-                                    <FileText className="mx-auto h-8 w-8 text-blue-400"/>
-                                    <h3 className="mt-2 text-lg font-semibold text-blue-800">No Orders Found</h3>
-                                    <p className="mt-1 text-sm text-blue-600">
+                                    className="col-span-full rounded-lg border border-dashed border-info/30 p-8 text-center">
+                                    <FileText className="mx-auto h-8 w-8 text-info"/>
+                                    <h3 className="mt-2 text-lg font-semibold text-info">No Orders Found</h3>
+                                    <p className="mt-1 text-sm text-info">
                                         Try adjusting your filters or search criteria
                                     </p>
                                 </div>
@@ -700,33 +683,32 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             {/* Placed Orders Column */}
                             <div className="flex flex-col">
-                                <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-t-md">
-                                    <h3 className="font-semibold text-blue-800 dark:text-blue-200 flex items-center">
+                                <div className="bg-info/15 p-3 rounded-t-md">
+                                    <h3 className="font-semibold text-info flex items-center">
                                         <span>PLACED</span>
-                                        <Badge
-                                            className="ml-2 bg-blue-200 text-blue-800 dark:bg-blue-800 dark:text-blue-200">
+                                        <Badge className={cn("ml-2", getStatusBadgeStyles('placed'))}>
                                             {filteredOrders.filter(order => order.status === 'placed').length}
                                         </Badge>
                                     </h3>
                                 </div>
                                 <div
-                                    className="bg-blue-50 dark:bg-blue-950 p-2 rounded-b-md flex-1 min-h-[70vh] overflow-auto custom-scrollbar">
+                                    className="bg-info/10 p-2 rounded-b-md flex-1 min-h-[70vh] overflow-auto custom-scrollbar">
                                     {filteredOrders
                                         .filter(order => order.status === 'placed')
                                         .map(order => (
                                             <Card key={order.id}
-                                                  className="mb-3 overflow-hidden hover:shadow-md border-blue-200">
-                                                <CardHeader className="p-2 pb-1 bg-blue-50">
+                                                  className="mb-3 overflow-hidden hover:shadow-md border-info/30">
+                                                <CardHeader className="p-2 pb-1 bg-info/10">
                                                     <div className="flex justify-between items-center">
                                                         <div className="flex items-center gap-1">
-                              <span className="font-medium text-sm text-blue-800">
+                              <span className="font-medium text-sm text-info">
                                 {order.order_type === 'takeaway'
                                     ? (
                                         <span className="flex items-center">
                                       Takeaway
                                             {order.token_number && (
                                                 <Badge
-                                                    className="ml-1 bg-blue-100 text-blue-800 border-blue-300 text-xs">
+                                                    className="ml-1 bg-info/10 text-info border-info/40 text-xs">
                                                     {order.token_number}
                                                 </Badge>
                                             )}
@@ -738,7 +720,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                         Quick Bill
                                                 {order.token_number && (
                                                     <Badge
-                                                        className="ml-1 bg-blue-100 text-blue-800 border-blue-300 text-xs">
+                                                        className="ml-1 bg-info/10 text-info border-info/40 text-xs">
                                                         {order.token_number}
                                                     </Badge>
                                                 )}
@@ -747,8 +729,8 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                         : `Table ${order.table_id || 'Unknown'}`}
                               </span>
                                                             <Badge variant="outline"
-                                                                   className="text-xs border-blue-300 text-blue-700">#{order.id}</Badge>
-                                                            <span className="text-xs text-blue-600 ml-1">
+                                                                   className="text-xs border-info/50 text-info">#{order.id}</Badge>
+                                                            <span className="text-xs text-info ml-1">
                                 {getOrderDateDisplay(order.order_time)}
                               </span>
                                                         </div>
@@ -759,7 +741,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                             >
                                                                 <TooltipTrigger asChild>
                                                                     <span 
-                                                                        className="text-xs font-medium text-blue-800 cursor-help"
+                                                                        className="text-xs font-medium text-info cursor-help"
                                                                         onClick={() => toggleTooltip(order.id)}
                                                                     >
                                                                         {formatCurrency(getTotalWithRoundoff(order.total_amount))}
@@ -799,18 +781,18 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                 <CardContent className="p-2 pt-0">
                                                     <div className="text-xs">
                                                         <div
-                                                            className="max-h-36 overflow-y-auto border border-blue-100 rounded-md divide-y divide-blue-100">
+                                                            className="max-h-36 overflow-y-auto border border-info/20 rounded-md divide-y divide-info/20">
                                                             {order.items && order.items.length > 0 ? (
                                                                 order.items.map(item => (
                                                                     <div key={item.id}
-                                                                         className="p-1.5 hover:bg-blue-50/50">
+                                                                         className="p-1.5 hover:bg-info/10">
                                                                         <div className="flex items-center gap-1">
                                                                             <div
                                                                                 className="flex-1 flex items-center gap-1">
                                                                                 <span
                                                                                     className={cn("font-medium truncate", item.status === 'cancelled' && "text-red-500")}>{item.name}</span>
                                                                                 <span
-                                                                                    className={cn("text-blue-600", item.status === 'cancelled' && "text-red-500")}>×{item.quantity}</span>
+                                                                                    className={cn("text-info", item.status === 'cancelled' && "text-destructive")}>×{item.quantity}</span>
                                                                                 {(isTrackingEnabled || item.status === 'cancelled') && (
                                                                                     <Badge
                                                                                         className={cn("px-1 py-0.5 text-xs ml-auto", getStatusBadgeStyles(item.status || 'unknown'))}>
@@ -822,7 +804,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                                                 <Button
                                                                                     variant="ghost"
                                                                                     size="sm"
-                                                                                    className="text-yellow-600 text-xs h-6 px-1.5 ml-1"
+                                                                                    className="text-warning text-xs h-6 px-1.5 ml-1"
                                                                                     onClick={() => onItemStatusChange(order.id, item.id, 'preparing')}
                                                                                     disabled={item.allowed_next_states && !item.allowed_next_states.includes('preparing')}
                                                                                 >
@@ -833,7 +815,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                                     </div>
                                                                 ))
                                                             ) : (
-                                                                <div className="p-2 text-center text-blue-400">
+                                                                <div className="p-2 text-center text-info">
                                                                     No items in this order
                                                                 </div>
                                                             )}
@@ -844,7 +826,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
-                                                                className="text-xs h-7 text-blue-700 hover:bg-blue-100"
+                                                                className="text-xs h-7 text-info hover:bg-info/10"
                                                                 onClick={() => onEditOrder(order)}
                                                             >
                                                                 <Edit className="h-3 w-3 mr-1"/> Edit
@@ -855,7 +837,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="sm"
-                                                                    className="text-xs h-7 text-blue-700 hover:bg-blue-100"
+                                                                    className="text-xs h-7 text-warning hover:bg-warning/10"
                                                                     onClick={() => onUpdateOrderStatus(order.id, 'preparing')}
                                                                     disabled={order.allowed_next_states && !order.allowed_next_states.includes('preparing')}
                                                                 >
@@ -869,7 +851,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                         ))}
 
                                     {filteredOrders.filter(order => order.status === 'placed').length === 0 && (
-                                        <div className="text-center p-4 text-blue-400 text-sm">
+                                        <div className="text-center p-4 text-info text-sm">
                                             No orders in this column
                                         </div>
                                     )}
@@ -878,35 +860,34 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
 
                             {/* Preparing Orders Column */}
                             <div className="flex flex-col">
-                                <div className="bg-yellow-100 dark:bg-yellow-900 p-3 rounded-t-md">
-                                    <h3 className="font-semibold text-yellow-800 dark:text-yellow-200 flex items-center">
+                                <div className="bg-warning/15 p-3 rounded-t-md">
+                                    <h3 className="font-semibold text-warning flex items-center">
                                         <span>PREPARING</span>
-                                        <Badge
-                                            className="ml-2 bg-yellow-200 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200">
+                                        <Badge className={cn("ml-2", getStatusBadgeStyles('preparing'))}>
                                             {filteredOrders.filter(order => order.status === 'preparing').length}
                                         </Badge>
                                     </h3>
                                 </div>
                                 <div
-                                    className="bg-yellow-50 dark:bg-yellow-950 p-2 rounded-b-md flex-1 min-h-[70vh] overflow-auto custom-scrollbar">
+                                    className="bg-warning/10 p-2 rounded-b-md flex-1 min-h-[70vh] overflow-auto custom-scrollbar">
                                     {/* Similar card structure as placed orders but with preparing status */}
                                     {filteredOrders
                                         .filter(order => order.status === 'preparing')
                                         .map(order => (
                                             <Card key={order.id}
-                                                  className="mb-3 overflow-hidden hover:shadow-md border-yellow-200">
+                                                  className="mb-3 overflow-hidden hover:shadow-md border-warning/30">
                                                 {/* Card content similar to placed orders but with preparing-specific actions */}
-                                                <CardHeader className="p-2 pb-1 bg-yellow-50">
+                                                <CardHeader className="p-2 pb-1 bg-warning/10">
                                                     <div className="flex justify-between items-center">
                                                         <div className="flex items-center gap-1">
-                              <span className="font-medium text-sm text-yellow-800">
+                              <span className="font-medium text-sm text-warning">
                                 {order.order_type === 'takeaway'
                                     ? (
                                         <span className="flex items-center">
                                       Takeaway
                                             {order.token_number && (
                                                 <Badge
-                                                    className="ml-1 bg-yellow-100 text-yellow-800 border-yellow-300 text-xs">
+                                                    className="ml-1 bg-warning/10 text-warning border-warning/40 text-xs">
                                                     {order.token_number}
                                                 </Badge>
                                             )}
@@ -918,7 +899,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                         Quick Bill
                                                 {order.token_number && (
                                                     <Badge
-                                                        className="ml-1 bg-yellow-100 text-yellow-800 border-yellow-300 text-xs">
+                                                        className="ml-1 bg-warning/10 text-warning border-warning/40 text-xs">
                                                         {order.token_number}
                                                     </Badge>
                                                 )}
@@ -927,30 +908,30 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                         : `Table ${order.table_id || 'Unknown'}`}
                               </span>
                                                             <Badge variant="outline"
-                                                                   className="text-xs border-yellow-300 text-yellow-700">#{order.id}</Badge>
-                                                            <span className="text-xs text-yellow-600 ml-1">
+                                                                   className="text-xs border-warning/50 text-warning">#{order.id}</Badge>
+                                                            <span className="text-xs text-warning ml-1">
                                 {getOrderDateDisplay(order.order_time)}
                               </span>
                                                         </div>
                                                         <span
-                                                            className="text-xs font-medium text-yellow-800">{formatCurrency(order.total_amount)}</span>
+                                                            className="text-xs font-medium text-warning">{formatCurrency(order.total_amount)}</span>
                                                     </div>
                                                 </CardHeader>
                                                 <CardContent className="p-2 pt-0">
                                                     <div className="text-xs">
                                                         <div
-                                                            className="max-h-36 overflow-y-auto border border-yellow-100 rounded-md divide-y divide-yellow-100">
+                                                            className="max-h-36 overflow-y-auto border border-warning/20 rounded-md divide-y divide-warning/20">
                                                             {order.items && order.items.length > 0 ? (
                                                                 order.items.map(item => (
                                                                     <div key={item.id}
-                                                                         className="p-1.5 hover:bg-yellow-50/50">
+                                                                         className="p-1.5 hover:bg-warning/10">
                                                                         <div className="flex items-center gap-1">
                                                                             <div
                                                                                 className="flex-1 flex items-center gap-1">
                                                                                 <span
                                                                                     className={cn("font-medium truncate", item.status === 'cancelled' && "text-red-500")}>{item.name}</span>
                                                                                 <span
-                                                                                    className={cn("text-yellow-600", item.status === 'cancelled' && "text-red-500")}>×{item.quantity}</span>
+                                                                                    className={cn("text-warning", item.status === 'cancelled' && "text-destructive")}>×{item.quantity}</span>
                                                                                 {(isTrackingEnabled || item.status === 'cancelled') && (
                                                                                     <Badge
                                                                                         className={cn("px-1 py-0.5 text-xs ml-auto", getStatusBadgeStyles(item.status || 'unknown'))}>
@@ -973,7 +954,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                                     </div>
                                                                 ))
                                                             ) : (
-                                                                <div className="p-2 text-center text-yellow-400">
+                                                                <div className="p-2 text-center text-warning">
                                                                     No items in this order
                                                                 </div>
                                                             )}
@@ -1029,25 +1010,24 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
 
                             {/* Served Orders Column */}
                             <div className="flex flex-col">
-                                <div className="bg-green-100 dark:bg-green-900 p-3 rounded-t-md">
-                                    <h3 className="font-semibold text-green-800 dark:text-green-200 flex items-center">
+                                <div className="bg-success/15 p-3 rounded-t-md">
+                                    <h3 className="font-semibold text-success flex items-center">
                                         <span>SERVED</span>
-                                        <Badge
-                                            className="ml-2 bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-200">
+                                        <Badge className={cn("ml-2", getStatusBadgeStyles('served'))}>
                                             {filteredOrders.filter(order => order.status === 'served').length}
                                         </Badge>
                                     </h3>
                                 </div>
                                 <div
-                                    className="bg-green-50 dark:bg-green-950 p-2 rounded-b-md flex-1 min-h-[70vh] overflow-auto custom-scrollbar">
+                                    className="bg-success/10 p-2 rounded-b-md flex-1 min-h-[70vh] overflow-auto custom-scrollbar">
                                     {/* Similar card structure as placed orders but with served status */}
                                     {filteredOrders
                                         .filter(order => order.status === 'served')
                                         .map(order => (
                                             <Card key={order.id}
-                                                  className="mb-3 overflow-hidden hover:shadow-md border-green-200">
+                                                  className="mb-3 overflow-hidden hover:shadow-md border-success/30">
                                                 {/* Card content similar to placed orders but with served-specific actions */}
-                                                <CardHeader className="p-2 pb-1 bg-green-50">
+                                                <CardHeader className="p-2 pb-1 bg-success/10">
                                                     <div className="flex justify-between items-center">
                                                         <div className="flex items-center gap-1">
                               <span className="font-medium text-sm text-green-800">
@@ -1169,35 +1149,34 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
 
                             {/* Paid Orders Column */}
                             <div className="flex flex-col">
-                                <div className="bg-purple-100 dark:bg-purple-900 p-3 rounded-t-md">
-                                    <h3 className="font-semibold text-purple-800 dark:text-purple-200 flex items-center">
+                                <div className="bg-purple-200 dark:bg-purple-800 p-3 rounded-t-md">
+                                    <h3 className="font-semibold text-purple-900 dark:text-purple-100 flex items-center">
                                         <span>PAID</span>
-                                        <Badge
-                                            className="ml-2 bg-purple-200 text-purple-800 dark:bg-purple-800 dark:text-purple-200">
+                                        <Badge className={cn("ml-2", getStatusBadgeStyles('paid'))}>
                                             {filteredOrders.filter(order => order.status === 'paid').length}
                                         </Badge>
                                     </h3>
                                 </div>
                                 <div
-                                    className="bg-purple-50 dark:bg-purple-950 p-2 rounded-b-md flex-1 min-h-[70vh] overflow-auto custom-scrollbar">
+                                    className="bg-purple-100 dark:bg-purple-900 p-2 rounded-b-md flex-1 min-h-[70vh] overflow-auto custom-scrollbar">
                                     {/* Similar card structure as placed orders but with paid status */}
                                     {filteredOrders
                                         .filter(order => order.status === 'paid')
                                         .map(order => (
                                             <Card key={order.id}
-                                                  className="mb-3 overflow-hidden hover:shadow-md border-purple-200">
+                                                  className="mb-3 overflow-hidden hover:shadow-md border-purple-300">
                                                 {/* Card content similar to placed orders but with paid-specific actions */}
-                                                <CardHeader className="p-2 pb-1 bg-purple-50">
+                                                <CardHeader className="p-2 pb-1 bg-purple-100">
                                                     <div className="flex justify-between items-center">
                                                         <div className="flex items-center gap-1">
-                              <span className="font-medium text-sm text-purple-800">
+                              <span className="font-medium text-sm text-purple-900">
                                 {order.order_type === 'takeaway'
                                     ? (
                                         <span className="flex items-center">
                                       Takeaway
                                             {order.token_number && (
                                                 <Badge
-                                                    className="ml-1 bg-purple-100 text-purple-800 border-purple-300 text-xs">
+                                                    className="ml-1 bg-purple-200 text-purple-900 border-purple-400 text-xs">
                                                     {order.token_number}
                                                 </Badge>
                                             )}
@@ -1209,7 +1188,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                         Quick Bill
                                                 {order.token_number && (
                                                     <Badge
-                                                        className="ml-1 bg-purple-100 text-purple-800 border-purple-300 text-xs">
+                                                        className="ml-1 bg-purple-200 text-purple-900 border-purple-400 text-xs">
                                                         {order.token_number}
                                                     </Badge>
                                                 )}
@@ -1218,30 +1197,30 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                         : `Table ${order.table_id || 'Unknown'}`}
                               </span>
                                                             <Badge variant="outline"
-                                                                   className="text-xs border-purple-300 text-purple-700">#{order.id}</Badge>
-                                                            <span className="text-xs text-purple-600 ml-1">
+                                                                   className="text-xs border-purple-400 text-purple-800">#{order.id}</Badge>
+                                                            <span className="text-xs text-purple-700 ml-1">
                                 {getOrderDateDisplay(order.order_time)}
                               </span>
                                                         </div>
                                                         <span
-                                                            className="text-xs font-medium text-purple-800">{formatCurrency(order.total_amount)}</span>
+                                                            className="text-xs font-medium text-purple-900">{formatCurrency(order.total_amount)}</span>
                                                     </div>
                                                 </CardHeader>
                                                 <CardContent className="p-2 pt-0">
                                                     <div className="text-xs">
                                                         <div
-                                                            className="max-h-36 overflow-y-auto border border-purple-100 rounded-md divide-y divide-purple-100">
+                                                            className="max-h-36 overflow-y-auto border border-purple-200 rounded-md divide-y divide-purple-200">
                                                             {order.items && order.items.length > 0 ? (
                                                                 order.items.map(item => (
                                                                     <div key={item.id}
-                                                                         className="p-1.5 hover:bg-purple-50/50">
+                                                                         className="p-1.5 hover:bg-purple-100/50">
                                                                         <div className="flex items-center gap-1">
                                                                             <div
                                                                                 className="flex-1 flex items-center gap-1">
                                                                                 <span
                                                                                     className={cn("font-medium truncate", item.status === 'cancelled' && "text-red-500")}>{item.name}</span>
                                                                                 <span
-                                                                                    className={cn("text-purple-600", item.status === 'cancelled' && "text-red-500")}>×{item.quantity}</span>
+                                                                                    className={cn("text-purple-700", item.status === 'cancelled' && "text-red-500")}>×{item.quantity}</span>
                                                                                 {(isTrackingEnabled || item.status === 'cancelled') && (
                                                                                     <Badge
                                                                                         className={cn("px-1 py-0.5 text-xs ml-auto", getStatusBadgeStyles(item.status || 'unknown'))}>
@@ -1253,7 +1232,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                                                     </div>
                                                                 ))
                                                             ) : (
-                                                                <div className="p-2 text-center text-purple-400">
+                                                                <div className="p-2 text-center text-purple-500">
                                                                     No items in this order
                                                                 </div>
                                                             )}
@@ -1265,7 +1244,7 @@ export const AdminOrderOverview: React.FC<AdminOrderOverviewProps> = ({
                                         ))}
 
                                     {filteredOrders.filter(order => order.status === 'paid').length === 0 && (
-                                        <div className="text-center p-4 text-purple-400 text-sm">
+                                        <div className="text-center p-4 text-purple-500 text-sm">
                                             No orders in this column
                                         </div>
                                     )}

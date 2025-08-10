@@ -4,7 +4,6 @@ import Navbar from './navbar';
 import {MobileNav} from './MobileNav';
 import {cn} from '@/lib/utils';
 import {useWebSocket} from '@/hooks';
-import {useAuthStore} from '@/lib/auth/auth.store';
 
 interface LayoutProps {
     children: ReactNode;
@@ -13,7 +12,6 @@ interface LayoutProps {
 export default function Layout({children}: LayoutProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
-    const {isAuthenticated} = useAuthStore();
     useWebSocket();
 
     useEffect(() => {
@@ -33,7 +31,7 @@ export default function Layout({children}: LayoutProps) {
     };
 
     return (
-        <div className="min-h-[100dvh] flex flex-col bg-background overflow-hidden">
+        <div className="h-screen flex flex-col bg-background overflow-hidden">
             <Navbar
                 toggleSidebar={toggleSidebar}
                 isSidebarOpen={isSidebarOpen}
@@ -49,22 +47,22 @@ export default function Layout({children}: LayoutProps) {
 
                 <div className={cn(
                     "flex-shrink-0 overflow-hidden bg-white dark:bg-gray-800",
-                    "fixed lg:relative h-[100dvh] z-40 transition-all duration-300 ease-in-out",
+                    "fixed lg:relative h-screen z-40 transition-all duration-300 ease-in-out",
                     isSidebarOpen
-                        ? "lg:w-44 xl:w-52 w-[280px] translate-x-0 shadow-xl"
-                        : "w-[280px] -translate-x-full lg:w-0 lg:translate-x-0"
+                        ? "lg:w-44 xl:w-52 w-[280px] translate-x-0 shadow-xl" // Visible when open
+                        : "w-[280px] -translate-x-full lg:w-0 lg:translate-x-0" // Hidden on mobile, collapsed on desktop
                 )}>
                     <Sidebar closeSidebar={toggleSidebar}/>
                 </div>
 
                 <main className={cn(
                     "flex-1 overflow-y-auto transition-all duration-300 ease-in-out custom-scrollbar",
-                    isSidebarOpen ? "" : "lg:pl-0",
-                    "pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-6"
+                    isSidebarOpen ? "" : "lg:pl-0", // Adjust padding when sidebar is closed
+                    "pb-20 lg:pb-6" // Increased padding at the bottom for mobile nav to prevent overlap
                 )}>
                     <div className={cn(
-                        "mx-auto p-1 sm:p-2 lg:p-3",
-                        isSidebarOpen ? "max-w-7xl" : "max-w-full"
+                        "mx-auto px-4 sm:px-6 lg:px-8 py-2 lg:py-3",
+                        "max-w-7xl" // Constrain main content to a user-friendly container width
                     )}>
                         {children}
                     </div>

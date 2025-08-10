@@ -87,13 +87,14 @@ export default function UserCreationForm({initialData, onSuccess}: UserFormProps
             const selectedStaff = staff.find(member => member.id === selectedStaffId);
             if (selectedStaff) {
                 form.setValue('role', selectedStaff.role.toLowerCase());
+
             }
         }
     }, [selectedStaffId, staff, form]);
 
     const handleSubmit = async (data: z.infer<typeof schema>) => {
         try {
-            const {confirmPassword, ...payload} = data;
+            const { ...payload} = data;
 
             if (isEditMode && !payload.password) {
                 delete payload.password;
@@ -150,7 +151,8 @@ export default function UserCreationForm({initialData, onSuccess}: UserFormProps
                             render={({field}) => (
                                 <FormItem>
                                     <FormLabel className="text-gray-700 dark:text-gray-300">
-                                        {isEditMode ? 'New Password (leave blank to keep current)' : 'Password'}
+                                        {isEditMode ? 'New Password' : 'Password'}
+                                        <div>(leave blank to keep current)</div>
                                     </FormLabel>
                                     <FormControl>
                                         <div className="relative">

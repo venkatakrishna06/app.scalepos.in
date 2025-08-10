@@ -7,7 +7,7 @@ const STALE_TIME = 1000 * 60 * 1; // 1 minute
 const CACHE_TIME = 1000 * 60 * 30; // 30 minutes
 
 export const useOrders = (params?: {
-    period?: 'day' | 'week' | 'month';
+    period?: 'day' | 'week' | 'month' | 'all' | 'custom';
     start_date?: string;
     end_date?: string;
     table_number?: number;

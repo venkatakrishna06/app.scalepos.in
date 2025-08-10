@@ -51,15 +51,15 @@ export const useTablesPage = () => {
     const getStatusColor = (status: Table['status']) => {
         switch (status) {
             case 'available':
-                return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+                return 'badge badge-success';
             case 'occupied':
-                return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+                return 'badge badge-warning';
             case 'reserved':
-                return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+                return 'badge badge-info';
             case 'cleaning':
-                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+                return 'badge badge-warning';
             default:
-                return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+                return 'badge';
         }
     };
 
