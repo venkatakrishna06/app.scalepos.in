@@ -382,7 +382,8 @@ export function PaymentDialog({open, onClose, order, draftOrder, onPaymentComple
             const errorMessage = error instanceof Error ? error.message : 'Failed to print bill';
             toast.error(errorMessage);
             console.error('Print error:', error);
-            throw error;
+            // Do not block the flow; return whatever order we have so payment can proceed
+            return orderForBill ?? null;
         }
     };
 
@@ -395,10 +396,15 @@ export function PaymentDialog({open, onClose, order, draftOrder, onPaymentComple
         }
 
         try {
-            // First print the bill (which now creates the order if it's a draft)
-            const orderFromPrintBill = await handlePrintBill();
+            // First attempt to print the bill (which also ensures the order exists). Don't block on print failures.
+            let orderFromPrintBill: Order | null = null;
+            try {
+                orderFromPrintBill = await handlePrintBill();
+            } catch (printErr) {
+                console.warn('Proceeding without printed bill due to QZ error', printErr);
+            }
 
-            // If we have an order from handlePrintBill, use it directly in handlePayment
+            // Proceed with payment regardless of printing outcome
             if (orderFromPrintBill) {
                 await handlePayment(orderFromPrintBill);
             } else {

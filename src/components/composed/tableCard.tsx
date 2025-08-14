@@ -75,7 +75,7 @@ export const TableCard = React.memo(({
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <h2 className="text-xl font-semibold">Table {table.table_number}</h2>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-2">
                             {getStatusIcon(table.status)}
                             <span className={cn(
                                 "rounded-full px-2.5 py-0.5 text-xs font-semibold",
@@ -106,12 +106,12 @@ export const TableCard = React.memo(({
                                 Mark Cleaning
                             </DropdownMenuItem>
                             <DropdownMenuSeparator/>
-                            {table.status === 'available' && (
-                                <DropdownMenuItem onClick={onSplit}>
-                                    <Split className="mr-2 h-4 w-4"/>
-                                    Split Table
-                                </DropdownMenuItem>
-                            )}
+                            {/*{table.status === 'available' && (*/}
+                            {/*    <DropdownMenuItem onClick={onSplit}>*/}
+                            {/*        <Split className="mr-2 h-4 w-4"/>*/}
+                            {/*        Split Table*/}
+                            {/*    </DropdownMenuItem>*/}
+                            {/*)}*/}
                             {table.status === 'available' && (
                                 <DropdownMenuItem onClick={() => onDelete(table.id)}>
                                     <Trash2 className="mr-2 h-4 w-4 text-destructive"/>

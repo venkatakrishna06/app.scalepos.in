@@ -525,9 +525,9 @@ function CreateOrderDialogComponent({
                             });
                             toast.success(`Order for ${table_id ? `Table ${table_id}` : currentOrderType} updated.`);
                             onClose();
-                            // Print KOT for new items
+                            // Print KOT for new items (fire-and-forget)
                             if (orderItems.length > 0) {
-                                await handlePrintKOT(existingOrder.token_number || tokenNumber);
+                                handlePrintKOT(existingOrder.token_number || tokenNumber).catch(err => console.error('KOT print error:', err));
                             }
                         }else {
                 await createOrderMutation.mutateAsync(orderData as any);
@@ -535,8 +535,8 @@ function CreateOrderDialogComponent({
                 onClose();
 
                 
-                // Print KOT for new order
-                await handlePrintKOT(tokenNumber);
+                // Print KOT for new order (fire-and-forget)
+                handlePrintKOT(tokenNumber).catch(err => console.error('KOT print error:', err));
             }
 
             // Pass the updated items to parent if callback provided

@@ -251,7 +251,8 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({ onOrderC
 
             const createdOrder = await createOrderMutation.mutateAsync(newOrderData as any); //FIXME: type casting
 
-            await handlePrint(printerConfig?.kot_printers, generateReceiptContent(createdOrder));
+            // Fire-and-forget KOT print to avoid blocking when QZ is unavailable or slow
+            handlePrint(printerConfig?.kot_printers, generateReceiptContent(createdOrder)).catch(err => console.error('KOT print error:', err));
 
             // Check if order tracking is enabled
             const isTrackingEnabled = restaurant?.enable_order_status_tracking || false;
@@ -269,7 +270,8 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({ onOrderC
 
                 await createPaymentMutation.mutateAsync(paymentData);
                 await updateOrderStatusMutation.mutateAsync({ id: createdOrder.id, status: 'paid' });
-                await handlePrint(printerConfig?.bill_printers, generateReceiptContent(createdOrder));
+                // Fire-and-forget Bill print to avoid blocking when QZ is unavailable or slow
+                handlePrint(printerConfig?.bill_printers, generateReceiptContent(createdOrder)).catch(err => console.error('Bill print error:', err));
                 toast.success('Order placed and payment completed successfully');
             } else {
                 toast.success('Order placed successfully');
