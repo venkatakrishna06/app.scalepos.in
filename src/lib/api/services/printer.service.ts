@@ -1,5 +1,6 @@
 import {api} from '../axios';
 import {API_ENDPOINTS} from '../endpoints';
+import { ensureQzConnected } from '@/lib/qz/ensureQz';
 
 export interface PrinterConfig {
     bill_printers: string[];
@@ -47,13 +48,7 @@ export const printerService = {
                 });
             }
 
-            if (typeof window.qz === 'undefined') {
-                throw new Error('QZ Tray not available');
-            }
-
-            if (!window.qz.websocket.isActive()) {
-                await window.qz.websocket.connect();
-            }
+            await ensureQzConnected();
 
             const printers = await window.qz.printers.find();
             return printers;
@@ -64,13 +59,7 @@ export const printerService = {
 
     sendTestPrint: async (printers: string[], printerType: 'bill' | 'kot' | 'bar'): Promise<void> => {
         try {
-            if (typeof window.qz === 'undefined') {
-                throw new Error('QZ Tray not available');
-            }
-
-            if (!window.qz.websocket.isActive()) {
-                await window.qz.websocket.connect();
-            }
+            await ensureQzConnected();
 
             let testContent = '';
             switch (printerType) {

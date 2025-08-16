@@ -9,6 +9,7 @@ import {useCreatePayment} from '@/api/payments';
 import {useRestaurant} from '@/api/restaurant';
 import {usePrinterConfig} from '@/api/printers';
 import {useCreateOrder, useUpdateOrderStatus} from '@/api/orders';
+import { ensureQzConnected } from '@/lib/qz/ensureQz';
 
 // Add TypeScript interface for window.qz
 declare global {
@@ -60,7 +61,7 @@ const ESCPOS = {
 };
 
 export function PaymentDialog({open, onClose, order, draftOrder, onPaymentComplete}: PaymentDialogProps) {
-    const [paymentMethod, setPaymentMethod] = useState<Payment['payment_method'] | ''>('');
+    const [paymentMethod, setPaymentMethod] = useState<Payment['payment_method'] | ''>('upi');
     const [currentStep, setCurrentStep] = useState<PaymentStep>('method');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -91,7 +92,7 @@ export function PaymentDialog({open, onClose, order, draftOrder, onPaymentComple
             setIsSubmitting(false);
             setError(null);
             setCashGiven('');
-            setPaymentMethod('');
+            setPaymentMethod('upi');
             // Reset createdOrder to null to ensure we use the new order prop
             setCreatedOrder(null);
         }
@@ -349,15 +350,7 @@ export function PaymentDialog({open, onClose, order, draftOrder, onPaymentComple
         }
 
         try {
-            // Check if QZ Tray is available
-            if (typeof window.qz === 'undefined') {
-                throw new Error('QZ Tray not available. Please ensure QZ Tray is installed and running.');
-            }
-
-            // Connect to QZ Tray if not already connected
-            if (!window.qz.websocket.isActive()) {
-                await window.qz.websocket.connect();
-            }
+            await ensureQzConnected();
 
             // Get bill printers from configuration
             const billPrinters = printerConfig?.bill_printers || [];

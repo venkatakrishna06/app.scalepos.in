@@ -29,6 +29,7 @@ import {useCreateOrder, useUpdateOrderStatus} from "@/api/orders";
 import {useRestaurant} from "@/api/restaurant";
 import {useCreatePayment} from "@/api/payments";
 import {usePrinterConfig} from "@/api/printers";
+import { ensureQzConnected } from '@/lib/qz/ensureQz';
 
 // KOT Printing and other logic will be adapted from your file
 // Note: QZ Tray logic is preserved but assumes window.qz is available.
@@ -65,7 +66,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({ onOrderC
     const [error, setError] = useState<string | null>(null);
     const [editingItemId, setEditingItemId] = useState<number | null>(null);
     const [itemNote, setItemNote] = useState<string>('');
-    const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'upi' | ''>('');
+    const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'upi' | ''>('upi');
     const [cashGiven, setCashGiven] = useState<string>('');
     const [showTaxDetails, setShowTaxDetails] = useState(false);
 
@@ -216,8 +217,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({ onOrderC
             return;
         }
         try {
-            if (typeof window.qz === 'undefined') throw new Error('QZ Tray not available.');
-            if (!window.qz.websocket.isActive()) await window.qz.websocket.connect();
+            await ensureQzConnected();
             for (const printer of printers) {
                 const config = window.qz.configs.create(printer);
                 await window.qz.print(config, [content]);
@@ -281,7 +281,7 @@ const DashboardTakeawayComponent: React.FC<DashboardTakeawayProps> = ({ onOrderC
             setSearchQuery('');
             setSelectedCategory('all');
             setIsCartOpen(false);
-            setPaymentMethod('');
+            setPaymentMethod('upi');
             setCashGiven('');
             if (onOrderCreated) onOrderCreated();
 

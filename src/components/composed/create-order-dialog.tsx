@@ -9,7 +9,6 @@ import {
     Plus,
     Search,
     ShoppingCart,
-    Star,
     X
 } from 'lucide-react';
 import {Dialog, DialogContent,} from '@/components/ui/dialog';
@@ -25,25 +24,8 @@ import {useFavoriteItems} from "@/api/analytics";
 import {usePrinterConfig} from "@/api/printers";
 import {PermissionGuard} from './permission-guard';
 import {PERMISSIONS} from '@/lib/auth/roles';
+import { ensureQzConnected } from '@/lib/qz/ensureQz';
 
-// Add QZ Tray type definitions
-declare global {
-    interface Window {
-        qz: {
-            websocket: {
-                connect: () => Promise<void>;
-                isActive: () => boolean;
-            };
-            printers: {
-                find: () => Promise<string[]>;
-            };
-            configs: {
-                create: (printer: string) => any;
-            };
-            print: (config: any, data: any) => Promise<void>;
-        };
-    }
-}
 
 // ESC/POS command constants
 const ESC = '\x1b';
@@ -425,15 +407,7 @@ function CreateOrderDialogComponent({
         try {
             // Print KOT using QZ Tray
             try {
-                // Check if QZ Tray is available
-                if (typeof window.qz === 'undefined') {
-                    throw new Error('QZ Tray not available. Please ensure QZ Tray is installed and running.');
-                }
-
-                // Connect to QZ Tray if not already connected
-                if (!window.qz.websocket.isActive()) {
-                    await window.qz.websocket.connect();
-                }
+                await ensureQzConnected();
 
                 // Get KOT printers from configuration
                 const kotPrinters = printerConfig?.kot_printers || [];
@@ -498,7 +472,7 @@ function CreateOrderDialogComponent({
                 staff_id: user?.staff_id,
                 status: 'placed' as const,
                 order_type: table_id ? 'dine-in' : currentOrderType,
-                items: orderItems.map(({ id, ...rest }) => rest), // Remove temp ID
+                items: orderItems.map(({  ...rest }) => rest), // Remove temp ID
                 total_amount: totalAmount
             };
 
