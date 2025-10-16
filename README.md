@@ -2,7 +2,7 @@
 
 ## Overview
 
-QuickQuick is a comprehensive restaurant management system designed to streamline and automate various aspects of
+ScalePOS is a comprehensive restaurant management system designed to streamline and automate various aspects of
 restaurant operations. The frontend application is built with modern web technologies to provide a responsive and
 intuitive user interface for restaurant staff and management.
 
